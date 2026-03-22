@@ -93,6 +93,16 @@ Lokale USB SSD:
 ├── Fail2Ban/CrowdSec
 └── Optional: Cloudflare Tunnel
 
+## Mögliche Weiter Dienste
+* **Dozzle** (WebUI for Logs)
+* **Watchtower** (Auto Update von Docker Images)
+* **Pulse** (Monitoring von Proxmox and Docker)
+* **Komodo** (Docker management mit Logs [wie Portainer])
+* **Uptime** Kuma (Check if Services Up or Down [also Website etc.])
+* **MailRise** (SMTP To Discord Notification)
+* **Netbox** (Documentation)
+* **Duplicata** (Docker backup)
+
 
 ## Netzwerk-Architektur
 INTERN: 192.168.178.0/24
