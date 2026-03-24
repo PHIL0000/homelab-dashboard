@@ -8,9 +8,10 @@ export default function Settings() {
   const [isOpen, setIsOpen] = useState(false);
 
   const themeLabels: Record<string, string> = {
-    dark: "🌙 Dark",
+    midnight: "🌃 Midnight",
+    oled: "⬛ OLED",
     cyberpunk: "🤖 Cyberpunk",
-    github: "� GitHub",
+    github: "🐙 GitHub",
     japan: "🌸 Japan",
     forest: "🌲 Forest",
   };
@@ -30,18 +31,18 @@ export default function Settings() {
           <div className="relative">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="w-full px-4 py-3 rounded-lg transition-all flex items-center justify-between bg-primary text-white hover:opacity-90"
+              className="w-full px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-between bg-primary text-white hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-primary)_60%,transparent)] hover:-translate-y-0.5"
             >
               <span>{themeLabels[theme]}</span>
               <ChevronDown
                 size={18}
-                className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+                className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
               />
             </button>
 
             {/* Dropdown Menu */}
             {isOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 rounded-lg border border-border bg-content shadow-lg z-10">
+              <div className="absolute top-full left-0 right-0 mt-3 rounded-lg border border-border bg-content shadow-xl shadow-black/50 z-10 overflow-hidden transform origin-top transition-all">
                 {availableThemes.map((t: Theme) => (
                   <button
                     key={t}
@@ -49,10 +50,10 @@ export default function Settings() {
                       setTheme(t);
                       setIsOpen(false);
                     }}
-                    className={`w-full px-4 py-3 text-left transition-all hover:opacity-80 border-b border-border last:border-b-0 ${
+                    className={`w-full px-4 py-3 text-left transition-all duration-200 border-b border-border last:border-b-0 ${
                       theme === t
                         ? "bg-primary text-white"
-                        : "bg-sidebar text-text"
+                        : "bg-content text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary hover:pl-6"
                     }`}
                   >
                     {themeLabels[t]}

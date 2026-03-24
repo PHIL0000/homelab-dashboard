@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-export type Theme = "dark" | "cyberpunk" | "github" | "japan" | "forest";
+export type Theme = "midnight" | "oled" | "cyberpunk" | "github" | "japan" | "forest";
 
 interface ThemeConfig {
   name: Theme;
@@ -19,9 +19,9 @@ interface ThemeConfig {
 }
 
 const themes: Record<Theme, ThemeConfig> = {
-  dark: {
-    name: "dark",
-    label: "Dark",
+  midnight: {
+    name: "midnight",
+    label: "Midnight",
     colors: {
       primary: "#8b5cf6",
       secondary: "#a78bfa",
@@ -32,6 +32,21 @@ const themes: Record<Theme, ThemeConfig> = {
       text: "#f8fafc",
       textSecondary: "#94a3b8",
       border: "#261a3f",
+    },
+  },
+  oled: {
+    name: "oled",
+    label: "OLED",
+    colors: {
+      primary: "#581c87", /* Dunkles, kräftiges Lila */
+      secondary: "#3b0764", /* Noch dunkleres Lila */
+      accent: "#7e22ce",
+      background: "#000000", /* Absolut reines Schwarz */
+      content: "#0a0a0a", /* Sehr dunkles Grau für Cards */
+      sidebar: "#050505", /* Fast unsichtbar */
+      text: "#fafafa",
+      textSecondary: "#a1a1aa",
+      border: "#18181b",
     },
   },
   cyberpunk: {
@@ -109,8 +124,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
-    const saved = localStorage.getItem("theme");
-    return (saved as Theme) || "dark";
+    const saved = localStorage.getItem("theme") as Theme;
+    // Prüfen, ob das gespeicherte Theme noch existiert (sonst Fallback auf Midnight)
+    if (saved && themes[saved]) {
+      return saved;
+    }
+    return "midnight";
   });
 
   useEffect(() => {
@@ -119,7 +138,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [theme]);
 
   const applyTheme = (selectedTheme: Theme) => {
-    const config = themes[selectedTheme];
+    const config = themes[selectedTheme] || themes["midnight"]; // Sicherstellen, dass config nicht undefined ist
     const html = document.documentElement;
 
     // Setze CSS-Variablen für inline styles
