@@ -5,7 +5,7 @@ const PlaceholderPage: React.FC = () => {
   const pageName = path.split("/").pop()?.replace("-", " ") || "Page";
 
   return (
-    <div className="h-full w-full p-6">
+    <div className="h-full w-full p-6 md:p-8">
       <div className="h-full rounded-lg shadow-lg p-6 bg-content border border-border">
         <h1 className="text-2xl font-bold capitalize mb-2 text-primary">{pageName}</h1>
         <p className="text-sm mb-6 text-text-secondary">
