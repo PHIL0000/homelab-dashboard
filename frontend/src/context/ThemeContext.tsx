@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-export type Theme = "dark" | "light" | "ocean" | "forest" | "sunset";
+export type Theme = "dark" | "cyberpunk" | "github" | "japan" | "forest";
 
 interface ThemeConfig {
   name: Theme;
-  isDark: boolean;
+  label: string;
   colors: {
     primary: string;
+    secondary: string;
+    accent: string;
     background: string;
     content: string;
     sidebar: string;
@@ -19,67 +21,77 @@ interface ThemeConfig {
 const themes: Record<Theme, ThemeConfig> = {
   dark: {
     name: "dark",
-    isDark: true,
+    label: "Dark",
     colors: {
-      primary: "#3b82f6",
-      background: "#0f172a",
-      content: "#1e293b",
-      sidebar: "#1e293b",
-      text: "#e2e8f0",
+      primary: "#8b5cf6",
+      secondary: "#a78bfa",
+      accent: "#d8b4fe",
+      background: "#090514", /* Fast schwarz mit extrem leichtem Lila-Schimmer */
+      content: "#110b1f",
+      sidebar: "#0a0616",
+      text: "#f8fafc",
       textSecondary: "#94a3b8",
-      border: "#334155",
+      border: "#261a3f",
     },
   },
-  light: {
-    name: "light",
-    isDark: false,
+  cyberpunk: {
+    name: "cyberpunk",
+    label: "Cyberpunk",
     colors: {
-      primary: "#2563eb",
-      background: "#f8fafc",
-      content: "#ffffff",
-      sidebar: "#f1f5f9",
-      text: "#1e293b",
-      textSecondary: "#64748b",
-      border: "#cbd5e1",
+      primary: "#fce22a", /* Neon Yellow */
+      secondary: "#ff003c", /* Neon Pink */
+      accent: "#00f0ff", /* Neon Cyan */
+      background: "#050512", /* Tiefes Blau-Schwarz */
+      content: "#0e0d26",
+      sidebar: "#090819",
+      text: "#e0def4",
+      textSecondary: "#908caa",
+      border: "#2a2559",
     },
   },
-  ocean: {
-    name: "ocean",
-    isDark: true,
+  github: {
+    name: "github",
+    label: "GitHub",
     colors: {
-      primary: "#06b6d4",
-      background: "#0c2340",
-      content: "#164863",
-      sidebar: "#0f3a5c",
-      text: "#d1f0ff",
-      textSecondary: "#a3d5ff",
-      border: "#1e5f8f",
+      primary: "#58a6ff", /* GH Blue */
+      secondary: "#238636", /* GH Green */
+      accent: "#8b949e",
+      background: "#0d1117", /* GH Dark Background */
+      content: "#161b22",
+      sidebar: "#010409",
+      text: "#c9d1d9",
+      textSecondary: "#8b949e",
+      border: "#30363d",
+    },
+  },
+  japan: {
+    name: "japan",
+    label: "Japan",
+    colors: {
+      primary: "#f43f5e", /* Rose/Crimson */
+      secondary: "#fda4af", /* Sakura Pink */
+      accent: "#fb7185",
+      background: "#0f0505", /* Extrem dunkles Blutrot/Schwarz */
+      content: "#1a0f0f",
+      sidebar: "#140909",
+      text: "#fef2f2",
+      textSecondary: "#fecdd3",
+      border: "#3f1d1d",
     },
   },
   forest: {
     name: "forest",
-    isDark: true,
+    label: "Forest",
     colors: {
-      primary: "#10b981",
-      background: "#0d1b0f",
-      content: "#1a3a1f",
-      sidebar: "#142818",
-      text: "#d1fae5",
-      textSecondary: "#a7f3d0",
-      border: "#1f5d3a",
-    },
-  },
-  sunset: {
-    name: "sunset",
-    isDark: true,
-    colors: {
-      primary: "#f97316",
-      background: "#1f1116",
-      content: "#341e1e",
-      sidebar: "#2a1618",
-      text: "#ffe4cc",
-      textSecondary: "#ffccaa",
-      border: "#6b3b2f",
+      primary: "#10b981", /* Emerald */
+      secondary: "#a3e635", /* Lime */
+      accent: "#4ade80",
+      background: "#020604", /* Nahezu komplett schwarzes Grün */
+      content: "#061209",
+      sidebar: "#030b06",
+      text: "#f0fdf4",
+      textSecondary: "#86efac",
+      border: "#123321",
     },
   },
 };
@@ -109,14 +121,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const applyTheme = (selectedTheme: Theme) => {
     const config = themes[selectedTheme];
     const html = document.documentElement;
-
-    // Entferne alte Theme-Klasse
-    html.classList.remove("light");
-    
-    // Füge neue Theme-Klasse hinzu (für "light" Theme)
-    if (!config.isDark) {
-      html.classList.add("light");
-    }
 
     // Setze CSS-Variablen für inline styles
     Object.entries(config.colors).forEach(([key, value]) => {

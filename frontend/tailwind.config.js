@@ -11,6 +11,8 @@ export default {
     extend: {
       colors: {
         primary: "var(--color-primary)",
+        secondary: "var(--color-secondary)",
+        accent: "var(--color-accent)",
         background: "var(--color-background)",
         "background-rgb": "var(--color-background)",
         content: "var(--color-content)",
@@ -22,14 +24,18 @@ export default {
       },
       backgroundColor: {
         primary: "var(--color-primary)",
+        secondary: "var(--color-secondary)",
+        accent: "var(--color-accent)",
         background: "var(--color-background)",
         content: "var(--color-content)",
         sidebar: "var(--color-sidebar)",
       },
       textColor: {
         primary: "var(--color-primary)",
+        secondary: "var(--color-secondary)",
+        accent: "var(--color-accent)",
         default: "var(--color-text)",
-        secondary: "var(--color-textSecondary)",
+        "text-secondary": "var(--color-textSecondary)",
       },
       borderColor: {
         default: "var(--color-border)",

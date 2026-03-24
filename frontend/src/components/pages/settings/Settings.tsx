@@ -9,10 +9,10 @@ export default function Settings() {
 
   const themeLabels: Record<string, string> = {
     dark: "🌙 Dark",
-    light: "☀️ Light",
-    ocean: "🌊 Ocean",
+    cyberpunk: "🤖 Cyberpunk",
+    github: "� GitHub",
+    japan: "🌸 Japan",
     forest: "🌲 Forest",
-    sunset: "🌅 Sunset",
   };
 
   return (

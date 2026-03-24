@@ -8,6 +8,17 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Default Dark theme colors - Fast schwarz mit extrem leichtem Lila-Schimmer */
+  --color-primary: #8b5cf6;
+  --color-secondary: #a78bfa;
+  --color-accent: #d8b4fe;
+  --color-background: #090514;
+  --color-content: #110b1f;
+  --color-sidebar: #0a0616;
+  --color-text: #f8fafc;
+  --color-textSecondary: #94a3b8;
+  --color-border: #261a3f;
 }
 
 * {
