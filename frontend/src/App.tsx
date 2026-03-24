@@ -14,11 +14,11 @@ import PlaceholderPage from "./components/dev/Placeholder";
 
 const App: React.FC = () => {
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background text-text">
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-content1">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-content">
           <div className="max-w-[2000px] mx-auto px-6 py-6 h-full">
             <Routes>
               <Route path="/" element={<PlaceholderPage />} />

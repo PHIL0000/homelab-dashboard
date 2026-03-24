@@ -1,23 +1,50 @@
-import { Card } from '@heroui/react'
+import React from "react";
+import type { Theme } from "@/context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function Settings() {
+  const { theme, setTheme, availableThemes } = useTheme();
+
+  const themeLabels: Record<string, string> = {
+    dark: "🌙 Dark",
+    light: "☀️ Light",
+    ocean: "🌊 Ocean",
+    forest: "🌲 Forest",
+    sunset: "🌅 Sunset",
+  };
+
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-slate-100">Settings</h1>
-        <p className="text-slate-400 mt-2">Konfiguriere deine Einstellungen</p>
+        <h1 className="text-4xl font-bold mb-2 text-text">Settings</h1>
+        <p className="text-text-secondary">Konfiguriere deine Einstellungen</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6 bg-slate-800 border border-slate-700">
-          <h2 className="text-xl font-semibold text-slate-100">Allgemein</h2>
-          <p className="text-slate-400 mt-2">Settings Inhalte kommen hier hin</p>
-        </Card>
-        <Card className="p-6 bg-slate-800 border border-slate-700">
-          <h2 className="text-xl font-semibold text-slate-100">Benachrichtigungen</h2>
-          <p className="text-slate-400 mt-2">Settings Inhalte kommen hier hin</p>
-        </Card>
+        <div className="p-6 rounded-lg border border-border bg-content">
+          <h2 className="text-xl font-semibold mb-4 text-text">Theme</h2>
+          <div className="space-y-3">
+            {availableThemes.map((t: Theme) => (
+              <button
+                key={t}
+                onClick={() => setTheme(t)}
+                className={`w-full px-4 py-3 rounded-lg transition-all hover:opacity-80 ${
+                  theme === t
+                    ? "bg-primary text-white shadow-lg"
+                    : "bg-sidebar text-text"
+                }`}
+              >
+                {themeLabels[t]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-6 rounded-lg border border-border bg-content">
+          <h2 className="text-xl font-semibold mb-2 text-text">Benachrichtigungen</h2>
+          <p className="text-text-secondary">Settings Inhalte kommen hier hin</p>
+        </div>
       </div>
     </div>
-  )
+  );
 }

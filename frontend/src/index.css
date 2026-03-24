@@ -17,12 +17,19 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #0f172a;
-  color: #e2e8f0;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html, body, #root {
   height: 100%;
-  background-color: #0f172a;
-  color: #e2e8f0;
+}
+
+/* Apply theme colors dynamically */
+body {
+  background-color: var(--color-background, #0f172a);
+  color: var(--color-text, #e2e8f0);
+}
+
+html.light {
+  color-scheme: light;
 }
