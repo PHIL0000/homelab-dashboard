@@ -41,6 +41,11 @@ export const translations = {
     'settings.timezone': 'Zeitzone',
     'settings.theme': 'Theme',
     'settings.empty': 'Aktuell keine Einstellungen verfügbar.',
+    'settings.integration': 'Integrationen',
+    'settings.haDomain': 'Home Assistant Domain',
+    'settings.haDomain.desc': 'Die URL zur Home Assistant Instanz für dieses Dashboard (z.B. https://ha.example.com)',
+    'settings.haDomain.placeholder': 'https://...',
+    'settings.save': 'Speichern',
 
     // Account
     'account.title': 'Konto',
@@ -67,6 +72,11 @@ export const translations = {
     'account.connectedServices': 'Verbundene Dienste',
     'account.connections.notice': 'Verbinde externe Konten für Single Sign-On und Integrationen.',
     'account.connections.empty': 'Aktuell sind keine Verknüpfungen verfügbar.',
+    'account.connect': 'Verbinden',
+    'account.connected': 'Verbunden',
+    'account.notConnected': 'Nicht verbunden',
+    'account.connections.ha.desc': 'Verknüpfe dein Profil zur automatischen Anmeldung bei Home Assistant.',
+    'account.connections.nc.desc': 'Verknüpfe dein Profil für Dateizugriff und Synchronisation.',
   },
   en: {
     // Navigation / Sidebar
@@ -108,6 +118,11 @@ export const translations = {
     'settings.timezone': 'Timezone',
     'settings.theme': 'Theme',
     'settings.empty': 'Currently no settings available.',
+    'settings.integration': 'Integrations',
+    'settings.haDomain': 'Home Assistant Domain',
+    'settings.haDomain.desc': 'The URL to the Home Assistant instance for this dashboard (e.g. https://ha.example.com)',
+    'settings.haDomain.placeholder': 'https://...',
+    'settings.save': 'Save',
 
     // Account
     'account.title': 'Account',
@@ -129,11 +144,16 @@ export const translations = {
     'account.newPassword': 'New Password',
     'account.updatePassword': 'Update Password',
     'account.2fa': 'Two-Factor Authentication (2FA)',
-    'account.2fa.desc': 'Protect your account additionally with an authenticator app.',
+    'account.2fa.desc': 'Protect your account further with an authenticator app.',
     'account.2fa.setup': 'Setup 2FA',
     'account.connectedServices': 'Connected Services',
-    'account.connections.notice': 'Connect external accounts for Single Sign-On and integrations.',
+    'account.connections.notice': 'Connect external accounts for single sign-on and integrations.',
     'account.connections.empty': 'Currently no connections available.',
+    'account.connect': 'Connect',
+    'account.connected': 'Connected',
+    'account.notConnected': 'Not connected',
+    'account.connections.ha.desc': 'Link your profile for automatic login to Home Assistant.',
+    'account.connections.nc.desc': 'Link your profile for file access and synchronization.',
   }
 };
 

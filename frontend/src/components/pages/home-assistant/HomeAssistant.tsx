@@ -2,8 +2,8 @@ import { Card } from '@heroui/react'
 import { ExternalLink } from "lucide-react";
 
 export default function HomeAssistant() {
-  // 🔧 HIER DEINE HOME ASSISTANT URL EINTRAGEN
-  const HOME_ASSISTANT_URL = "https://ha.hlphil.de/wall-tablet/home";
+  // Holt die URL aus dem LocalStorage oder nutzt den Fallback
+  const HOME_ASSISTANT_URL = localStorage.getItem('haDomain') || "https://";
 
   return (
     <div className="h-full flex flex-col p-4 md:p-8">
