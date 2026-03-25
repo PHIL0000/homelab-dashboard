@@ -48,14 +48,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   ];
 
   const aiItems = [
-    { label: "Chat", path: "/ai/chat", icon: MessageSquare },
-    { label: "Image Gen", path: "/ai/image-gen", icon: ImageIcon },
+    { label: t("nav.ai.chat"), path: "/ai/chat", icon: MessageSquare },
+    { label: t("nav.ai.imageGen"), path: "/ai/image-gen", icon: ImageIcon },
   ];
 
   const storageItems = [
-    { label: "NAS", path: "/storage/nas", icon: Database },
-    { label: "Nextcloud", path: "/storage/nextcloud", icon: Cloud },
-    { label: "GitLab", path: "/storage/gitlab", icon: Code2 },
+    { label: t("nav.storage.nas"), path: "/storage/nas", icon: Database },
+    { label: t("nav.storage.nextcloud"), path: "/storage/nextcloud", icon: Cloud },
+    { label: t("nav.storage.gitlab"), path: "/storage/gitlab", icon: Code2 },
   ];
 
   const documentationItems = [
@@ -82,7 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={`p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] transition-all ${isCollapsed ? "mx-auto" : ""}`}
-          title={isCollapsed ? "Sidebar ausklappen" : "Sidebar einklappen"}
+          title={isCollapsed ? t("nav.sidebar.expand") : t("nav.sidebar.collapse")}
         >
           {isCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
         </button>

@@ -16,6 +16,13 @@ export const translations = {
     'nav.docs.overview': 'Übersicht',
     'nav.docs.hardware': 'Hardware',
     'nav.docs.services': 'Dienste',
+    'nav.ai.chat': 'Chat',
+    'nav.ai.imageGen': 'Bild-Gen',
+    'nav.storage.nas': 'NAS',
+    'nav.storage.nextcloud': 'Nextcloud',
+    'nav.storage.gitlab': 'GitLab',
+    'nav.sidebar.expand': 'Sidebar ausklappen',
+    'nav.sidebar.collapse': 'Sidebar einklappen',
 
     // Settings
     'settings.title': 'Einstellungen',
@@ -76,6 +83,13 @@ export const translations = {
     'nav.docs.overview': 'Overview',
     'nav.docs.hardware': 'Hardware',
     'nav.docs.services': 'Services',
+    'nav.ai.chat': 'Chat',
+    'nav.ai.imageGen': 'Image Gen',
+    'nav.storage.nas': 'NAS',
+    'nav.storage.nextcloud': 'Nextcloud',
+    'nav.storage.gitlab': 'GitLab',
+    'nav.sidebar.expand': 'Expand Sidebar',
+    'nav.sidebar.collapse': 'Collapse Sidebar',
 
     // Settings
     'settings.title': 'Settings',
