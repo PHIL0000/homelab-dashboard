@@ -1,87 +1,45 @@
-# Homelab-Dashboard
-This is a custom HomeLab Dashboard to hold track of all your services. It also includes features for documentation and managing.
+# Homelab Dashboard
 
-## 📁 Folder Structure
+Welcome to the Homelab Dashboard project! This is the centralized, standalone frontend UI for managing and monitoring a comprehensive multi-node homelab environment.
 
-The project is organized as follows:
+## Overview
+This repository contains a full-stack application (React frontend, Node/DB backend planned) designed to run as the primary entry point for a homelab setup. Rather than monolithically bundling applications, this dashboard serves as an overarching portal (running on a dedicated Raspberry Pi 5 8GB). It seamlessly aggregates decoupled services like Home Assistant, Nextcloud, Ollama (AI), Gitlab, and Storage into one seamless, buttery-smooth React interface.
 
-```
-homelab-dashboard/
-├── frontend/                          # React TypeScript Frontend
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── nav/                  # Navigation components
-│   │   │   │   └── Sidebar.tsx       # Main sidebar navigation
-│   │   │   └── pages/                # Page components
-│   │   │       ├── dashboard/        # Dashboard page
-│   │   │       ├── calendar/         # Calendar management
-│   │   │       ├── storage/          # Storage monitoring
-│   │   │       │   ├── NAS/          # UGREEN NAS Web Interface (Embedding) 
-│   │   │       │   ├── Nextcloud/    # Nextcloud Webinterface (Embedding)
-│   │   │       │   └── GitLa/        # GitLab Web Interface (Embedding)
-│   │   │       ├── ai/               # AI features
-│   │   │       │   ├── Chat/         # Open Web UI for GPT like Chatinterface
-│   │   │       │   └── Image Gen/    # ComfyUI for Image generatrion
-│   │   │       ├── homeassistant/    # Home Assistant Web Interface (Embedding)
-│   │   │       ├── performance/      # Performance monitoring
-│   │   │       ├── account/          # Account management
-│   │   │       └── settings/         # Settings page
-│   │   ├── App.tsx                   # Main app component with routing
-│   │   ├── main.tsx                  # Entry point
-│   │   ├── App.css                   # App styles
-│   │   └── index.css                 # Global styles
-│
-└── backend/                           # Backend services (TBD)
-    └── src/
-```
-### Frontend Dependencies
+### Project Structure
+- `frontend/`: A modern web interface built with React, Vite, Tailwind CSS, and HeroUI.
+  - Supports i18n (English/German).
+  - Built-in customizable themes.
+  - Direct integrations for services like Home Assistant via iframes.
+- `backend/`: (WIP) Future backend for persisting user settings, configuration state, and aggregated metrics.
 
-- **React 19.2.4** - UI library for building the interface
-- **React Router DOM 7.13.2** - Client-side routing
-- **TypeScript ~5.9.3** - Type-safe JavaScript
-- **Tailwind CSS 4.2.2** - Utility-first CSS framework
-- **HeroUI 3.0.1** - React component library with pre-built UI components
-- **Framer Motion 12.38.0** - Animation library for smooth transitions
-- **Vite 8.0.1** - Fast build tool and dev server
+---
 
+## 🏛️ Homelab Architecture Context
 
+The Dashboard sits within a sophisticated 6-node distributed homelab architecture:
+1. **Frontend / UI Node (Raspberry Pi 5 8GB) → This Project**
+   Host for Homer, OpenWebUI, Grafana, and this Dashboard.
+2. **AI & Storage Core (UGREEN iDX6011 Pro NAS)**
+   Heavy lifting machine with an eGPU. Hosts Ollama, Stable Diffusion, NAS Storage, Nextcloud/Paperless Databases.
+3. **Dev / CI Node (CM3588 Plus)**
+   Dedicated hardware for GitLab CE and Runners.
+4. **Productivity Hub (Raspberry Pi 5 16GB)**
+   Hosts Nextcloud, n8n, SearXNG, and Authentik for centralized SSO (OIDC/SAML).
+5. **Network Edge (Raspberry Pi 4 2GB)**
+   Runs Traefik reverse proxy and Fail2Ban / CrowdSec.
+6. **VPN Island (Raspberry Pi 4 4GB)**
+   Runs Pi-Hole + WireGuard for completely isolated remote DNS and network access.
 
-## AI Requests:
-Ich habe mich dazu entschlossen, mir das alles Selber zu bauen, dass es genau für meine Anforderungen passt. Ich habe dazu diese Ordner struktur erstellt und will dies Bibiotheken dafür nutzen:
+---
 
-- **React 19.2.4** - UI library for building the interface
-- **React Router DOM 7.13.2** - Client-side routing
-- **TypeScript ~5.9.3** - Type-safe JavaScript
-- **Tailwind CSS 4.2.2** - Utility-first CSS framework
-- **HeroUI 3.0.1** - React component library with pre-built UI components
-- **Framer Motion 12.38.0** - Animation library for smooth transitions
-- **Vite 8.0.1** - Fast build tool and dev server
+## 🚀 Key Features of the Dashboard
+- **Modular Pages**: Navigate easily to Storage, Home Assistant, Performance, Calendar, and AI specific integrations.
+- **Home Assistant Viewer**: Interactive iframe module that pulls dynamic domains defined in settings.
+- **Customization Settings**: Change display language and UI themes directly from the browser (currently stored in `localStorage`, switching to database later).
+- **Smooth Navigation**: Side-nav driven layout built with scalable Tailwind UI principles.
 
-homelab-dashboard/
-├── frontend/                          # React TypeScript Frontend
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── nav/                  # Navigation components
-│   │   │   │   └── Sidebar.tsx       # Main sidebar navigation
-│   │   │   └── pages/                # Page components
-│   │   │       ├── dashboard/        # Dashboard page
-│   │   │       ├── calendar/         # Calendar management
-│   │   │       ├── storage/          # Storage monitoring
-│   │   │       │   ├── NAS/          # UGREEN NAS Web Interface (Embedding) 
-│   │   │       │   ├── Nextcloud/    # Nextcloud Webinterface (Embedding)
-│   │   │       │   └── GitLa/        # GitLab Web Interface (Embedding)
-│   │   │       ├── ai/               # AI features
-│   │   │       │   ├── Chat/         # Open Web UI for GPT like Chatinterface
-│   │   │       │   └── Image Gen/    # ComfyUI for Image generatrion
-│   │   │       ├── homeassistant/    # Home Assistant Web Interface (Embedding)
-│   │   │       ├── performance/      # Performance monitoring
-│   │   │       ├── account/          # Account management
-│   │   │       └── settings/         # Settings page
-│   │   ├── App.tsx                   # Main app component with routing
-│   │   ├── main.tsx                  # Entry point
-│   │   ├── App.css                   # App styles
-│   │   └── index.css                 # Global styles
-
-Ich habe ansich ein Funktionierendes grund setup, aber das sieht nicht wirklich schön aus. Kannst du mir für die main.tsx, App.tsx und Sidebar.tsx Code für eine Schöne Webseite erstellen? Ich will am Linken rand ein Sidebar für die ganzen pages. Für die pages in dem /ai folder sollte man in der Sidebar einen Punkt Ai haben, den man dann aufklappen kann um an Chat und Image gen zu kommen.
-Ich will aktuell noch nicht die ganzen einzelnenn Seiten erstellen. Gebe mir also zudem Code für eine Placeholder Seite die ich erstaml überall rein machen kann.
-Nutze für alle UI Elemente HeroUI
+## 🛠️ Tech Stack
+- React 18, Vite.
+- Tailwind CSS & PostCSS for styling.
+- HeroUI and Lucide React (Icons).
+- TypeScript.
