@@ -38,7 +38,44 @@ The Dashboard sits within a sophisticated 6-node distributed homelab architectur
 - **Customization Settings**: Change display language and UI themes directly from the browser (currently stored in `localStorage`, switching to database later).
 - **Smooth Navigation**: Side-nav driven layout built with scalable Tailwind UI principles.
 
-## 🛠️ Tech Stack
+## � Detailed File Structure
+
+```text
+homelab-dashboard/
+├── README.md                 # This documentation
+├── homelab-doc.md            # Hardware & Architecture master plan
+├── backend/                  # (WIP) Node.js Backend
+│   └── src/
+└── frontend/                 # React Frontend Application
+    ├── public/               # Static assets
+    ├── src/
+    │   ├── App.tsx           # Main application routing
+    │   ├── main.tsx          # React application entry point
+    │   ├── index.css         # Global styles & Tailwind directives
+    │   ├── assets/           # Images, icons, etc.
+    │   ├── components/       # Reusable React components
+    │   │   ├── auth/         # Authentication views
+    │   │   ├── dev/          # Development placeholders
+    │   │   ├── error/        # Error boundaries
+    │   │   ├── nav/          # Sidebar & Navigation logic
+    │   │   └── pages/        # Main application views/routes
+    │   │       ├── account/
+    │   │       ├── ai/
+    │   │       ├── calendar/
+    │   │       ├── dashboard/
+    │   │       ├── home-assistant/
+    │   │       ├── performance/
+    │   │       ├── settings/
+    │   │       └── storage/
+    │   ├── context/          # React Contexts (LanguageContext, ThemeContext)
+    │   └── i18n/             # Translations mapping (EN/DE)
+    ├── package.json          # Frontend dependencies
+    ├── vite.config.ts        # Vite configuration
+    ├── tailwind.config.js    # Tailwind CSS configuration
+    └── postcss.config.js     # PostCSS styling
+```
+
+## �🛠️ Tech Stack
 - React 18, Vite.
 - Tailwind CSS & PostCSS for styling.
 - HeroUI and Lucide React (Icons).
