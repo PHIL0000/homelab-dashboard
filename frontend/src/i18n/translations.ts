@@ -12,6 +12,10 @@ export const translations = {
     'nav.settings': 'Einstellungen',
     'nav.account': 'Konto',
     'nav.profile': 'Profil',
+    'nav.documentation': 'Dokumentation',
+    'nav.docs.overview': 'Übersicht',
+    'nav.docs.hardware': 'Hardware',
+    'nav.docs.services': 'Dienste',
 
     // Settings
     'settings.title': 'Einstellungen',
@@ -68,6 +72,10 @@ export const translations = {
     'nav.settings': 'Settings',
     'nav.account': 'Account',
     'nav.profile': 'Profile',
+    'nav.documentation': 'Documentation',
+    'nav.docs.overview': 'Overview',
+    'nav.docs.hardware': 'Hardware',
+    'nav.docs.services': 'Services',
 
     // Settings
     'settings.title': 'Settings',

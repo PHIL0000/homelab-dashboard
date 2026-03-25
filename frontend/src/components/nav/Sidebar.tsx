@@ -29,6 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   const location = useLocation();
   const [openAI, setOpenAI] = useState(false);
   const [openStorage, setOpenStorage] = useState(false);
+  const [openDocs, setOpenDocs] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebarCollapsed");
     return saved === "true";
@@ -43,6 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   const topItems = [
     { label: t("nav.dashboard"), path: "/dashboard", icon: LayoutDashboard },
     { label: t("nav.calendar"), path: "/calendar", icon: CalendarDays },
+    { label: t("nav.homeAssistant"), path: "/home-assistant", icon: Home },
   ];
 
   const aiItems = [
@@ -56,8 +58,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
     { label: "GitLab", path: "/storage/gitlab", icon: Code2 },
   ];
 
+  const documentationItems = [
+    { label: t("nav.docs.overview"), path: "/documentation/overview", icon: LayoutDashboard },
+    { label: t("nav.docs.hardware"), path: "/documentation/hardware", icon: HardDrive },
+    { label: t("nav.docs.services"), path: "/documentation/services", icon: Settings },
+  ];
+
   const bottomItems = [
-    { label: t("nav.homeAssistant"), path: "/home-assistant", icon: Home },
     { label: t("nav.performance"), path: "/performance", icon: Activity },
   ];
 
@@ -196,6 +203,56 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
             </div>
           )}
         </div>
+
+        {/* DOCUMENTATION SECTION */}
+        <div className="mb-1.5">
+          {isCollapsed ? (
+            <button
+              onClick={() => {
+                setIsCollapsed(false);
+                setOpenDocs(true);
+              }}
+              title={t("nav.documentation")}
+              className="w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-200 text-text hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] group"
+            >
+              <LayoutDashboard size={20} className="text-text-secondary group-hover:text-primary transition-colors shrink-0" />
+            </button>
+          ) : (
+            <button
+              onClick={() => setOpenDocs(!openDocs)}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 text-text hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] group"
+            >
+              <div className="flex items-center gap-3">
+                <LayoutDashboard size={20} className="text-text-secondary group-hover:text-primary transition-colors shrink-0" />
+                <span className="font-medium whitespace-nowrap">{t("nav.documentation")}</span>
+              </div>
+              <ChevronDown
+                size={16}
+                className={`text-text-secondary group-hover:text-primary transition-transform shrink-0 ${openDocs ? "rotate-180" : ""}`}
+              />
+            </button>
+          )}
+
+          {openDocs && !isCollapsed && (
+            <div className="ml-4 mt-1 space-y-1 relative before:absolute before:left-[11px] before:top-0 before:bottom-2 before:w-[1px] before:bg-border">
+              {documentationItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ml-4 group ${
+                    isActive(item.path)
+                      ? "bg-primary text-white shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)]"
+                      : "text-text-secondary hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:translate-x-1"
+                  }`}
+                >
+                  <item.icon size={16} className={`shrink-0 ${isActive(item.path) ? "" : "opacity-70 group-hover:opacity-100"} transition-opacity`} />
+                  <span className="whitespace-nowrap">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
 
         {/* BOTTOM ITEMS */}
         {bottomItems.map((item) => (

@@ -32,6 +32,9 @@ const App: React.FC = () => {
               <Route path="/storage/gitlab" element={<PlaceholderPage />} />
               <Route path="/ai/chat" element={<PlaceholderPage />} />
               <Route path="/ai/image-gen" element={<PlaceholderPage />} />
+              <Route path="/documentation/overview" element={<PlaceholderPage />} />
+              <Route path="/documentation/hardware" element={<PlaceholderPage />} />
+              <Route path="/documentation/services" element={<PlaceholderPage />} />
               <Route path="/performance" element={<PlaceholderPage />} />
 
               {/* Placeholder für alle Seiten zuerst */}
