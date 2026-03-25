@@ -2,12 +2,12 @@
 import React, { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Sidebar from "./components/nav/Sidebar";
-import DashboardPage from "./components/pages/dashboard/Dashboard";
-import CalendarPage from "./components/pages/calendar/Calendar";
+//import DashboardPage from "./components/pages/dashboard/Dashboard";
+//import CalendarPage from "./components/pages/calendar/Calendar";
 import HomeAssistantPage from "./components/pages/home-assistant/HomeAssistant";
 //import AiChatPage from "./components/pages/ai/Chat/AiChat";
 //import AiImageGenPage from "./components/pages/ai/ImageGen/AiImageGen";
-import PerformancePage from "./components/pages/performance/Performance";
+//import PerformancePage from "./components/pages/performance/Performance";
 import AccountPage from "./components/pages/account/Account";
 import SettingsPage from "./components/pages/settings/Settings";
 import PlaceholderPage from "./components/dev/Placeholder";

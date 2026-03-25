@@ -10,7 +10,8 @@ This repository contains a full-stack application (React frontend, Node/DB backe
   - Supports i18n (English/German).
   - Built-in customizable themes.
   - Direct integrations for services like Home Assistant via iframes.
-- `backend/`: (WIP) Future backend for persisting user settings, configuration state, and aggregated metrics.
+- `backend-node/`: (WIP) Future backend for persisting user settings, configuration state, and aggregated metrics.
+- `backend-python/`: (Planned) Orchestrator for SSH connections, hardware monitoring, and AI pipelines.
 
 ---
 
@@ -38,14 +39,16 @@ The Dashboard sits within a sophisticated 6-node distributed homelab architectur
 - **Customization Settings**: Change display language and UI themes directly from the browser (currently stored in `localStorage`, switching to database later).
 - **Smooth Navigation**: Side-nav driven layout built with scalable Tailwind UI principles.
 
-## � Detailed File Structure
+## 📂 Detailed File Structure
 
 ```text
 homelab-dashboard/
 ├── README.md                 # This documentation
 ├── homelab-doc.md            # Hardware & Architecture master plan
-├── backend/                  # (WIP) Node.js Backend
+├── docker-compose.yml        # Root compose file for all nodes
+├── backend-node/             # Main Node.js REST API
 │   └── src/
+├── backend-python/           # Python SSH & Hardware Orchestrator
 └── frontend/                 # React Frontend Application
     ├── public/               # Static assets
     ├── src/

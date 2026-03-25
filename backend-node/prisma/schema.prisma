@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Settings {
+  id        Int      @id @default(1) // Singleton settings record
+  theme     String   @default("midnight")
+  language  String   @default("de")
+  haDomain  String   @default("https://ha.hlphil.de/wall-tablet/home")
+}
+
+model Hardware {
+  id          String    @id @default(uuid())
+  name        String
+  ipAddress   String?
+  macAddress  String?
+  role        String?
+  status      String    @default("offline") // online, offline, maintenance
+  services    Service[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Service {
+  id          String    @id @default(uuid())
+  name        String
+  port        Int?
+  url         String?
+  status      String    @default("unknown") // running, stopped, unknown
+  
+  hardwareId  String
+  hardware    Hardware  @relation(fields: [hardwareId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

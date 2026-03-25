@@ -1,4 +1,3 @@
-import { Card } from '@heroui/react'
 import { ExternalLink } from "lucide-react";
 
 export default function HomeAssistant() {

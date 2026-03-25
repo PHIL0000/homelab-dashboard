@@ -1,0 +1,42 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment
+.env
+.env.*
+
+# Python
+backend-python/__pycache__/
+backend-python/*.py[cod]
+backend-python/*$py.class
+backend-python/venv
+backend-python/.venv
+backend-python/env/
+backend-python/.env/
+
+# Prisma
+backend-node/prisma/*.db
+backend-node/dev.db
