@@ -18,7 +18,7 @@ This repository contains a full-stack application (React frontend, Node/DB backe
 
 The Dashboard sits within a sophisticated 6-node distributed homelab architecture:
 1. **Frontend / UI Node (Raspberry Pi 5 8GB) → This Project**
-   Host for Homer, OpenWebUI, Grafana, and this Dashboard.
+   Host for this Dashboard, OpenWebUI, Grafana.
 2. **AI & Storage Core (UGREEN iDX6011 Pro NAS)**
    Heavy lifting machine with an eGPU. Hosts Ollama, Stable Diffusion, NAS Storage, Nextcloud/Paperless Databases.
 3. **Dev / CI Node (CM3588 Plus)**
