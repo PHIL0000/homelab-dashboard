@@ -10,36 +10,230 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- ENUMS ---
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum HardwareType {
+  SERVER
+  PI
+  NAS
+  ROUTER
+  VM_HOST
+  OTHER
+}
+
+enum HardwareStatus {
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+}
+
+enum ServiceCategory {
+  AUTOMATION
+  STORAGE
+  DNS
+  MEDIA
+  OTHER
+}
+
+enum SoftwareUnitType {
+  DOCKER_CONTAINER
+  VM
+  POD
+  BARE_METAL_SERVICE
+  OTHER
+}
+
+enum DeploymentStatus {
+  RUNNING
+  STOPPED
+  ERROR
+  UNKNOWN
+}
+
+// --- MODELS ---
+
 model Settings {
   id        Int      @id @default(1) // Singleton settings record
-  theme     String   @default("midnight")
-  language  String   @default("de")
-  haDomain  String   @default("https://ha.hlphil.de/wall-tablet/home")
+  haDomain  String   @default("https://homeassistant.local:8123")
 }
 
-model Hardware {
-  id          String    @id @default(uuid())
-  name        String
-  ipAddress   String?
-  macAddress  String?
-  role        String?
-  status      String    @default("offline") // online, offline, maintenance
-  services    Service[]
+// 1. User
+model User {
+  id            String          @id @default(uuid()) @db.Uuid
+  name          String
+  email         String          @unique
+  passwordHash  String
+  role          UserRole        @default(USER)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  dashboards    UserDashboard[]
 }
 
-model Service {
-  id          String    @id @default(uuid())
-  name        String
-  port        Int?
-  url         String?
-  status      String    @default("unknown") // running, stopped, unknown
+// 2. Hardware (Hosts)
+model HardwareAsset {
+  id          String         @id @default(uuid()) @db.Uuid
+  name        String         @unique
+  type        HardwareType?
+  status      HardwareStatus @default(OFFLINE) // Live-Status
+  cpu         String?
+  ram         Int?
+  os          String?
+  ip          String?
+  mac         String?
+  notes       String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  deployments Deployment[]
+  docs        Doc[]
+  widgets     Widget[]       // Implizite m:n Verbindung für Widget -> Hardware
+}
+
+// 3. Service‑Templates (z.B. Home Assistant, Nextcloud, Pi‑Hole)
+model ServiceTemplate {
+  id              String           @id @default(uuid()) @db.Uuid
+  name            String           @unique
+  category        ServiceCategory?
+  description     String?
+  defaultPort     Int?
+  defaultImage    String?
+  defaultUrl      String?
+  defaultMetrics  String[]         // Array of strings
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  softwareUnits   SoftwareUnit[]
+  docs            Doc[]
+}
+
+// 4. Software‑Einheiten (z.B. Docker‑Container, VMs)
+model SoftwareUnit {
+  id                String            @id @default(uuid()) @db.Uuid
+  name              String
+  type              SoftwareUnitType
+  image             String?
+  port              Int?
+  url               String?
+  serviceTemplateId String?           @db.Uuid
+  serviceTemplate   ServiceTemplate?  @relation(fields: [serviceTemplateId], references: [id], onDelete: SetNull)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  deployments       Deployment[]
+  docs              Doc[]
+  widgets           Widget[]          // Implizite m:n Verbindung für Widget -> Software-Einheit
+}
+
+// 5. Deployment: wo läuft was?
+model Deployment {
+  id              String            @id @default(uuid()) @db.Uuid
+  hardwareAssetId String            @db.Uuid
+  hardwareAsset   HardwareAsset     @relation(fields: [hardwareAssetId], references: [id], onDelete: Cascade)
+  softwareUnitId  String            @db.Uuid
+  softwareUnit    SoftwareUnit      @relation(fields: [softwareUnitId], references: [id], onDelete: Cascade)
+  internalIp      String?
+  exposedPorts    Json?
+  envTags         Json?
+  status          DeploymentStatus? @default(UNKNOWN)
+  restartPolicy   String?
+  volumes         Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([hardwareAssetId, softwareUnitId])
+}
+
+// 6. Dokumentation
+model Doc {
+  id                String           @id @default(uuid()) @db.Uuid
+  title             String
+  slug              String?
+  content           String           @db.Text // Markdown content
+
+  hardwareAssetId   String?          @db.Uuid
+  hardwareAsset     HardwareAsset?   @relation(fields: [hardwareAssetId], references: [id], onDelete: Cascade)
+
+  softwareUnitId    String?          @db.Uuid
+  softwareUnit      SoftwareUnit?    @relation(fields: [softwareUnitId], references: [id], onDelete: Cascade)
+
+  serviceTemplateId String?          @db.Uuid
+  serviceTemplate   ServiceTemplate? @relation(fields: [serviceTemplateId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([hardwareAssetId])
+  @@index([softwareUnitId])
+  @@index([serviceTemplateId])
+}
+
+// 7. Card‑Typen
+model CardType {
+  id            String   @id @default(uuid()) @db.Uuid
+  key           String   @unique // graph, button, slider, text
+  name          String
+  description   String?  @db.Text
+  icon          String?
+  configSchema  Json?
+  metricsHint   Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  widgets       Widget[]
+}
+
+// 8. User‑Dashboards
+model UserDashboard {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  page        String   // dashboard, performance
+  title       String?
+  layout      Json?    // react-grid-layout Array
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  widgetLinks DashboardWidget[] // Explizierte m:n Verbindung für Widget -> Dashboard
+}
+
+// 9. Dashboard-Widget Verknüpfung (Explizite Zwischentabelle für Layout-Daten)
+model DashboardWidget {
+  id              String        @id @default(uuid()) @db.Uuid
+  userDashboardId String        @db.Uuid
+  widgetId        String        @db.Uuid
   
-  hardwareId  String
-  hardware    Hardware  @relation(fields: [hardwareId], references: [id], onDelete: Cascade)
+  userDashboard   UserDashboard @relation(fields: [userDashboardId], references: [id], onDelete: Cascade)
+  widget          Widget        @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  
+  // Hier könnten zusätzlich spezifische Widget-Konfigurationen für *genau dieses Dashboard* gespeichert werden.
+  // Falls du z.B. Grid-Layout Positionsdaten separat vom Dashboard-JSON halten willst:
+  // x         Int?
+  // y         Int?
+  // w         Int?
+  // h         Int?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  @@unique([userDashboardId, widgetId])
+}
+
+// 11. Widgets (konkrete Karten)
+model Widget {
+  id              String          @id @default(uuid()) @db.Uuid
+  dashboardLinks  DashboardWidget[] // Explizite m:n Verbindung für Widget -> Dashboard
+  cardTypeId      String          @db.Uuid
+  cardType        CardType        @relation(fields: [cardTypeId], references: [id])
+  customTitle     String?
+  config          Json?           // Globale Card-spezifische Konfig
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  hardwareAssets  HardwareAsset[] // widget_hardware
+  softwareUnits   SoftwareUnit[]  // widget_software
 }
