@@ -10,8 +10,8 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-// GET /settings - get settings (create default if missing)
-app.get('/settings', async (req, res) => {
+// GET /api/settings - get settings (create default if missing)
+app.get('/api/settings', async (req, res) => {
   try {
     let settings = await prisma.settings.findUnique({
       where: { id: 1 },
@@ -32,8 +32,8 @@ app.get('/settings', async (req, res) => {
   }
 });
 
-// PUT /settings - update settings
-app.put('/settings', async (req, res) => {
+// PUT /api/settings - update settings
+app.put('/api/settings', async (req, res) => {
   try {
     const { theme, language, haDomain } = req.body;
     
