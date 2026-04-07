@@ -8,20 +8,20 @@ import AdvancedTab from "./tabs/AdvancedTab";
 
 export default function Settings() {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'allgemein' | 'darstellung' | 'benachrichtigungen' | 'erweitert'>('allgemein');
+  const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'notifications' | 'advanced'>('general');
 
   const tabTitles = {
-    allgemein: t('settings.general'),
-    darstellung: t('settings.appearance'),
-    benachrichtigungen: t('settings.notifications'),
-    erweitert: t('settings.advanced')
+    general: t('settings.general'),
+    appearance: t('settings.appearance'),
+    notifications: t('settings.notifications'),
+    advanced: t('settings.advanced')
   };
 
   const tabDescriptions = {
-    allgemein: t('settings.general.desc'),
-    darstellung: t('settings.appearance.desc'),
-    benachrichtigungen: t('settings.notifications.desc'),
-    erweitert: t('settings.advanced.desc')
+    general: t('settings.general.desc'),
+    appearance: t('settings.appearance.desc'),
+    notifications: t('settings.notifications.desc'),
+    advanced: t('settings.advanced.desc')
   };
 
   return (
@@ -31,26 +31,26 @@ export default function Settings() {
         <h2 className="text-xl font-bold mb-6 text-text px-2">{t('settings.title')}</h2>
         <nav className="space-y-1">
           <button 
-            onClick={() => setActiveTab('allgemein')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'allgemein' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            onClick={() => setActiveTab('general')}
+            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'general' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
           >
             {t('settings.general')}
           </button>
           <button 
-            onClick={() => setActiveTab('darstellung')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'darstellung' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            onClick={() => setActiveTab('appearance')}
+            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'appearance' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
           >
             {t('settings.appearance')}
           </button>
           <button 
-            onClick={() => setActiveTab('benachrichtigungen')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'benachrichtigungen' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            onClick={() => setActiveTab('notifications')}
+            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'notifications' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
           >
             {t('settings.notifications')}
           </button>
           <button 
-            onClick={() => setActiveTab('erweitert')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'erweitert' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            onClick={() => setActiveTab('advanced')}
+            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'advanced' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
           >
             {t('settings.advanced')}
           </button>
@@ -63,10 +63,10 @@ export default function Settings() {
           <p className="text-text-secondary">{tabDescriptions[activeTab]}</p>
         </div>
 
-        {activeTab === 'allgemein' && <GeneralTab />}
-        {activeTab === 'darstellung' && <AppearanceTab />}
-        {activeTab === 'benachrichtigungen' && <NotificationsTab />}
-        {activeTab === 'erweitert' && <AdvancedTab />}
+        {activeTab === 'general' && <GeneralTab />}
+        {activeTab === 'appearance' && <AppearanceTab />}
+        {activeTab === 'notifications' && <NotificationsTab />}
+        {activeTab === 'advanced' && <AdvancedTab />}
       </div>
     </div>
   );

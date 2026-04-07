@@ -7,18 +7,18 @@ import ConnectionsTab from './tabs/ConnectionsTab';
 
 export default function Account() {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'profil' | 'sicherheit' | 'verknuepfungen'>('profil');
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'connections'>('profile');
 
   const tabTitles = {
-    profil: t('account.profile'),
-    sicherheit: t('account.security'),
-    verknuepfungen: t('account.connections')
+    profile: t('account.profile'),
+    security: t('account.security'),
+    connections: t('account.connections')
   };
 
   const tabDescriptions = {
-    profil: t('account.profile.desc'),
-    sicherheit: t('account.security.desc'),
-    verknuepfungen: t('account.connections.desc')
+    profile: t('account.profile.desc'),
+    security: t('account.security.desc'),
+    connections: t('account.connections.desc')
   };
 
   return (
@@ -28,20 +28,20 @@ export default function Account() {
         <h2 className="text-xl font-bold mb-6 text-text px-2">{t('account.title')}</h2>
         <nav className="space-y-1">
           <button 
-            onClick={() => setActiveTab('profil')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'profil' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            onClick={() => setActiveTab('profile')}
+            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'profile' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
           >
             {t('account.profile')}
           </button>
           <button 
-            onClick={() => setActiveTab('sicherheit')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'sicherheit' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            onClick={() => setActiveTab('security')}
+            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'security' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
           >
             {t('account.security')}
           </button>
           <button 
-            onClick={() => setActiveTab('verknuepfungen')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'verknuepfungen' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            onClick={() => setActiveTab('connections')}
+            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'connections' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
           >
             {t('account.connections')}
           </button>
@@ -57,9 +57,9 @@ export default function Account() {
           <p className="text-text-secondary">{tabDescriptions[activeTab]}</p>
         </div>
 
-        {activeTab === 'profil' && <ProfileTab />}
-        {activeTab === 'sicherheit' && <SecurityTab />}
-        {activeTab === 'verknuepfungen' && <ConnectionsTab />}
+        {activeTab === 'profile' && <ProfileTab />}
+        {activeTab === 'security' && <SecurityTab />}
+        {activeTab === 'connections' && <ConnectionsTab />}
       </div>
     </div>
   )
