@@ -1,0 +1,38 @@
+model Network {
+  id          String             @id @default(uuid()) @db.Uuid
+  name        String             @unique
+  vlanId      Int?
+  subnet      String?
+  gateway     String?
+  dnsServers  String[]           // Native array of strings
+  color       String?
+  notes       String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  interfaces  NetworkInterface[]
+}
+
+model NetworkInterface {
+  id              String         @id @default(uuid()) @db.Uuid
+  networkId       String         @db.Uuid
+  network         Network        @relation(fields: [networkId], references: [id], onDelete: Cascade)
+
+  ipAddress       String?
+  macAddress      String?
+
+  // Exclusive relations (either Hardware or SoftwareUnit)
+  // Instead of polymorphic IDs, we enforce referential integrity
+  hardwareAssetId String?        @db.Uuid
+  hardwareAsset   HardwareAsset? @relation(fields: [hardwareAssetId], references: [id], onDelete: Cascade)
+
+  softwareUnitId  String?        @db.Uuid
+  softwareUnit    SoftwareUnit?  @relation(fields: [softwareUnitId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([networkId])
+  @@index([hardwareAssetId])
+  @@index([softwareUnitId])
+}

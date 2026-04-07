@@ -13,12 +13,12 @@ app.use(express.json());
 // GET /api/settings - get settings (create default if missing)
 app.get('/api/settings', async (req, res) => {
   try {
-    let settings = await prisma.settings.findUnique({
+    let settings = await prisma.instanceSettings.findUnique({
       where: { id: 1 },
     });
     
     if (!settings) {
-      settings = await prisma.settings.create({
+      settings = await prisma.instanceSettings.create({
         data: {
           id: 1,
         },
@@ -35,20 +35,16 @@ app.get('/api/settings', async (req, res) => {
 // PUT /api/settings - update settings
 app.put('/api/settings', async (req, res) => {
   try {
-    const { theme, language, haDomain } = req.body;
+    const { haDomain } = req.body;
     
-    const settings = await prisma.settings.upsert({
+    const settings = await prisma.instanceSettings.upsert({
       where: { id: 1 },
       update: {
-        ...(theme !== undefined && { theme }),
-        ...(language !== undefined && { language }),
         ...(haDomain !== undefined && { haDomain }),
       },
       create: {
         id: 1,
-        theme: theme ?? "midnight",
-        language: language ?? "de",
-        haDomain: haDomain ?? "https://ha.hlphil.de/wall-tablet/home",
+        haDomain: haDomain ?? "https://homeassistant.local:8123",
       },
     });
 

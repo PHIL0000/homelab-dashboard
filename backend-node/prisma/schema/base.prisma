@@ -1,0 +1,58 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Global Instance Settings singleton
+model InstanceSettings {
+  id        Int      @id @default(1)
+  haDomain  String   @default("https://homeassistant.local:8123")
+}
+
+// --- ENUMS ---
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum HardwareType {
+  SERVER
+  PI
+  NAS
+  ROUTER
+  VM_HOST
+  OTHER
+}
+
+enum HardwareStatus {
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+}
+
+enum ServiceCategory {
+  AUTOMATION
+  STORAGE
+  DNS
+  MEDIA
+  OTHER
+}
+
+enum SoftwareUnitType {
+  DOCKER_CONTAINER
+  VM
+  POD
+  BARE_METAL_SERVICE
+  OTHER
+}
+
+enum DeploymentStatus {
+  RUNNING
+  STOPPED
+  ERROR
+  UNKNOWN
+}
