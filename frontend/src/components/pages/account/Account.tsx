@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 
 import ProfileTab from './tabs/ProfileTab';
 import SecurityTab from './tabs/SecurityTab';
@@ -7,6 +8,7 @@ import ConnectionsTab from './tabs/ConnectionsTab';
 
 export default function Account() {
   const { t } = useLanguage();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'connections'>('profile');
 
   const tabTitles = {
@@ -45,7 +47,10 @@ export default function Account() {
           >
             {t('account.connections')}
           </button>
-          <button className="w-full text-left px-4 py-2 rounded-lg text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-colors mt-8 text-red-400 hover:text-red-500 hover:bg-red-500/10">
+          <button 
+            onClick={() => logout()}
+            className="w-full text-left px-4 py-2 rounded-lg text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-colors mt-8 text-red-400 hover:text-red-500 hover:bg-red-500/10"
+          >
             {t('account.logout')}
           </button>
         </nav>

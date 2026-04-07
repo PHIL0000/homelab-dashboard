@@ -5,15 +5,29 @@ import { Link } from "react-router-dom";
 export default function HomeAssistant() {
   const [iframeError, setIframeError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [haDomain, setHaDomain] = useState<string>("");
 
-  // Get the URL from LocalStorage
-  const HOME_ASSISTANT_URL = localStorage.getItem('haDomain') || "";
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          setHaDomain(data.haDomain || "");
+        }
+      } catch (error) {
+        console.error("Failed to load HA domain", error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const HOME_ASSISTANT_URL = haDomain;
   const isValidUrl = HOME_ASSISTANT_URL.startsWith('http://') || HOME_ASSISTANT_URL.startsWith('https://');
 
   useEffect(() => {
-    // After a short delay, set isLoading to false.
-    // Unfortunately, an iframe does not trigger a real "onerror" event if the CSP (X-Frame-Options) of the target page blocks it.
-    // We can only intercept the onload event.
+    // Wait slightly to show loading spinner initially. 
+    // And also wait if the iframe blocks via CSP.
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);

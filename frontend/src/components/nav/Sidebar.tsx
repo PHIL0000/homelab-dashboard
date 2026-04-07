@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 import { 
   ChevronDown, 
   Settings, 
@@ -26,6 +27,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const location = useLocation();
   const [openAI, setOpenAI] = useState(false);
   const [openStorage, setOpenStorage] = useState(false);
@@ -280,12 +282,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
           className={`flex-1 flex gap-3 px-2 py-2 rounded-lg transition-all duration-200 hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:translate-y-[-2px] hover:shadow-lg bg-content group ${isCollapsed ? "justify-center h-12" : "items-center h-14"}`}
         >
           <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-primary shadow-[0_0_10px_color-mix(in_srgb,var(--color-primary)_40%,transparent)] group-hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_80%,transparent)] transition-shadow">
-            <span className="text-sm font-bold text-white">U</span>
+            <span className="text-sm font-bold text-white uppercase">{user?.username ? user.username.substring(0, 1) : "U"}</span>
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-medium text-text truncate group-hover:text-primary transition-colors">User</p>
-              <p className="text-xs text-text-secondary truncate">{t("nav.profile")}</p>
+              <p className="text-sm font-medium text-text truncate group-hover:text-primary transition-colors">{user?.username || "User"}</p>
+              <p className="text-xs text-text-secondary truncate">{user?.role === "ADMIN" ? "Administrator" : "User"}</p>
             </div>
           )}
         </button>

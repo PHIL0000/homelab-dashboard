@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Sidebar from "./components/nav/Sidebar";
 //import DashboardPage from "./components/pages/dashboard/Dashboard";
 //import CalendarPage from "./components/pages/calendar/Calendar";
@@ -11,9 +11,35 @@ import HomeAssistantPage from "./components/pages/home-assistant/HomeAssistant";
 import AccountPage from "./components/pages/account/Account";
 import SettingsPage from "./components/pages/settings/Settings";
 import PlaceholderPage from "./components/dev/Placeholder";
+import LoginPage from "./components/auth/Login";
+import SetupPage from "./components/auth/Setup";
+import { useAuth } from "./context/AuthContext";
 
 const App: React.FC = () => {
   const [activeModal, setActiveModal] = useState<"settings" | "account" | null>(null);
+  const location = useLocation();
+  const { isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <div className="flex h-screen items-center justify-center bg-background text-text">Loading...</div>;
+  }
+
+  // Check if we are on an auth screen
+  const isAuthRoute = location.pathname === "/login" || location.pathname === "/setup";
+
+  if (isAuthRoute) {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/setup" element={<SetupPage />} />
+      </Routes>
+    );
+  }
+
+  // If not authenticated and not explicitly on an auth route, don't render dashboard
+  if (!user && !isAuthRoute) {
+    return null; // The AuthContext useEffect will eventually navigate to login/setup
+  }
 
   return (
     <div className="flex h-screen bg-background text-text">
@@ -36,7 +62,7 @@ const App: React.FC = () => {
               <Route path="/documentation/hardware" element={<PlaceholderPage />} />
               <Route path="/documentation/services" element={<PlaceholderPage />} />
               <Route path="/performance" element={<PlaceholderPage />} />
-
+              
               {/* Placeholder für alle Seiten zuerst */}
               <Route path="*" element={<PlaceholderPage />} />
             </Routes>
