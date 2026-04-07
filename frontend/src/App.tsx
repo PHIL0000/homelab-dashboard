@@ -13,6 +13,10 @@ import SettingsPage from "./components/pages/settings/Settings";
 import PlaceholderPage from "./components/dev/Placeholder";
 import LoginPage from "./components/auth/Login";
 import SetupPage from "./components/auth/Setup";
+import DocsOverview from "./components/pages/documentation/Overview";
+import Hardware from "./components/pages/documentation/Hardware";
+import Services from "./components/pages/documentation/Services";
+
 import { useAuth } from "./context/AuthContext";
 
 const App: React.FC = () => {
@@ -58,9 +62,9 @@ const App: React.FC = () => {
               <Route path="/storage/gitlab" element={<PlaceholderPage />} />
               <Route path="/ai/chat" element={<PlaceholderPage />} />
               <Route path="/ai/image-gen" element={<PlaceholderPage />} />
-              <Route path="/documentation/overview" element={<PlaceholderPage />} />
-              <Route path="/documentation/hardware" element={<PlaceholderPage />} />
-              <Route path="/documentation/services" element={<PlaceholderPage />} />
+              <Route path="/documentation/overview" element={<DocsOverview />} />
+              <Route path="/documentation/hardware" element={<Hardware />} />
+              <Route path="/documentation/services" element={<Services />} />
               <Route path="/performance" element={<PlaceholderPage />} />
               
               {/* Placeholder für alle Seiten zuerst */}
