@@ -6,6 +6,7 @@ export default function Hardware() {
   const { token } = useAuth();
   const [hardware, setHardware] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   // Form states
   const [name, setName] = useState('');
@@ -29,12 +30,35 @@ export default function Hardware() {
     fetchHardware();
   }, [token]);
 
+  const handleEdit = (hw: any) => {
+    setEditId(hw.id);
+    setName(hw.name || '');
+    setType(hw.type || 'SERVER');
+    setStatus(hw.status || 'ONLINE');
+    setCpu(hw.cpu || '');
+    setRam(hw.ram ? hw.ram.toString() : '');
+    setOs(hw.os || '');
+    setIp(hw.ip || '');
+    setMac(hw.mac || '');
+    setNotes(hw.notes || '');
+    setIsModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setEditId(null);
+    setName(''); setType('SERVER'); setStatus('ONLINE'); setCpu(''); setRam(''); setOs(''); setIp(''); setMac(''); setNotes('');
+    setIsModalOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
     try {
-      const res = await fetch('http://localhost:3001/api/infrastructure/hardware', {
-        method: 'POST',
+      const url = editId ? `http://localhost:3001/api/infrastructure/hardware/${editId}` : 'http://localhost:3001/api/infrastructure/hardware';
+      const method = editId ? 'PUT' : 'POST';
+      
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
@@ -54,15 +78,13 @@ export default function Hardware() {
       if (res.ok) {
         setIsModalOpen(false);
         fetchHardware();
-        // Reset form
-        setName(''); setType('SERVER'); setStatus('ONLINE'); setCpu(''); setRam(''); setOs(''); setIp(''); setMac(''); setNotes('');
       } else {
         const errorData = await res.json();
         alert('Error: ' + errorData.error);
       }
     } catch (error) {
       console.error(error);
-      alert('Failed to add hardware');
+      alert('Failed to save hardware');
     }
   };
 
@@ -70,7 +92,7 @@ export default function Hardware() {
     <div className="p-6 max-w-4xl h-full overflow-auto relative">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-text">Hardware Assets</h2>
-        <button onClick={() => setIsModalOpen(true)} className="bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg text-white transition-colors">+ Add Hardware</button>
+        <button onClick={handleAdd} className="bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg text-white transition-colors">+ Add Hardware</button>
       </div>
       <Card className="border border-border bg-content p-0 overflow-hidden">
          <table className="w-full text-left">
@@ -81,6 +103,7 @@ export default function Hardware() {
                <th className="px-4 py-3 text-sm font-medium text-text-secondary">Status</th>
                <th className="px-4 py-3 text-sm font-medium text-text-secondary">IP</th>
                <th className="px-4 py-3 text-sm font-medium text-text-secondary">OS</th>
+               <th className="px-4 py-3 text-sm font-medium text-text-secondary text-right">Actions</th>
              </tr>
            </thead>
            <tbody className="divide-y divide-border">
@@ -95,6 +118,9 @@ export default function Hardware() {
                  </td>
                  <td className="px-4 py-3 text-text-secondary text-sm">{hw.ip || '-'}</td>
                  <td className="px-4 py-3 text-text-secondary text-sm">{hw.os || '-'}</td>
+                 <td className="px-4 py-3 text-right">
+                   <button onClick={() => handleEdit(hw)} className="text-primary hover:text-primary/80 text-sm font-medium">Edit</button>
+                 </td>
                </tr>
              ))}
            </tbody>
@@ -105,7 +131,7 @@ export default function Hardware() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-background border border-border rounded-xl w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-text">Add New Hardware</h3>
+              <h3 className="text-xl font-bold text-text">{editId ? 'Edit Hardware' : 'Add New Hardware'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-text-secondary hover:text-text">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
@@ -148,7 +174,7 @@ export default function Hardware() {
                   <input type="text" value={cpu} onChange={e => setCpu(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">RAM (MB)</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">RAM (GB)</label>
                   <input type="number" value={ram} onChange={e => setRam(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
                 </div>
                 <div className="md:col-span-2">

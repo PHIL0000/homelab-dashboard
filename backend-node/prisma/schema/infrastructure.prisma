@@ -78,8 +78,8 @@ model Storage {
   storageType     String?        // array, zfs, btrfs, lvm, single, etc.
   raidType        String?        // raid0, raid1, raid5, raidz2
   driveCount      Int?
-  rawSpaceTB      Float?
-  usableSpaceTB   Float?
+  rawSpaceGB      Float?
+  usableSpaceGB   Float?
   filesystem      String?        // ext4, xfs, zfs
   notes           String?
 
