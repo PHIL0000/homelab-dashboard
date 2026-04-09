@@ -28,10 +28,12 @@ export default function StorageItems() {
   };
 
   return (
-  <div className="documentation-area p-6 max-w-5xl h-full overflow-auto relative">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-text">Storage (Overview)</h2>
-      </div>
+  <div className="documentation-area page-shell relative">
+      <div className="h-full flex flex-col min-h-0">
+        <div className="page-header">
+          <h2 className="page-title">Storage (Overview)</h2>
+        </div>
+        <div className="page-content-scroll">
   <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
         <table className="w-full text-left">
           <thead>
@@ -63,6 +65,8 @@ export default function StorageItems() {
           </tbody>
         </table>
       </Card>
+        </div>
+      </div>
     </div>
   );
 }

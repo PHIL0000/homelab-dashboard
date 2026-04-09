@@ -56,10 +56,10 @@ export default function Account() {
         </nav>
       </div>
 
-      <div className="flex-1 p-6 md:p-8 overflow-y-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-text mb-2">{tabTitles[activeTab]}</h1>
-          <p className="text-text-secondary">{tabDescriptions[activeTab]}</p>
+      <div className="flex-1 p-4 md:p-6 overflow-y-auto">
+        <div className="mb-5 pb-3 border-b border-border">
+          <h1 className="text-2xl font-bold text-primary mb-1">{tabTitles[activeTab]}</h1>
+          <p className="text-sm text-text-secondary">{tabDescriptions[activeTab]}</p>
         </div>
 
         {activeTab === 'profile' && <ProfileTab />}

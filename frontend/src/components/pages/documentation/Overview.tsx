@@ -48,10 +48,13 @@ export default function DocsOverview() {
   }, [storageItems]);
 
   return (
-  <div className="documentation-area p-6 max-w-4xl h-full overflow-auto">
-      <h2 className="text-2xl font-bold mb-6 text-text">{t('nav.docs.hardware')}</h2>
+  <div className="documentation-area page-shell">
+      <div className="h-full flex flex-col min-h-0">
+        <div className="page-header">
+          <h2 className="page-title">{t('nav.docs.hardware')}</h2>
+        </div>
 
-      <div className="space-y-6">
+        <div className="space-y-6 flex-1 min-h-0 overflow-y-auto pr-1">
         {hardware.length === 0 && (
           <Card className="rounded-xl p-4 bg-content border border-border text-text-secondary">
             No hardware entries available.
@@ -78,6 +81,7 @@ export default function DocsOverview() {
             </div>
           </Card>
         ))}
+        </div>
       </div>
     </div>
   );

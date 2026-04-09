@@ -35,8 +35,8 @@ export default function HomeAssistant() {
   }, []);
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-8">
-      <div className="mb-4 flex-shrink-0">
+    <div className="page-shell">
+      <div className="page-header">
         <a 
           href={isValidUrl ? HOME_ASSISTANT_URL : undefined}
           target={isValidUrl ? "_blank" : undefined}
@@ -44,7 +44,7 @@ export default function HomeAssistant() {
           className="flex items-center gap-3 cursor-pointer group w-fit"
           title={isValidUrl ? "Open in new tab" : "No valid URL provided"}
         >
-          <h1 className="text-3xl md:text-4xl font-bold text-text group-hover:text-primary transition-colors">
+          <h1 className="page-title group-hover:opacity-90 transition-opacity">
             Home Assistant
           </h1>
           {isValidUrl && (
@@ -53,7 +53,8 @@ export default function HomeAssistant() {
         </a>
       </div>
 
-      <div className="flex-1 w-full rounded-xl overflow-hidden border border-border bg-content shadow-lg relative min-h-0">
+      <div className="page-content-scroll">
+      <div className="h-full w-full rounded-xl overflow-hidden border border-border bg-content/40 relative min-h-0">
         
         {/* Loading bar / Background that adapts to theme */}
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background text-text-secondary z-0">
@@ -99,6 +100,7 @@ export default function HomeAssistant() {
             onError={() => setIframeError(true)}
           ></iframe>
         )}
+      </div>
       </div>
     </div>
   )

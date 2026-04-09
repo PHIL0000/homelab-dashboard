@@ -51,9 +51,13 @@ export default function DocumentationMap() {
   }, [services, deployedServiceIds]);
 
   return (
-  <div className="documentation-area p-6 h-full overflow-auto">
-      <h2 className="text-2xl font-bold text-text mb-6">Infrastructure Map</h2>
+  <div className="documentation-area page-shell">
+      <div className="h-full flex flex-col min-h-0">
+        <div className="page-header">
+          <h2 className="page-title">Infrastructure Map</h2>
+        </div>
 
+        <div className="page-content-scroll">
   <Card className="rounded-xl border border-border bg-content p-6 mb-6">
         <h3 className="text-lg font-semibold text-text mb-4">Hardware → Services Tree</h3>
         <div className="space-y-4">
@@ -96,6 +100,8 @@ export default function DocumentationMap() {
           </ul>
         )}
       </Card>
+        </div>
+      </div>
     </div>
   );
 }

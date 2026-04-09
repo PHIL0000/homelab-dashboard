@@ -310,12 +310,13 @@ export default function MarkdownDocs() {
   };
 
   return (
-  <div className="documentation-area p-6 h-full overflow-auto relative">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-text">Markdown Documents (Top Level)</h2>
-      </div>
+  <div className="documentation-area page-shell relative">
+      <div className="h-full flex flex-col min-h-0">
+        <div className="page-header">
+          <h2 className="page-title">Markdown Documents (Top Level)</h2>
+        </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 page-content-scroll">
   <Card className="xl:col-span-4 rounded-xl border border-border bg-content p-0 overflow-hidden h-fit">
           <div className="px-4 py-3 border-b border-border bg-background text-sm font-semibold text-text-secondary">Top-Level Markdown Files</div>
           <div className="divide-y divide-border">
@@ -464,6 +465,7 @@ export default function MarkdownDocs() {
             </div>
           )}
         </Card>
+      </div>
       </div>
 
       {pendingDelete && (

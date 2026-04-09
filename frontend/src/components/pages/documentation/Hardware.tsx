@@ -651,18 +651,19 @@ export default function Hardware() {
   };
 
   return (
-  <div className="documentation-area p-6 h-full overflow-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-text">Hardware Documentation</h2>
-      </div>
+  <div className="documentation-area page-shell">
+      <div className="h-full flex flex-col min-h-0">
+        <div className="page-header">
+          <h2 className="page-title">Hardware Documentation</h2>
+        </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-  <Card className="xl:col-span-4 rounded-xl border border-border bg-content p-0 overflow-hidden h-fit">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0">
+  <Card className="xl:col-span-4 rounded-xl border border-border bg-content p-0 overflow-hidden h-full min-h-0 flex flex-col">
           <div className="px-4 py-3 border-b border-border bg-background flex items-center justify-between gap-3">
             <span className="text-sm font-semibold text-text-secondary">Hardware Nodes</span>
             <button onClick={handleAddHardware} className="bg-primary hover:bg-primary/90 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-colors">+ Add Hardware</button>
           </div>
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-border overflow-y-auto min-h-0">
             {hardware.length === 0 && <p className="p-4 text-text-secondary">No hardware found.</p>}
             {hardware.map(hw => (
               <button
@@ -695,7 +696,8 @@ export default function Hardware() {
           </div>
         </Card>
 
-        <div className="xl:col-span-8 space-y-6">
+        <div className="xl:col-span-8 min-h-0 overflow-y-auto pr-1">
+          <div className="space-y-6">
           {!selectedHardware && (
             <Card className="rounded-xl border border-border bg-content p-6 text-text-secondary">
               Select hardware on the left or create a new one.
@@ -782,7 +784,9 @@ export default function Hardware() {
               </Card>
             </>
           )}
+          </div>
         </div>
+      </div>
       </div>
 
       {isHardwareModalOpen && (
