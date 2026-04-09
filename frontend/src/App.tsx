@@ -16,9 +16,9 @@ import SetupPage from "./components/auth/Setup";
 import DocsOverview from "./components/pages/documentation/Overview";
 import Hardware from "./components/pages/documentation/Hardware";
 import Services from "./components/pages/documentation/Services";
-import Deployments from "./components/pages/documentation/Deployments";
 import StorageItems from "./components/pages/documentation/StorageItems";
 import MarkdownDocs from "./components/pages/documentation/MarkdownDocs";
+import DocumentationMap from "./components/pages/documentation/Map";
 
 import { useAuth } from "./context/AuthContext";
 
@@ -65,12 +65,12 @@ const App: React.FC = () => {
               <Route path="/storage/gitlab" element={<PlaceholderPage />} />
               <Route path="/ai/chat" element={<PlaceholderPage />} />
               <Route path="/ai/image-gen" element={<PlaceholderPage />} />
-              <Route path="/documentation/overview" element={<DocsOverview />} />
-              <Route path="/documentation/hardware" element={<Hardware />} />
+              <Route path="/documentation/overview" element={<Hardware />} />
+              <Route path="/documentation/hardware" element={<DocsOverview />} />
               <Route path="/documentation/services" element={<Services />} />
-              <Route path="/documentation/deployments" element={<Deployments />} />
               <Route path="/documentation/storage" element={<StorageItems />} />
               <Route path="/documentation/docs" element={<MarkdownDocs />} />
+              <Route path="/documentation/map" element={<DocumentationMap />} />
               <Route path="/performance" element={<PlaceholderPage />} />
               
               {/* Placeholder für alle Seiten zuerst */}

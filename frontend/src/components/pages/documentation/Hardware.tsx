@@ -1,14 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
+import ReactMarkdown from 'react-markdown';
+
+const API_BASE = 'http://localhost:3001/api/infrastructure';
 
 export default function Hardware() {
   const { token } = useAuth();
-  const [hardware, setHardware] = useState<any[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editId, setEditId] = useState<string | null>(null);
 
-  // Form states
+  const [hardware, setHardware] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [deployments, setDeployments] = useState<any[]>([]);
+  const [storageItems, setStorageItems] = useState<any[]>([]);
+  const [docs, setDocs] = useState<any[]>([]);
+  const [selectedHardwareId, setSelectedHardwareId] = useState<string>('');
+
+  const [isHardwareModalOpen, setIsHardwareModalOpen] = useState(false);
+  const [isDeploymentModalOpen, setIsDeploymentModalOpen] = useState(false);
+  const [isStorageModalOpen, setIsStorageModalOpen] = useState(false);
+  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
+
+  const [hardwareEditId, setHardwareEditId] = useState<string | null>(null);
+  const [deploymentEditId, setDeploymentEditId] = useState<string | null>(null);
+  const [storageEditId, setStorageEditId] = useState<string | null>(null);
+  const [docEditId, setDocEditId] = useState<string | null>(null);
+
   const [name, setName] = useState('');
   const [type, setType] = useState('SERVER');
   const [status, setStatus] = useState('ONLINE');
@@ -19,19 +35,83 @@ export default function Hardware() {
   const [mac, setMac] = useState('');
   const [notes, setNotes] = useState('');
 
-  const fetchHardware = () => {
+  const [softwareUnitId, setSoftwareUnitId] = useState('');
+  const [internalIp, setInternalIp] = useState('');
+  const [deploymentStatus, setDeploymentStatus] = useState('RUNNING');
+
+  const [storageName, setStorageName] = useState('');
+  const [storageType, setStorageType] = useState('SSD');
+  const [usableSpace, setUsableSpace] = useState<number | ''>('');
+  const [spaceUnit, setSpaceUnit] = useState<'GB' | 'TB'>('GB');
+
+  const [docTitle, setDocTitle] = useState('');
+  const [docContent, setDocContent] = useState('');
+  const [docHardwareAssetId, setDocHardwareAssetId] = useState('');
+  const [docSoftwareUnitId, setDocSoftwareUnitId] = useState('');
+
+  const authHeaders = useMemo(() => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`
+  }), [token]);
+
+  const fetchData = async () => {
     if (!token) return;
-    fetch('http://localhost:3001/api/infrastructure/hardware', { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.json())
-      .then(data => setHardware(data));
+    try {
+      const [hwRes, swRes, depRes, storageRes, docsRes] = await Promise.all([
+        fetch(`${API_BASE}/hardware`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/services`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/deployments`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/storage`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/docs`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+
+      const hwData = await hwRes.json();
+      setHardware(hwData);
+      setServices(await swRes.json());
+      setDeployments(await depRes.json());
+      setStorageItems(await storageRes.json());
+      setDocs(await docsRes.json());
+
+      if (!selectedHardwareId && hwData.length > 0) {
+        setSelectedHardwareId(hwData[0].id);
+      }
+      if (selectedHardwareId && !hwData.some((hw: any) => hw.id === selectedHardwareId)) {
+        setSelectedHardwareId(hwData[0]?.id || '');
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
-    fetchHardware();
+    fetchData();
   }, [token]);
 
-  const handleEdit = (hw: any) => {
-    setEditId(hw.id);
+  const selectedHardware = hardware.find(hw => hw.id === selectedHardwareId);
+  const selectedDeployments = deployments.filter(dep => dep.hardwareAssetId === selectedHardwareId);
+  const selectedStorage = storageItems.filter(item => item.hardwareAssetId === selectedHardwareId);
+  const selectedDocs = docs.filter(doc => doc.hardwareAssetId === selectedHardwareId);
+  const selectedServiceIds = new Set(selectedDeployments.map(dep => dep.softwareUnitId).filter(Boolean));
+  const selectedServices = services.filter(sw => selectedServiceIds.has(sw.id));
+  const selectedServiceDocs = docs.filter(doc => doc.softwareUnitId && selectedServiceIds.has(doc.softwareUnitId));
+  const visibleDocs = Array.from(new Map([...selectedDocs, ...selectedServiceDocs].map(doc => [doc.id, doc])).values());
+
+  const handleAddHardware = () => {
+    setHardwareEditId(null);
+    setName('');
+    setType('SERVER');
+    setStatus('ONLINE');
+    setCpu('');
+    setRam('');
+    setOs('');
+    setIp('');
+    setMac('');
+    setNotes('');
+    setIsHardwareModalOpen(true);
+  };
+
+  const handleEditHardware = (hw: any) => {
+    setHardwareEditId(hw.id);
     setName(hw.name || '');
     setType(hw.type || 'SERVER');
     setStatus(hw.status || 'ONLINE');
@@ -41,102 +121,339 @@ export default function Hardware() {
     setIp(hw.ip || '');
     setMac(hw.mac || '');
     setNotes(hw.notes || '');
-    setIsModalOpen(true);
+    setIsHardwareModalOpen(true);
   };
 
-  const handleAdd = () => {
-    setEditId(null);
-    setName(''); setType('SERVER'); setStatus('ONLINE'); setCpu(''); setRam(''); setOs(''); setIp(''); setMac(''); setNotes('');
-    setIsModalOpen(true);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const saveHardware = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
-    try {
-      const url = editId ? `http://localhost:3001/api/infrastructure/hardware/${editId}` : 'http://localhost:3001/api/infrastructure/hardware';
-      const method = editId ? 'PUT' : 'POST';
-      
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name,
-          type,
-          status,
-          cpu,
-          ram: ram ? parseInt(ram, 10) : null,
-          os,
-          ip,
-          mac,
-          notes
-        })
-      });
-      if (res.ok) {
-        setIsModalOpen(false);
-        fetchHardware();
-      } else {
-        const errorData = await res.json();
-        alert('Error: ' + errorData.error);
+
+    const url = hardwareEditId ? `${API_BASE}/hardware/${hardwareEditId}` : `${API_BASE}/hardware`;
+    const method = hardwareEditId ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method,
+      headers: authHeaders,
+      body: JSON.stringify({
+        name,
+        type,
+        status,
+        cpu,
+        ram: ram ? parseInt(ram, 10) : null,
+        os,
+        ip,
+        mac,
+        notes
+      })
+    });
+
+    if (response.ok) {
+      const saved = await response.json();
+      setIsHardwareModalOpen(false);
+      await fetchData();
+      if (!hardwareEditId) {
+        setSelectedHardwareId(saved.id);
       }
-    } catch (error) {
-      console.error(error);
-      alert('Failed to save hardware');
+      return;
     }
+
+    const errorData = await response.json();
+    alert(`Error: ${errorData.error || 'Failed to save hardware'}`);
+  };
+
+  const handleAddDeployment = () => {
+    setDeploymentEditId(null);
+    setSoftwareUnitId('');
+    setInternalIp('');
+    setDeploymentStatus('RUNNING');
+    setIsDeploymentModalOpen(true);
+  };
+
+  const handleEditDeployment = (dep: any) => {
+    setDeploymentEditId(dep.id);
+    setSoftwareUnitId(dep.softwareUnitId || '');
+    setInternalIp(dep.internalIp || '');
+    setDeploymentStatus(dep.status || 'RUNNING');
+    setIsDeploymentModalOpen(true);
+  };
+
+  const saveDeployment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !selectedHardwareId) return;
+
+    const url = deploymentEditId ? `${API_BASE}/deployments/${deploymentEditId}` : `${API_BASE}/deployments`;
+    const method = deploymentEditId ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method,
+      headers: authHeaders,
+      body: JSON.stringify({
+        hardwareAssetId: selectedHardwareId,
+        softwareUnitId,
+        internalIp,
+        status: deploymentStatus
+      })
+    });
+
+    if (response.ok) {
+      setIsDeploymentModalOpen(false);
+      await fetchData();
+      return;
+    }
+
+    const errorData = await response.json();
+    alert(`Error: ${errorData.error || 'Failed to save deployment'}`);
+  };
+
+  const handleAddStorage = () => {
+    setStorageEditId(null);
+    setStorageName('');
+    setStorageType('SSD');
+    setUsableSpace('');
+    setSpaceUnit('GB');
+    setIsStorageModalOpen(true);
+  };
+
+  const handleEditStorage = (item: any) => {
+    setStorageEditId(item.id);
+    setStorageName(item.name || '');
+    setStorageType(item.storageType || 'SSD');
+
+    if (item.usableSpaceGB && item.usableSpaceGB >= 1000 && item.usableSpaceGB % 1000 === 0) {
+      setUsableSpace(item.usableSpaceGB / 1000);
+      setSpaceUnit('TB');
+    } else {
+      setUsableSpace(item.usableSpaceGB || '');
+      setSpaceUnit('GB');
+    }
+
+    setIsStorageModalOpen(true);
+  };
+
+  const saveStorage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !selectedHardwareId) return;
+
+    const url = storageEditId ? `${API_BASE}/storage/${storageEditId}` : `${API_BASE}/storage`;
+    const method = storageEditId ? 'PUT' : 'POST';
+
+    const usableSpaceGB = spaceUnit === 'TB' ? Number(usableSpace) * 1000 : Number(usableSpace);
+
+    const response = await fetch(url, {
+      method,
+      headers: authHeaders,
+      body: JSON.stringify({
+        name: storageName,
+        storageType,
+        usableSpaceGB,
+        hardwareAssetId: selectedHardwareId
+      })
+    });
+
+    if (response.ok) {
+      setIsStorageModalOpen(false);
+      await fetchData();
+      return;
+    }
+
+    const errorData = await response.json();
+    alert(`Error: ${errorData.error || 'Failed to save storage'}`);
+  };
+
+  const handleAddDoc = () => {
+    setDocEditId(null);
+    setDocTitle('');
+    setDocContent('');
+    setDocHardwareAssetId(selectedHardwareId || '');
+    setDocSoftwareUnitId('');
+    setIsDocModalOpen(true);
+  };
+
+  const handleEditDoc = (doc: any) => {
+    setDocEditId(doc.id);
+    setDocTitle(doc.title || '');
+    setDocContent(doc.content || '');
+    setDocHardwareAssetId(doc.hardwareAssetId || selectedHardwareId || '');
+    setDocSoftwareUnitId(doc.softwareUnitId || '');
+    setIsDocModalOpen(true);
+  };
+
+  const saveDoc = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+
+    const url = docEditId ? `${API_BASE}/docs/${docEditId}` : `${API_BASE}/docs`;
+    const method = docEditId ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method,
+      headers: authHeaders,
+      body: JSON.stringify({
+        title: docTitle,
+        content: docContent,
+        hardwareAssetId: docHardwareAssetId || undefined,
+        softwareUnitId: docSoftwareUnitId || undefined
+      })
+    });
+
+    if (response.ok) {
+      setIsDocModalOpen(false);
+      await fetchData();
+      return;
+    }
+
+    const errorData = await response.json();
+    alert(`Error: ${errorData.error || 'Failed to save document'}`);
+  };
+
+  const displaySpace = (gb: number | undefined | null) => {
+    if (!gb) return '-';
+    if (gb >= 1000 && gb % 1000 === 0) return `${gb / 1000} TB`;
+    if (gb >= 1000) return `${(gb / 1000).toFixed(2)} TB`;
+    return `${gb} GB`;
   };
 
   return (
-    <div className="p-6 max-w-4xl h-full overflow-auto relative">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-text">Hardware Assets</h2>
-        <button onClick={handleAdd} className="bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg text-white transition-colors">+ Add Hardware</button>
+    <div className="p-6 h-full overflow-auto">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-text">Hardware Documentation</h2>
+        <button onClick={handleAddHardware} className="bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg text-white transition-colors">+ Add Hardware</button>
       </div>
-      <Card className="border border-border bg-content p-0 overflow-hidden">
-         <table className="w-full text-left">
-           <thead>
-             <tr className="bg-background border-b border-border">
-               <th className="px-4 py-3 text-sm font-medium text-text-secondary">Name</th>
-               <th className="px-4 py-3 text-sm font-medium text-text-secondary">Type</th>
-               <th className="px-4 py-3 text-sm font-medium text-text-secondary">Status</th>
-               <th className="px-4 py-3 text-sm font-medium text-text-secondary">IP</th>
-               <th className="px-4 py-3 text-sm font-medium text-text-secondary">OS</th>
-               <th className="px-4 py-3 text-sm font-medium text-text-secondary text-right">Actions</th>
-             </tr>
-           </thead>
-           <tbody className="divide-y divide-border">
-             {hardware.map(hw => (
-               <tr key={hw.id} className="hover:bg-background/50 transition-colors">
-                 <td className="px-4 py-3 font-medium text-text">{hw.name}</td>
-                 <td className="px-4 py-3 text-text-secondary text-sm">{hw.type}</td>
-                 <td className="px-4 py-3">
-                   <span className={`px-2 py-1 text-xs rounded-full ${hw.status === 'ONLINE' ? 'bg-green-500/20 text-green-400' : hw.status === 'OFFLINE' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
-                     {hw.status}
-                   </span>
-                 </td>
-                 <td className="px-4 py-3 text-text-secondary text-sm">{hw.ip || '-'}</td>
-                 <td className="px-4 py-3 text-text-secondary text-sm">{hw.os || '-'}</td>
-                 <td className="px-4 py-3 text-right">
-                   <button onClick={() => handleEdit(hw)} className="text-primary hover:text-primary/80 text-sm font-medium">Edit</button>
-                 </td>
-               </tr>
-             ))}
-           </tbody>
-         </table>
-      </Card>
 
-      {isModalOpen && (
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <Card className="xl:col-span-4 border border-border bg-content p-0 overflow-hidden h-fit">
+          <div className="px-4 py-3 border-b border-border bg-background text-sm font-semibold text-text-secondary">Hardware Nodes</div>
+          <div className="divide-y divide-border">
+            {hardware.length === 0 && <p className="p-4 text-text-secondary">No hardware found.</p>}
+            {hardware.map(hw => (
+              <button
+                key={hw.id}
+                onClick={() => setSelectedHardwareId(hw.id)}
+                className={`w-full text-left px-4 py-3 transition-all border-l-4 ${selectedHardwareId === hw.id ? 'bg-primary/20 border-primary shadow-md' : 'hover:bg-background/60 border-transparent'}`}
+              >
+                <div className="flex justify-between items-start gap-3">
+                  <div>
+                    <p className={`font-medium ${selectedHardwareId === hw.id ? 'text-primary' : 'text-text'}`}>{hw.name}</p>
+                    <p className="text-xs text-text-secondary">{hw.type} • {hw.status}</p>
+                  </div>
+                  <span
+                    role="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditHardware(hw);
+                    }}
+                    className="text-xs text-primary hover:text-primary/80"
+                  >
+                    Edit
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        <div className="xl:col-span-8 space-y-6">
+          {!selectedHardware && (
+            <Card className="border border-border bg-content p-6 text-text-secondary">
+              Wähle links eine Hardware aus oder lege eine neue an.
+            </Card>
+          )}
+
+          {selectedHardware && (
+            <>
+              <Card className="border border-border bg-content p-6">
+                <div className="flex justify-between items-start gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-text">{selectedHardware.name}</h3>
+                    <p className="text-sm text-text-secondary mt-1">{selectedHardware.type} • {selectedHardware.status}</p>
+                  </div>
+                  <button onClick={() => handleEditHardware(selectedHardware)} className="text-sm text-primary hover:text-primary/80">Edit Hardware</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
+                  <p className="text-text-secondary">IP: <span className="text-text">{selectedHardware.ip || '-'}</span></p>
+                  <p className="text-text-secondary">OS: <span className="text-text">{selectedHardware.os || '-'}</span></p>
+                  <p className="text-text-secondary">RAM: <span className="text-text">{selectedHardware.ram ? `${selectedHardware.ram} GB` : '-'}</span></p>
+                </div>
+                {selectedHardware.notes && <p className="mt-4 text-sm text-text-secondary whitespace-pre-wrap">{selectedHardware.notes}</p>}
+              </Card>
+
+              <Card className="border border-border bg-content p-0 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
+                  <h4 className="font-semibold text-text">Services auf dieser Hardware</h4>
+                  <button onClick={handleAddDeployment} className="text-sm text-primary hover:text-primary/80">+ Service hinzufügen</button>
+                </div>
+                <div className="divide-y divide-border">
+                  {selectedDeployments.length === 0 && <p className="p-4 text-sm text-text-secondary">Keine Services zugeordnet.</p>}
+                  {selectedDeployments.map(dep => (
+                    <div key={dep.id} className="px-4 py-3 flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-medium text-text">{dep.softwareUnit?.name || 'Unbekannter Service'}</p>
+                        <p className="text-xs text-text-secondary">{dep.softwareUnit?.type || '-'} • {dep.internalIp || '-'} • {dep.status || 'UNKNOWN'}</p>
+                      </div>
+                      <button onClick={() => handleEditDeployment(dep)} className="text-sm text-primary hover:text-primary/80">Edit</button>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              <Card className="border border-border bg-content p-0 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
+                  <h4 className="font-semibold text-text">Festplatten / Storage</h4>
+                  <button onClick={handleAddStorage} className="text-sm text-primary hover:text-primary/80">+ Storage hinzufügen</button>
+                </div>
+                <div className="divide-y divide-border">
+                  {selectedStorage.length === 0 && <p className="p-4 text-sm text-text-secondary">Kein Storage zugeordnet.</p>}
+                  {selectedStorage.map(item => (
+                    <div key={item.id} className="px-4 py-3 flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-medium text-text">{item.name}</p>
+                        <p className="text-xs text-text-secondary">{item.storageType || '-'} • {displaySpace(item.usableSpaceGB)}</p>
+                      </div>
+                      <button onClick={() => handleEditStorage(item)} className="text-sm text-primary hover:text-primary/80">Edit</button>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              <Card className="border border-border bg-content p-0 overflow-hidden">
+                <div className="px-4 py-3 border-b border-border bg-background flex items-center justify-between gap-3">
+                  <h4 className="font-semibold text-text">Verknüpfte Markdown Dokumente (Hardware + Services)</h4>
+                  <button onClick={handleAddDoc} className="text-sm text-primary hover:text-primary/80">+ Markdown hinzufügen</button>
+                </div>
+                <div className="divide-y divide-border">
+                  {visibleDocs.length === 0 && <p className="p-4 text-sm text-text-secondary">Keine Dokumente mit dieser Hardware oder deren Services verknüpft.</p>}
+                  {visibleDocs.map(doc => (
+                    <div key={doc.id} className="px-4 py-3 flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-text">{doc.title}</p>
+                        <div className="flex flex-wrap gap-2 my-2">
+                          {doc.hardwareAsset?.name && <span className="text-xs bg-primary/15 text-primary px-2 py-1 rounded-full">HW: {doc.hardwareAsset.name}</span>}
+                          {doc.softwareUnit?.name && <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-1 rounded-full">Service: {doc.softwareUnit.name}</span>}
+                        </div>
+                        <div className="prose prose-invert prose-sm max-w-none max-h-32 overflow-auto text-text-secondary">
+                          <ReactMarkdown>{doc.content || ''}</ReactMarkdown>
+                        </div>
+                      </div>
+                      <button onClick={() => handleEditDoc(doc)} className="text-sm text-primary hover:text-primary/80 shrink-0">Edit</button>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </>
+          )}
+        </div>
+      </div>
+
+      {isHardwareModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-background border border-border rounded-xl w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-text">{editId ? 'Edit Hardware' : 'Add New Hardware'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-text-secondary hover:text-text">
+              <h3 className="text-xl font-bold text-text">{hardwareEditId ? 'Edit Hardware' : 'Add New Hardware'}</h3>
+              <button onClick={() => setIsHardwareModalOpen(false)} className="text-text-secondary hover:text-text">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={saveHardware} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
@@ -187,8 +504,144 @@ export default function Hardware() {
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
+                <button type="button" onClick={() => setIsHardwareModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
                 <button type="submit" className="bg-primary hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Hardware</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isDeploymentModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-background border border-border rounded-xl w-full max-w-lg p-6 shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-text">{deploymentEditId ? 'Edit Deployment' : 'Service zu Hardware hinzufügen'}</h3>
+              <button onClick={() => setIsDeploymentModalOpen(false)} className="text-text-secondary hover:text-text">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            <form onSubmit={saveDeployment} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Service *</label>
+                <select required value={softwareUnitId} onChange={e => setSoftwareUnitId(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
+                  <option value="" disabled>Select a service</option>
+                  {services.map(sw => <option key={sw.id} value={sw.id}>{sw.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Internal IP / Address</label>
+                <input type="text" value={internalIp} onChange={e => setInternalIp(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Status</label>
+                <select value={deploymentStatus} onChange={e => setDeploymentStatus(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
+                  <option value="RUNNING">Running</option>
+                  <option value="STOPPED">Stopped</option>
+                  <option value="ERROR">Error</option>
+                  <option value="UNKNOWN">Unknown</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
+                <button type="button" onClick={() => setIsDeploymentModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
+                <button type="submit" className="bg-primary flex-1 hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Deployment</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isStorageModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-background border border-border rounded-xl w-full max-w-lg p-6 shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-text">{storageEditId ? 'Edit Storage' : 'Storage zur Hardware hinzufügen'}</h3>
+              <button onClick={() => setIsStorageModalOpen(false)} className="text-text-secondary hover:text-text">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            <form onSubmit={saveStorage} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
+                <input required type="text" value={storageName} onChange={e => setStorageName(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Type *</label>
+                <select required value={storageType} onChange={e => setStorageType(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
+                  <option value="SSD">SSD</option>
+                  <option value="HDD">HDD</option>
+                  <option value="NVME">NVMe</option>
+                  <option value="NAS">NAS / Network</option>
+                  <option value="USB">USB Drive</option>
+                </select>
+              </div>
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Usable Space *</label>
+                  <input required type="number" step="0.1" value={usableSpace} onChange={e => setUsableSpace(e.target.value ? Number(e.target.value) : '')} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div className="w-24">
+                  <select value={spaceUnit} onChange={e => setSpaceUnit(e.target.value as 'GB' | 'TB')} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
+                    <option value="GB">GB</option>
+                    <option value="TB">TB</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
+                <button type="button" onClick={() => setIsStorageModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
+                <button type="submit" className="bg-primary flex-1 hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Storage</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isDocModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-background border border-border rounded-xl w-full max-w-6xl p-6 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-text">{docEditId ? 'Edit Markdown Document' : 'New Markdown Document'}</h3>
+              <button onClick={() => setIsDocModalOpen(false)} className="text-text-secondary hover:text-text">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            <form onSubmit={saveDoc} className="space-y-4 flex flex-col flex-1 overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Title *</label>
+                  <input required type="text" value={docTitle} onChange={e => setDocTitle(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Hardware Link</label>
+                  <select value={docHardwareAssetId} onChange={e => setDocHardwareAssetId(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
+                    <option value="">None</option>
+                    {hardware.map(hw => <option key={hw.id} value={hw.id}>{hw.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Service Link</label>
+                <select value={docSoftwareUnitId} onChange={e => setDocSoftwareUnitId(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
+                  <option value="">None</option>
+                  {selectedServices.map(sw => <option key={sw.id} value={sw.id}>{sw.name}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 mb-4">
+                <div className="flex flex-col min-h-0">
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Markdown Content *</label>
+                  <textarea required value={docContent} onChange={e => setDocContent(e.target.value)} className="w-full flex-1 min-h-[260px] bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary font-mono text-sm resize-none" />
+                </div>
+                <div className="flex flex-col min-h-0">
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Live Preview</label>
+                  <div className="w-full flex-1 min-h-[260px] overflow-auto bg-content border border-border rounded-lg px-4 py-3 prose prose-invert prose-sm max-w-none">
+                    <ReactMarkdown>{docContent || '*Keine Inhalte vorhanden*'}</ReactMarkdown>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border shrink-0">
+                <button type="button" onClick={() => setIsDocModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
+                <button type="submit" className="bg-primary flex-1 hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Document</button>
               </div>
             </form>
           </div>

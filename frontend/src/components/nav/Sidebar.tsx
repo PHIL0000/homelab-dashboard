@@ -17,6 +17,7 @@ import {
   Code2,
   Home,
   Activity,
+  GitBranch,
   PanelLeftClose,
   PanelLeftOpen
 } from "lucide-react";
@@ -62,9 +63,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
 
   const documentationItems = [
     { label: t("nav.docs.overview"), path: "/documentation/overview", icon: LayoutDashboard },
+    { label: t("nav.docs.map"), path: "/documentation/map", icon: GitBranch },
     { label: t("nav.docs.hardware"), path: "/documentation/hardware", icon: HardDrive },
     { label: t("nav.docs.services"), path: "/documentation/services", icon: Settings },
-    { label: t("nav.docs.deployments"), path: "/documentation/deployments", icon: Activity },
     { label: t("nav.docs.storage"), path: "/documentation/storage", icon: Database },
     { label: t("nav.docs.documents"), path: "/documentation/docs", icon: Bot },
   ];
