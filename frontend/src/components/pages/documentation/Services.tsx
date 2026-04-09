@@ -15,6 +15,14 @@ export default function Services() {
   const [deployments, setDeployments] = useState<any[]>([]);
   const [storageItems, setStorageItems] = useState<any[]>([]);
   const [docs, setDocs] = useState<DocItem[]>([]);
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    name: string;
+    deployments: number;
+    storage: number;
+    markdownCount: number;
+    markdownPreview: string[];
+  } | null>(null);
 
   const fetchServices = () => {
     if (!token) return;
@@ -72,7 +80,7 @@ export default function Services() {
     return Array.from(seen);
   };
 
-  const deleteService = async (service: any) => {
+  const requestDeleteService = (service: any) => {
     if (!token) return;
 
     const relatedDeployments = deployments.filter((dep) => String(dep.softwareUnitId) === String(service.id));
@@ -81,30 +89,20 @@ export default function Services() {
     const docsToDeleteIds = collectDocSubtreeIds(serviceRootDocs.map((doc) => doc.id));
     const docsToDelete = docs.filter((doc) => docsToDeleteIds.includes(doc.id));
 
-    const summaryLines = [
-      `• Service: ${service.name}`,
-      `• Deployments: ${relatedDeployments.length}`,
-      `• Storage entries: ${relatedStorage.length}`,
-      `• Markdown documents (incl. childs): ${docsToDelete.length}`
-    ];
+    setPendingDelete({
+      id: String(service.id),
+      name: service.name || 'Service',
+      deployments: relatedDeployments.length,
+      storage: relatedStorage.length,
+      markdownCount: docsToDelete.length,
+      markdownPreview: docsToDelete.map((doc) => doc.title).slice(0, 4)
+    });
+  };
 
-    if (docsToDelete.length > 0) {
-      const docTitles = docsToDelete.map((doc) => doc.title).slice(0, 6);
-      summaryLines.push(`• Markdown list: ${docTitles.join(', ')}${docsToDelete.length > 6 ? ' …' : ''}`);
-    }
+  const confirmDeleteService = async () => {
+    if (!token || !pendingDelete) return;
 
-    const confirmationText = [
-      'Delete service and related data?',
-      '',
-      'The following will be removed:',
-      ...summaryLines,
-      '',
-      'This action cannot be undone.'
-    ].join('\n');
-
-    if (!window.confirm(confirmationText)) return;
-
-    const response = await fetch(`http://localhost:3001/api/infrastructure/services/${service.id}`, {
+    const response = await fetch(`http://localhost:3001/api/infrastructure/services/${pendingDelete.id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -115,6 +113,7 @@ export default function Services() {
       return;
     }
 
+    setPendingDelete(null);
     fetchServices();
   };
 
@@ -150,7 +149,7 @@ export default function Services() {
                  <td className="px-4 py-3 text-text-secondary text-sm">{deploymentCountByService.get(sw.id) || 0}</td>
                  <td className="px-4 py-3 text-right">
                    <button
-                     onClick={() => deleteService(sw)}
+                     onClick={() => requestDeleteService(sw)}
                      className="text-red-300 hover:text-red-200 text-sm font-medium"
                    >
                      Delete
@@ -161,6 +160,44 @@ export default function Services() {
            </tbody>
          </table>
       </Card>
+
+      {pendingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-xl border border-border bg-content p-5 shadow-2xl">
+            <h3 className="text-lg font-semibold text-text">Delete {pendingDelete.name}?</h3>
+            <p className="mt-1 text-sm text-text-secondary">This will also remove related entries.</p>
+
+            <ul className="mt-4 space-y-1.5 text-sm text-text-secondary">
+              <li>• {pendingDelete.deployments} deployment(s)</li>
+              <li>• {pendingDelete.storage} storage entry/entries</li>
+              <li>• {pendingDelete.markdownCount} markdown doc(s) incl. childs</li>
+            </ul>
+
+            {pendingDelete.markdownPreview.length > 0 && (
+              <p className="mt-3 text-xs text-text-secondary/90">
+                Docs: {pendingDelete.markdownPreview.join(', ')}{pendingDelete.markdownCount > pendingDelete.markdownPreview.length ? ' …' : ''}
+              </p>
+            )}
+
+            <div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
+              <button
+                type="button"
+                onClick={() => setPendingDelete(null)}
+                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteService}
+                className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

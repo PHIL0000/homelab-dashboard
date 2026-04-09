@@ -39,6 +39,12 @@ export default function MarkdownDocs() {
   const [editContent, setEditContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    title: string;
+    childCount: number;
+    childPreview: string[];
+  } | null>(null);
 
   const docsById = useMemo(() => {
     return new Map(docs.map((doc) => [doc.id, doc]));
@@ -232,7 +238,7 @@ export default function MarkdownDocs() {
     }
   };
 
-  const handleDeleteDoc = async () => {
+  const requestDeleteDoc = () => {
     if (!token || !selectedDoc) return;
 
     const childrenByParent = new Map<string, string[]>();
@@ -263,27 +269,22 @@ export default function MarkdownDocs() {
       .map((doc) => doc.title)
       .slice(0, 8);
 
-    const confirmationLines = [
-      `Delete markdown document "${selectedDoc.title}"?`,
-      '',
-      'The following will be removed:',
-      `• Document: ${selectedDoc.title}`,
-      `• Child documents: ${childCount}`
-    ];
+    setPendingDelete({
+      id: selectedDoc.id,
+      title: selectedDoc.title,
+      childCount,
+      childPreview: childTitles
+    });
+  };
 
-    if (childTitles.length > 0) {
-      confirmationLines.push(`• Child list: ${childTitles.join(', ')}${childCount > childTitles.length ? ' …' : ''}`);
-    }
-
-    confirmationLines.push('', 'This action cannot be undone.');
-
-    if (!window.confirm(confirmationLines.join('\n'))) return;
+  const handleDeleteDoc = async () => {
+    if (!token || !pendingDelete) return;
 
     setIsSaving(true);
     setMessage(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/infrastructure/docs/${selectedDoc.id}`, {
+      const response = await fetch(`http://localhost:3001/api/infrastructure/docs/${pendingDelete.id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
@@ -296,6 +297,7 @@ export default function MarkdownDocs() {
       }
 
       setMessage({ type: 'success', text: 'Markdown file deleted.' });
+  setPendingDelete(null);
       setIsEditing(false);
       setEditTitle('');
       setEditContent('');
@@ -407,7 +409,7 @@ export default function MarkdownDocs() {
                     {selectedDoc && (
                       <button
                         type="button"
-                        onClick={handleDeleteDoc}
+                        onClick={requestDeleteDoc}
                         disabled={isSaving}
                         className="mr-auto px-3 py-1.5 text-sm rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 disabled:opacity-60 transition-colors"
                       >
@@ -463,6 +465,44 @@ export default function MarkdownDocs() {
           )}
         </Card>
       </div>
+
+      {pendingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-xl border border-border bg-content p-5 shadow-2xl">
+            <h3 className="text-lg font-semibold text-text">Delete {pendingDelete.title}?</h3>
+            <p className="mt-1 text-sm text-text-secondary">This also removes child markdown files.</p>
+
+            <ul className="mt-4 space-y-1.5 text-sm text-text-secondary">
+              <li>• 1 selected document</li>
+              <li>• {pendingDelete.childCount} child document(s)</li>
+            </ul>
+
+            {pendingDelete.childPreview.length > 0 && (
+              <p className="mt-3 text-xs text-text-secondary/90">
+                Child docs: {pendingDelete.childPreview.join(', ')}{pendingDelete.childCount > pendingDelete.childPreview.length ? ' …' : ''}
+              </p>
+            )}
+
+            <div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
+              <button
+                type="button"
+                onClick={() => setPendingDelete(null)}
+                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteDoc}
+                disabled={isSaving}
+                className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20 disabled:opacity-60"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

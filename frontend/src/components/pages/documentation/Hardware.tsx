@@ -70,6 +70,23 @@ export default function Hardware() {
   const [docHardwareAssetId, setDocHardwareAssetId] = useState('');
   const [docSoftwareUnitId, setDocSoftwareUnitId] = useState('');
   const [docParentDocId, setDocParentDocId] = useState('');
+  const [pendingHardwareDelete, setPendingHardwareDelete] = useState<{
+    id: string;
+    name: string;
+    deployments: number;
+    services: number;
+    storage: number;
+    docs: number;
+    servicePreview: string[];
+    docPreview: string[];
+    externalImpact: number;
+  } | null>(null);
+  const [pendingDocDelete, setPendingDocDelete] = useState<{
+    id: string;
+    title: string;
+    childCount: number;
+    childPreview: string[];
+  } | null>(null);
 
   const authHeaders = useMemo(() => ({
     'Content-Type': 'application/json',
@@ -219,40 +236,23 @@ export default function Hardware() {
         String(dep.hardwareAssetId) !== String(hardwareEditId)
     );
 
-    const summaryLines = [
-      `• Hardware: ${selectedHardware?.name || 'Selected hardware'}`,
-      `• Deployments: ${relatedDeployments.length}`,
-      `• Services: ${impactedServices.length}`,
-      `• Storage entries: ${totalRelatedStorage}`,
-      `• Markdown documents: ${impactedDocs.length}`
-    ];
+    setPendingHardwareDelete({
+      id: String(hardwareEditId),
+      name: selectedHardware?.name || 'Selected hardware',
+      deployments: relatedDeployments.length,
+      services: impactedServices.length,
+      storage: totalRelatedStorage,
+      docs: impactedDocs.length,
+      servicePreview: impactedServices.map((service) => service.name).slice(0, 4),
+      docPreview: impactedDocs.map((doc) => doc.title).slice(0, 4),
+      externalImpact: externalDeploymentsImpacted.length
+    });
+  };
 
-    if (impactedServices.length > 0) {
-      const serviceNames = impactedServices.map((service) => service.name).slice(0, 6);
-      summaryLines.push(`• Service list: ${serviceNames.join(', ')}${impactedServices.length > 6 ? ' …' : ''}`);
-    }
+  const confirmDeleteHardware = async () => {
+    if (!token || !pendingHardwareDelete) return;
 
-    if (impactedDocs.length > 0) {
-      const docTitles = impactedDocs.map((doc) => doc.title).slice(0, 6);
-      summaryLines.push(`• Markdown list: ${docTitles.join(', ')}${impactedDocs.length > 6 ? ' …' : ''}`);
-    }
-
-    if (externalDeploymentsImpacted.length > 0) {
-      summaryLines.push(`• WARNING: ${externalDeploymentsImpacted.length} deployment(s) on other hardware will also be removed because their services are deleted.`);
-    }
-
-    const confirmationText = [
-      'Delete hardware and related data?',
-      '',
-      'The following will be removed:',
-      ...summaryLines,
-      '',
-      'This action cannot be undone.'
-    ].join('\n');
-
-    if (!window.confirm(confirmationText)) return;
-
-    const response = await fetch(`${API_BASE}/hardware/${hardwareEditId}`, {
+    const response = await fetch(`${API_BASE}/hardware/${pendingHardwareDelete.id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -263,6 +263,7 @@ export default function Hardware() {
       return;
     }
 
+    setPendingHardwareDelete(null);
     setIsHardwareModalOpen(false);
     setHardwareEditId(null);
     await fetchData();
@@ -495,23 +496,18 @@ export default function Hardware() {
       .map((doc) => doc.title)
       .slice(0, 8);
 
-    const confirmationLines = [
-      `Delete markdown document "${targetDoc?.title || 'Selected document'}"?`,
-      '',
-      'The following will be removed:',
-      `• Document: ${targetDoc?.title || docEditId}`,
-      `• Child documents: ${childCount}`
-    ];
+    setPendingDocDelete({
+      id: docEditId,
+      title: targetDoc?.title || 'Selected document',
+      childCount,
+      childPreview: childTitles
+    });
+  };
 
-    if (childTitles.length > 0) {
-      confirmationLines.push(`• Child list: ${childTitles.join(', ')}${childCount > childTitles.length ? ' …' : ''}`);
-    }
+  const confirmDeleteDoc = async () => {
+    if (!token || !pendingDocDelete) return;
 
-    confirmationLines.push('', 'This action cannot be undone.');
-
-    if (!window.confirm(confirmationLines.join('\n'))) return;
-
-    const response = await fetch(`${API_BASE}/docs/${docEditId}`, {
+    const response = await fetch(`${API_BASE}/docs/${pendingDocDelete.id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -522,6 +518,7 @@ export default function Hardware() {
       return;
     }
 
+    setPendingDocDelete(null);
     setIsDocModalOpen(false);
     setDocEditId(null);
     await fetchData();
@@ -923,6 +920,92 @@ export default function Hardware() {
                 <button type="submit" className="bg-primary flex-1 hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Document</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {pendingHardwareDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-xl border border-border bg-content p-5 shadow-2xl">
+            <h3 className="text-lg font-semibold text-text">Delete {pendingHardwareDelete.name}?</h3>
+            <p className="mt-1 text-sm text-text-secondary">Related child entries will be removed too.</p>
+
+            <ul className="mt-4 space-y-1.5 text-sm text-text-secondary">
+              <li>• {pendingHardwareDelete.deployments} deployment(s)</li>
+              <li>• {pendingHardwareDelete.services} service(s)</li>
+              <li>• {pendingHardwareDelete.storage} storage entry/entries</li>
+              <li>• {pendingHardwareDelete.docs} markdown doc(s)</li>
+            </ul>
+
+            {pendingHardwareDelete.servicePreview.length > 0 && (
+              <p className="mt-3 text-xs text-text-secondary/90">
+                Services: {pendingHardwareDelete.servicePreview.join(', ')}{pendingHardwareDelete.services > pendingHardwareDelete.servicePreview.length ? ' …' : ''}
+              </p>
+            )}
+            {pendingHardwareDelete.docPreview.length > 0 && (
+              <p className="mt-1 text-xs text-text-secondary/90">
+                Docs: {pendingHardwareDelete.docPreview.join(', ')}{pendingHardwareDelete.docs > pendingHardwareDelete.docPreview.length ? ' …' : ''}
+              </p>
+            )}
+            {pendingHardwareDelete.externalImpact > 0 && (
+              <p className="mt-2 text-xs text-amber-300">
+                Warning: {pendingHardwareDelete.externalImpact} deployment(s) on other hardware are also affected.
+              </p>
+            )}
+
+            <div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
+              <button
+                type="button"
+                onClick={() => setPendingHardwareDelete(null)}
+                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteHardware}
+                className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingDocDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-xl border border-border bg-content p-5 shadow-2xl">
+            <h3 className="text-lg font-semibold text-text">Delete {pendingDocDelete.title}?</h3>
+            <p className="mt-1 text-sm text-text-secondary">Child markdown files are removed too.</p>
+
+            <ul className="mt-4 space-y-1.5 text-sm text-text-secondary">
+              <li>• 1 selected document</li>
+              <li>• {pendingDocDelete.childCount} child document(s)</li>
+            </ul>
+
+            {pendingDocDelete.childPreview.length > 0 && (
+              <p className="mt-3 text-xs text-text-secondary/90">
+                Child docs: {pendingDocDelete.childPreview.join(', ')}{pendingDocDelete.childCount > pendingDocDelete.childPreview.length ? ' …' : ''}
+              </p>
+            )}
+
+            <div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
+              <button
+                type="button"
+                onClick={() => setPendingDocDelete(null)}
+                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteDoc}
+                className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
