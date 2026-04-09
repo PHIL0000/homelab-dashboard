@@ -178,12 +178,22 @@ export default function MarkdownDocs() {
     setEditContent(selectedDoc.content || '');
   }, [selectedDoc?.id]);
 
+  useEffect(() => {
+    if (message?.type !== 'success') return;
+
+    const timeoutId = window.setTimeout(() => {
+      setMessage(null);
+    }, 2500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [message]);
+
   const handleSaveEdit = async () => {
     if (!token || !selectedDoc) return;
 
     const normalizedTitle = ensureMarkdownFilename(editTitle);
     if (!normalizedTitle) {
-      setMessage({ type: 'error', text: 'Dateiname darf nicht leer sein.' });
+      setMessage({ type: 'error', text: 'Filename cannot be empty.' });
       return;
     }
 
@@ -300,7 +310,7 @@ export default function MarkdownDocs() {
               {isEditing && (
                 <div className="border border-border rounded-lg p-4 bg-background/40 space-y-3">
                   <div>
-                    <label className="block text-xs font-medium text-text-secondary mb-1">Dateiname</label>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">Filename</label>
                     <input
                       type="text"
                       value={editTitle}
@@ -308,10 +318,10 @@ export default function MarkdownDocs() {
                       className="w-full bg-content border border-border rounded-lg px-3 py-2 text-text focus:outline-none focus:border-primary"
                       placeholder="z. B. hardware-overview.md"
                     />
-                    <p className="text-[11px] text-text-secondary mt-1">`.md` wird automatisch ergänzt, falls nicht vorhanden.</p>
+                    <p className="text-[11px] text-text-secondary mt-1">`.md` is added automatically when missing.</p>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-text-secondary mb-1">Inhalt</label>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">Content</label>
                     <textarea
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
@@ -362,7 +372,6 @@ export default function MarkdownDocs() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-text-secondary mt-2">Tipp: Du kannst in Markdown auch direkt auf andere Dateien verlinken, z. B. <code>doc:ID</code>, Dateiname oder Titel.</p>
                 </div>
               )}
             </div>

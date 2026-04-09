@@ -52,7 +52,7 @@ export default function Services() {
            <tbody className="divide-y divide-border">
              {services.length === 0 && (
                <tr>
-                 <td colSpan={5} className="px-4 py-6 text-center text-text-secondary">Keine Services vorhanden.</td>
+                 <td colSpan={5} className="px-4 py-6 text-center text-text-secondary">No services available.</td>
                </tr>
              )}
              {services.map(sw => (

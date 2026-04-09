@@ -67,11 +67,11 @@ export default function DocumentationMap() {
                 <div className="text-xs text-text-secondary mt-1">{hw.type || 'OTHER'} • {hw.ip || 'no ip'} • {hw.status || 'UNKNOWN'}</div>
 
                 <div className="mt-3 pl-4 border-l border-border space-y-2">
-                  {deps.length === 0 && <p className="text-sm text-text-secondary">└─ Keine Dienste deployed</p>}
+                  {deps.length === 0 && <p className="text-sm text-text-secondary">└─ No deployed services</p>}
 
                   {deps.map(dep => (
                     <div key={dep.id} className="text-sm">
-                      <p className="text-text">└─ ⚙️ {dep.softwareUnit?.name || 'Unbekannter Dienst'}</p>
+                      <p className="text-text">└─ ⚙️ {dep.softwareUnit?.name || 'Unknown service'}</p>
                       <p className="ml-6 text-xs text-text-secondary">{dep.softwareUnit?.type || 'OTHER'} • {dep.internalIp || 'no internal ip'} • {dep.status || 'UNKNOWN'}</p>
                     </div>
                   ))}
@@ -85,7 +85,7 @@ export default function DocumentationMap() {
       <Card className="border border-border bg-content p-6">
         <h3 className="text-lg font-semibold text-text mb-4">Services ohne Deployment</h3>
         {unassignedServices.length === 0 ? (
-          <p className="text-text-secondary">Alle Dienste sind aktuell einer Hardware zugeordnet.</p>
+          <p className="text-text-secondary">All services are currently assigned to hardware.</p>
         ) : (
           <ul className="space-y-2">
             {unassignedServices.map(sw => (

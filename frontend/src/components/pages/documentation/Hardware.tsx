@@ -410,7 +410,7 @@ export default function Hardware() {
         <div className="xl:col-span-8 space-y-6">
           {!selectedHardware && (
             <Card className="border border-border bg-content p-6 text-text-secondary">
-              Wähle links eine Hardware aus oder lege eine neue an.
+              Select hardware on the left or create a new one.
             </Card>
           )}
 
@@ -434,15 +434,15 @@ export default function Hardware() {
 
               <Card className="border border-border bg-content p-0 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
-                  <h4 className="font-semibold text-text">Services auf dieser Hardware</h4>
-                  <button onClick={handleAddDeployment} className="text-sm text-primary hover:text-primary/80">+ Service hinzufügen</button>
+                  <h4 className="font-semibold text-text">Services on this hardware</h4>
+                  <button onClick={handleAddDeployment} className="text-sm text-primary hover:text-primary/80">+ Add service</button>
                 </div>
                 <div className="divide-y divide-border">
-                  {selectedDeployments.length === 0 && <p className="p-4 text-sm text-text-secondary">Keine Services zugeordnet.</p>}
+                  {selectedDeployments.length === 0 && <p className="p-4 text-sm text-text-secondary">No services assigned.</p>}
                   {selectedDeployments.map(dep => (
                     <div key={dep.id} className="px-4 py-3 flex items-center justify-between gap-4">
                       <div>
-                        <p className="font-medium text-text">{dep.softwareUnit?.name || 'Unbekannter Service'}</p>
+                        <p className="font-medium text-text">{dep.softwareUnit?.name || 'Unknown service'}</p>
                         <p className="text-xs text-text-secondary">{dep.softwareUnit?.type || '-'} • {dep.internalIp || '-'} • {dep.status || 'UNKNOWN'}</p>
                       </div>
                       <button onClick={() => handleEditDeployment(dep)} className="text-sm text-primary hover:text-primary/80">Edit</button>
@@ -453,11 +453,11 @@ export default function Hardware() {
 
               <Card className="border border-border bg-content p-0 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
-                  <h4 className="font-semibold text-text">Festplatten / Storage</h4>
-                  <button onClick={handleAddStorage} className="text-sm text-primary hover:text-primary/80">+ Storage hinzufügen</button>
+                  <h4 className="font-semibold text-text">Disks / Storage</h4>
+                  <button onClick={handleAddStorage} className="text-sm text-primary hover:text-primary/80">+ Add storage</button>
                 </div>
                 <div className="divide-y divide-border">
-                  {selectedStorage.length === 0 && <p className="p-4 text-sm text-text-secondary">Kein Storage zugeordnet.</p>}
+                  {selectedStorage.length === 0 && <p className="p-4 text-sm text-text-secondary">No storage assigned.</p>}
                   {selectedStorage.map(item => (
                     <div key={item.id} className="px-4 py-3 flex items-center justify-between gap-4">
                       <div>
@@ -472,11 +472,11 @@ export default function Hardware() {
 
               <Card className="border border-border bg-content p-0 overflow-hidden">
                 <div className="px-4 py-3 border-b border-border bg-background flex items-center justify-between gap-3">
-                  <h4 className="font-semibold text-text">Verknüpfte Markdown Dokumente (Hardware + Services)</h4>
-                  <button onClick={handleAddDoc} className="text-sm text-primary hover:text-primary/80">+ Markdown hinzufügen</button>
+                  <h4 className="font-semibold text-text">Linked markdown documents (hardware + services)</h4>
+                  <button onClick={handleAddDoc} className="text-sm text-primary hover:text-primary/80">+ Add markdown</button>
                 </div>
                 <div className="divide-y divide-border">
-                  {visibleDocs.length === 0 && <p className="p-4 text-sm text-text-secondary">Keine Dokumente mit dieser Hardware oder deren Services verknüpft.</p>}
+                  {visibleDocs.length === 0 && <p className="p-4 text-sm text-text-secondary">No documents linked to this hardware or its services.</p>}
                   {rootVisibleDocs.map(doc => renderDocNode(doc))}
                 </div>
               </Card>
@@ -557,7 +557,7 @@ export default function Hardware() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-background border border-border rounded-xl w-full max-w-lg p-6 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-text">{deploymentEditId ? 'Edit Deployment' : 'Service zu Hardware hinzufügen'}</h3>
+              <h3 className="text-xl font-bold text-text">{deploymentEditId ? 'Edit Deployment' : 'Add service to hardware'}</h3>
               <button onClick={() => setIsDeploymentModalOpen(false)} className="text-text-secondary hover:text-text">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
@@ -596,7 +596,7 @@ export default function Hardware() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-background border border-border rounded-xl w-full max-w-lg p-6 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-text">{storageEditId ? 'Edit Storage' : 'Storage zur Hardware hinzufügen'}</h3>
+              <h3 className="text-xl font-bold text-text">{storageEditId ? 'Edit Storage' : 'Add storage to hardware'}</h3>
               <button onClick={() => setIsStorageModalOpen(false)} className="text-text-secondary hover:text-text">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
@@ -684,7 +684,7 @@ export default function Hardware() {
                 <div className="flex flex-col min-h-0">
                   <label className="block text-sm font-medium text-text-secondary mb-1">Live Preview</label>
                   <div className="w-full flex-1 min-h-[260px] overflow-auto bg-content border border-border rounded-lg px-4 py-3">
-                    <ReactMarkdown components={markdownComponents}>{docContent || '*Keine Inhalte vorhanden*'}</ReactMarkdown>
+                    <ReactMarkdown components={markdownComponents}>{docContent || '*No content available*'}</ReactMarkdown>
                   </div>
                 </div>
               </div>

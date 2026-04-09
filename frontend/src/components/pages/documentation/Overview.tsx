@@ -53,7 +53,7 @@ export default function DocsOverview() {
       <div className="space-y-6">
         {hardware.length === 0 && (
           <Card className="p-4 bg-content border border-border text-text-secondary">
-            Keine Hardware-Einträge vorhanden.
+            No hardware entries available.
           </Card>
         )}
 

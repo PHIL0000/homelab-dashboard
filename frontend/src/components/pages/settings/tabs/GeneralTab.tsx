@@ -20,8 +20,8 @@ export default function GeneralTab() {
               onChange={(e) => setLanguage(e.target.value as Language)}
               className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary"
             >
-              <option value="de">Deutsch</option>
               <option value="en">English</option>
+              <option value="de">Deutsch</option>
             </select>
           </div>
         </div>
