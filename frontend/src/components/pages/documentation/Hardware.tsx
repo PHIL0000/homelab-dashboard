@@ -47,18 +47,28 @@ export default function Hardware() {
   const [docEditId, setDocEditId] = useState<string | null>(null);
 
   const [name, setName] = useState('');
+  const [hostname, setHostname] = useState('');
   const [type, setType] = useState('SERVER');
-  const [status, setStatus] = useState('ONLINE');
   const [cpu, setCpu] = useState('');
+  const [cpuCores, setCpuCores] = useState('');
   const [ram, setRam] = useState('');
   const [os, setOs] = useState('');
   const [ip, setIp] = useState('');
   const [mac, setMac] = useState('');
+  const [make, setMake] = useState('');
+  const [model, setModel] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [location, setLocation] = useState('');
+  const [icon, setIcon] = useState('');
   const [notes, setNotes] = useState('');
 
   const [softwareUnitId, setSoftwareUnitId] = useState('');
   const [internalIp, setInternalIp] = useState('');
-  const [deploymentStatus, setDeploymentStatus] = useState('RUNNING');
+  const [deploymentModalMode, setDeploymentModalMode] = useState<'create-service' | 'edit-deployment'>('create-service');
+  const [newServiceName, setNewServiceName] = useState('');
+  const [newServiceType, setNewServiceType] = useState('OTHER');
+  const [newServicePort, setNewServicePort] = useState('');
+  const [newServiceUrl, setNewServiceUrl] = useState('');
 
   const [storageName, setStorageName] = useState('');
   const [storageType, setStorageType] = useState('SSD');
@@ -70,6 +80,7 @@ export default function Hardware() {
   const [docHardwareAssetId, setDocHardwareAssetId] = useState('');
   const [docSoftwareUnitId, setDocSoftwareUnitId] = useState('');
   const [docParentDocId, setDocParentDocId] = useState('');
+  const [previewDoc, setPreviewDoc] = useState<any | null>(null);
   const [pendingHardwareDelete, setPendingHardwareDelete] = useState<{
     id: string;
     name: string;
@@ -137,20 +148,31 @@ export default function Hardware() {
   const selectedServiceDocs = docs.filter(doc => doc.softwareUnitId && selectedServiceIds.has(doc.softwareUnitId));
   const visibleDocs = Array.from(new Map([...selectedDocs, ...selectedServiceDocs].map(doc => [doc.id, doc])).values());
   const visibleDocIds = new Set(visibleDocs.map(doc => doc.id));
-  const rootVisibleDocs = visibleDocs.filter(doc => !doc.parentDocId || !visibleDocIds.has(doc.parentDocId));
+  const rootVisibleDocs = visibleDocs
+    .filter(doc => !doc.parentDocId || !visibleDocIds.has(doc.parentDocId))
+    .sort((a, b) => String(a.title || '').localeCompare(String(b.title || '')));
 
-  const getDocChildren = (docId: string) => visibleDocs.filter(doc => doc.parentDocId === docId);
+  const getDocChildren = (docId: string) =>
+    visibleDocs
+      .filter(doc => doc.parentDocId === docId)
+      .sort((a, b) => String(a.title || '').localeCompare(String(b.title || '')));
 
   const handleAddHardware = () => {
     setHardwareEditId(null);
     setName('');
+    setHostname('');
     setType('SERVER');
-    setStatus('ONLINE');
     setCpu('');
+    setCpuCores('');
     setRam('');
     setOs('');
     setIp('');
     setMac('');
+    setMake('');
+    setModel('');
+    setSerialNumber('');
+    setLocation('');
+    setIcon('');
     setNotes('');
     setIsHardwareModalOpen(true);
   };
@@ -158,13 +180,19 @@ export default function Hardware() {
   const handleEditHardware = (hw: any) => {
     setHardwareEditId(hw.id);
     setName(hw.name || '');
+    setHostname(hw.hostname || '');
     setType(hw.type || 'SERVER');
-    setStatus(hw.status || 'ONLINE');
     setCpu(hw.cpu || '');
+    setCpuCores(hw.cpuCores ? String(hw.cpuCores) : '');
     setRam(hw.ram ? hw.ram.toString() : '');
     setOs(hw.os || '');
     setIp(hw.ip || '');
     setMac(hw.mac || '');
+    setMake(hw.make || '');
+    setModel(hw.model || '');
+    setSerialNumber(hw.serialNumber || '');
+    setLocation(hw.location || '');
+    setIcon(hw.icon || '');
     setNotes(hw.notes || '');
     setIsHardwareModalOpen(true);
   };
@@ -181,13 +209,19 @@ export default function Hardware() {
       headers: authHeaders,
       body: JSON.stringify({
         name,
+        hostname: hostname || null,
         type,
-        status,
         cpu,
+        cpuCores: cpuCores ? parseInt(cpuCores, 10) : null,
         ram: ram ? parseInt(ram, 10) : null,
         os,
         ip,
         mac,
+        make: make || null,
+        model: model || null,
+        serialNumber: serialNumber || null,
+        location: location || null,
+        icon: icon || null,
         notes
       })
     });
@@ -270,24 +304,57 @@ export default function Hardware() {
   };
 
   const handleAddDeployment = () => {
+    setDeploymentModalMode('create-service');
     setDeploymentEditId(null);
     setSoftwareUnitId('');
+    setNewServiceName('');
+    setNewServiceType('OTHER');
+    setNewServicePort('');
+    setNewServiceUrl('');
     setInternalIp('');
-    setDeploymentStatus('RUNNING');
     setIsDeploymentModalOpen(true);
   };
 
   const handleEditDeployment = (dep: any) => {
+    setDeploymentModalMode('edit-deployment');
     setDeploymentEditId(dep.id);
     setSoftwareUnitId(dep.softwareUnitId || '');
     setInternalIp(dep.internalIp || '');
-    setDeploymentStatus(dep.status || 'RUNNING');
     setIsDeploymentModalOpen(true);
   };
 
   const saveDeployment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token || !selectedHardwareId) return;
+
+    let targetSoftwareUnitId = softwareUnitId;
+
+    if (deploymentModalMode === 'create-service') {
+      if (!newServiceName.trim()) {
+        alert('Service name is required');
+        return;
+      }
+
+      const createServiceRes = await fetch(`${API_BASE}/services`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({
+          name: newServiceName.trim(),
+          type: newServiceType,
+          port: newServicePort ? Number(newServicePort) : undefined,
+          url: newServiceUrl || undefined
+        })
+      });
+
+      if (!createServiceRes.ok) {
+        const createServiceError = await createServiceRes.json().catch(() => ({}));
+        alert(`Error: ${createServiceError.error || 'Failed to create service'}`);
+        return;
+      }
+
+      const createdService = await createServiceRes.json();
+      targetSoftwareUnitId = String(createdService.id);
+    }
 
     const url = deploymentEditId ? `${API_BASE}/deployments/${deploymentEditId}` : `${API_BASE}/deployments`;
     const method = deploymentEditId ? 'PUT' : 'POST';
@@ -297,9 +364,8 @@ export default function Hardware() {
       headers: authHeaders,
       body: JSON.stringify({
         hardwareAssetId: selectedHardwareId,
-        softwareUnitId,
-        internalIp,
-        status: deploymentStatus
+        softwareUnitId: targetSoftwareUnitId,
+        internalIp
       })
     });
 
@@ -531,26 +597,42 @@ export default function Hardware() {
     return `${gb} GB`;
   };
 
-  const renderDocNode = (doc: any, depth = 0) => (
-    <div key={doc.id} className={`px-4 py-3 ${depth > 0 ? 'ml-5 border-l border-border' : ''}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-text">{doc.title}</p>
-          <div className="flex flex-wrap gap-2 my-2">
-            {doc.hardwareAsset?.name && <span className="text-xs bg-primary/15 text-primary px-2 py-1 rounded-full">HW: {doc.hardwareAsset.name}</span>}
-            {doc.softwareUnit?.name && <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-1 rounded-full">Service: {doc.softwareUnit.name}</span>}
-            {doc.parentDoc?.title && <span className="text-xs bg-purple-500/15 text-purple-300 px-2 py-1 rounded-full">Parent: {doc.parentDoc.title}</span>}
-          </div>
-          <div className="max-h-32 overflow-auto">
-            <ReactMarkdown components={markdownComponents}>{doc.content || ''}</ReactMarkdown>
-          </div>
-        </div>
-        <button onClick={() => handleEditDoc(doc)} className="text-sm text-primary hover:text-primary/80 shrink-0">Edit</button>
-      </div>
+  const renderDocNode = (doc: any, depth = 0) => {
+    const childCount = getDocChildren(doc.id).length;
 
-      {getDocChildren(doc.id).map(child => renderDocNode(child, depth + 1))}
-    </div>
-  );
+    return (
+      <div key={doc.id} className={`${depth > 0 ? 'ml-5 border-l border-border' : ''}`}>
+        <button
+          type="button"
+          onClick={() => setPreviewDoc(doc)}
+          className="w-full px-4 py-2.5 text-left hover:bg-background/50 transition-colors"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-text truncate">{doc.title}</p>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {doc.softwareUnit?.name && <span className="text-[11px] bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded-full">Service</span>}
+                {doc.hardwareAsset?.name && <span className="text-[11px] bg-primary/15 text-primary px-2 py-0.5 rounded-full">Hardware</span>}
+                {childCount > 0 && <span className="text-[11px] bg-background border border-border text-text-secondary px-2 py-0.5 rounded-full">{childCount} child</span>}
+              </div>
+            </div>
+            <span
+              role="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditDoc(doc);
+              }}
+              className="text-xs text-primary hover:text-primary/80 shrink-0"
+            >
+              Edit
+            </span>
+          </div>
+        </button>
+
+        {getDocChildren(doc.id).map(child => renderDocNode(child, depth + 1))}
+      </div>
+    );
+  };
 
   return (
   <div className="documentation-area p-6 h-full overflow-auto">
@@ -615,9 +697,16 @@ export default function Hardware() {
                   <button onClick={() => handleEditHardware(selectedHardware)} className="text-sm text-primary hover:text-primary/80">Edit Hardware</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
+                  <p className="text-text-secondary">Hostname: <span className="text-text">{selectedHardware.hostname || '-'}</span></p>
+                  <p className="text-text-secondary">Make: <span className="text-text">{selectedHardware.make || '-'}</span></p>
+                  <p className="text-text-secondary">Model: <span className="text-text">{selectedHardware.model || '-'}</span></p>
+                  <p className="text-text-secondary">CPU: <span className="text-text">{selectedHardware.cpu || '-'}</span></p>
+                  <p className="text-text-secondary">CPU Cores: <span className="text-text">{selectedHardware.cpuCores ?? '-'}</span></p>
                   <p className="text-text-secondary">IP: <span className="text-text">{selectedHardware.ip || '-'}</span></p>
                   <p className="text-text-secondary">OS: <span className="text-text">{selectedHardware.os || '-'}</span></p>
                   <p className="text-text-secondary">RAM: <span className="text-text">{selectedHardware.ram ? `${selectedHardware.ram} GB` : '-'}</span></p>
+                  <p className="text-text-secondary">Serial: <span className="text-text">{selectedHardware.serialNumber || '-'}</span></p>
+                  <p className="text-text-secondary">Location: <span className="text-text">{selectedHardware.location || '-'}</span></p>
                 </div>
                 {selectedHardware.notes && <p className="mt-4 text-sm text-text-secondary whitespace-pre-wrap">{selectedHardware.notes}</p>}
               </Card>
@@ -691,22 +780,16 @@ export default function Hardware() {
                   <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Hostname</label>
+                  <input type="text" value={hostname} onChange={e => setHostname(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
                   <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
                     <option value="SERVER">Server</option>
                     <option value="PI">Raspberry Pi</option>
                     <option value="NAS">NAS</option>
-                    <option value="ROUTER">Router/Switch</option>
-                    <option value="VM_HOST">VM Host</option>
                     <option value="OTHER">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Status</label>
-                  <select value={status} onChange={e => setStatus(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                    <option value="ONLINE">Online</option>
-                    <option value="OFFLINE">Offline</option>
-                    <option value="MAINTENANCE">Maintenance</option>
                   </select>
                 </div>
                 <div>
@@ -722,8 +805,32 @@ export default function Hardware() {
                   <input type="text" value={cpu} onChange={e => setCpu(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">CPU Cores</label>
+                  <input type="number" value={cpuCores} onChange={e => setCpuCores(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Make</label>
+                  <input type="text" value={make} onChange={e => setMake(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Model</label>
+                  <input type="text" value={model} onChange={e => setModel(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">RAM (GB)</label>
                   <input type="number" value={ram} onChange={e => setRam(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Serial Number</label>
+                  <input type="text" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Location</label>
+                  <input type="text" value={location} onChange={e => setLocation(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Icon</label>
+                  <input type="text" value={icon} onChange={e => setIcon(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" placeholder="e.g. server, pi, nas" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-text-secondary mb-1">Operating System</label>
@@ -763,24 +870,57 @@ export default function Hardware() {
             </div>
             <form onSubmit={saveDeployment} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Service *</label>
-                <select required value={softwareUnitId} onChange={e => setSoftwareUnitId(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                  <option value="" disabled>Select a service</option>
-                  {services.map(sw => <option key={sw.id} value={sw.id}>{sw.name}</option>)}
-                </select>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Service Name *</label>
+                {deploymentModalMode === 'create-service' ? (
+                  <input
+                    required
+                    type="text"
+                    value={newServiceName}
+                    onChange={e => setNewServiceName(e.target.value)}
+                    className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary"
+                    placeholder="e.g. Nextcloud"
+                  />
+                ) : (
+                  <select required value={softwareUnitId} onChange={e => setSoftwareUnitId(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
+                    <option value="" disabled>Select a service</option>
+                    {services.map(sw => <option key={sw.id} value={sw.id}>{sw.name}</option>)}
+                  </select>
+                )}
               </div>
+
+              {deploymentModalMode === 'create-service' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Service Type</label>
+                    <select value={newServiceType} onChange={e => setNewServiceType(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
+                      <option value="OTHER">Other</option>
+                      <option value="DOCKER_CONTAINER">Docker Container</option>
+                      <option value="VM">VM</option>
+                      <option value="POD">Pod</option>
+                      <option value="BARE_METAL_SERVICE">Bare Metal Service</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">Port</label>
+                      <input type="number" value={newServicePort} onChange={e => setNewServicePort(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">URL / Domain</label>
+                      <input type="text" value={newServiceUrl} onChange={e => setNewServiceUrl(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {deploymentModalMode === 'create-service' && (
+                <div className="rounded-lg border border-border bg-background/40 p-3">
+                  <p className="text-xs text-text-secondary">The new service will be created and directly linked to this hardware.</p>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Internal IP / Address</label>
                 <input type="text" value={internalIp} onChange={e => setInternalIp(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Status</label>
-                <select value={deploymentStatus} onChange={e => setDeploymentStatus(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                  <option value="RUNNING">Running</option>
-                  <option value="STOPPED">Stopped</option>
-                  <option value="ERROR">Error</option>
-                  <option value="UNKNOWN">Unknown</option>
-                </select>
               </div>
               <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
                 {deploymentEditId && (
@@ -1004,6 +1144,47 @@ export default function Hardware() {
                 className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {previewDoc && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-4xl max-h-[85vh] overflow-hidden rounded-xl border border-border bg-content shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3 bg-background">
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold text-text truncate">{previewDoc.title}</h3>
+                <div className="flex gap-2 mt-1 flex-wrap">
+                  {previewDoc.hardwareAsset?.name && <span className="text-xs bg-primary/15 text-primary px-2 py-0.5 rounded-full">HW: {previewDoc.hardwareAsset.name}</span>}
+                  {previewDoc.softwareUnit?.name && <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded-full">Service: {previewDoc.softwareUnit.name}</span>}
+                </div>
+              </div>
+              <button onClick={() => setPreviewDoc(null)} className="text-text-secondary hover:text-text">✕</button>
+            </div>
+
+            <div className="p-4 overflow-auto flex-1">
+              <ReactMarkdown components={markdownComponents}>{previewDoc.content || '*No content available*'}</ReactMarkdown>
+            </div>
+
+            <div className="border-t border-border p-3 bg-background flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setPreviewDoc(null);
+                  handleEditDoc(previewDoc);
+                }}
+                className="px-3 py-1.5 text-sm rounded-lg border border-border bg-content hover:bg-primary/15 hover:text-primary transition-colors"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewDoc(null)}
+                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
+              >
+                Close
               </button>
             </div>
           </div>
