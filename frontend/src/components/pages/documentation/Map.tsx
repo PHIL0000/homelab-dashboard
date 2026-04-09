@@ -51,10 +51,10 @@ export default function DocumentationMap() {
   }, [services, deployedServiceIds]);
 
   return (
-    <div className="p-6 h-full overflow-auto">
+  <div className="documentation-area p-6 h-full overflow-auto">
       <h2 className="text-2xl font-bold text-text mb-6">Infrastructure Map</h2>
 
-      <Card className="border border-border bg-content p-6 mb-6">
+  <Card className="rounded-xl border border-border bg-content p-6 mb-6">
         <h3 className="text-lg font-semibold text-text mb-4">Hardware → Services Tree</h3>
         <div className="space-y-4">
           {hardware.length === 0 && <p className="text-text-secondary">No hardware available.</p>}
@@ -82,7 +82,7 @@ export default function DocumentationMap() {
         </div>
       </Card>
 
-      <Card className="border border-border bg-content p-6">
+  <Card className="rounded-xl border border-border bg-content p-6">
         <h3 className="text-lg font-semibold text-text mb-4">Services ohne Deployment</h3>
         {unassignedServices.length === 0 ? (
           <p className="text-text-secondary">All services are currently assigned to hardware.</p>

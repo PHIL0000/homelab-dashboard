@@ -233,13 +233,13 @@ export default function MarkdownDocs() {
   };
 
   return (
-    <div className="p-6 h-full overflow-auto relative">
+  <div className="documentation-area p-6 h-full overflow-auto relative">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-text">Markdown Documents (Top Level)</h2>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        <Card className="xl:col-span-4 border border-border bg-content p-0 overflow-hidden h-fit">
+  <Card className="xl:col-span-4 rounded-xl border border-border bg-content p-0 overflow-hidden h-fit">
           <div className="px-4 py-3 border-b border-border bg-background text-sm font-semibold text-text-secondary">Top-Level Markdown Files</div>
           <div className="divide-y divide-border">
             {topLevelDocs.length === 0 && <p className="p-4 text-text-secondary">No top-level markdown files found.</p>}
@@ -269,7 +269,7 @@ export default function MarkdownDocs() {
           </div>
         </Card>
 
-        <Card className="xl:col-span-8 border border-border bg-content p-6">
+  <Card className="xl:col-span-8 rounded-xl border border-border bg-content p-6">
           {!selectedDoc && <p className="text-text-secondary">Select a top-level markdown file on the left.</p>}
 
           {selectedDoc && (

@@ -44,3 +44,12 @@ body {
 html.light {
   color-scheme: light;
 }
+
+/* Keep documentation design intact, but soften corners a bit */
+.documentation-area .rounded-lg {
+  border-radius: 0.875rem;
+}
+
+.documentation-area .rounded-xl {
+  border-radius: 1rem;
+}

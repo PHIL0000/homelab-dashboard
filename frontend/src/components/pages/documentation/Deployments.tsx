@@ -84,12 +84,12 @@ export default function Deployments() {
   };
 
   return (
-    <div className="p-6 max-w-4xl h-full overflow-auto relative">
+  <div className="documentation-area p-6 max-w-4xl h-full overflow-auto relative">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-text">Deployments</h2>
         <button onClick={handleAdd} className="bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg text-white transition-colors">+ Add Deployment</button>
       </div>
-      <Card className="border border-border bg-content p-0 overflow-hidden">
+  <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
          <table className="w-full text-left">
            <thead>
              <tr className="bg-background border-b border-border">

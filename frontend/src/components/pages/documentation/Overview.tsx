@@ -48,17 +48,18 @@ export default function DocsOverview() {
   }, [storageItems]);
 
   return (
-    <div className="p-6 max-w-4xl h-full overflow-auto">
+  <div className="documentation-area p-6 max-w-4xl h-full overflow-auto">
       <h2 className="text-2xl font-bold mb-6 text-text">{t('nav.docs.hardware')}</h2>
+
       <div className="space-y-6">
         {hardware.length === 0 && (
-          <Card className="p-4 bg-content border border-border text-text-secondary">
+          <Card className="rounded-xl p-4 bg-content border border-border text-text-secondary">
             No hardware entries available.
           </Card>
         )}
 
         {hardware.map(hw => (
-          <Card key={hw.id} className="p-4 bg-content border border-border flex flex-col gap-2">
+          <Card key={hw.id} className="rounded-xl p-4 bg-content border border-border flex flex-col gap-2">
             <h3 className="text-xl font-bold text-primary">{hw.name} <span className="text-sm text-text-secondary">({hw.type})</span></h3>
             <p className="text-sm text-text-secondary">{hw.ip || '-'} • {hw.os || '-'}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">

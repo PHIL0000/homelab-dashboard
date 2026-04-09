@@ -372,15 +372,17 @@ export default function Hardware() {
   );
 
   return (
-    <div className="p-6 h-full overflow-auto">
+  <div className="documentation-area p-6 h-full overflow-auto">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-text">Hardware Documentation</h2>
-        <button onClick={handleAddHardware} className="bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg text-white transition-colors">+ Add Hardware</button>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        <Card className="xl:col-span-4 border border-border bg-content p-0 overflow-hidden h-fit">
-          <div className="px-4 py-3 border-b border-border bg-background text-sm font-semibold text-text-secondary">Hardware Nodes</div>
+  <Card className="xl:col-span-4 rounded-xl border border-border bg-content p-0 overflow-hidden h-fit">
+          <div className="px-4 py-3 border-b border-border bg-background flex items-center justify-between gap-3">
+            <span className="text-sm font-semibold text-text-secondary">Hardware Nodes</span>
+            <button onClick={handleAddHardware} className="bg-primary hover:bg-primary/90 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-colors">+ Add Hardware</button>
+          </div>
           <div className="divide-y divide-border">
             {hardware.length === 0 && <p className="p-4 text-text-secondary">No hardware found.</p>}
             {hardware.map(hw => (
@@ -416,14 +418,14 @@ export default function Hardware() {
 
         <div className="xl:col-span-8 space-y-6">
           {!selectedHardware && (
-            <Card className="border border-border bg-content p-6 text-text-secondary">
+            <Card className="rounded-xl border border-border bg-content p-6 text-text-secondary">
               Select hardware on the left or create a new one.
             </Card>
           )}
 
           {selectedHardware && (
             <>
-              <Card className="border border-border bg-content p-6">
+              <Card className="rounded-xl border border-border bg-content p-6">
                 <div className="flex justify-between items-start gap-4">
                   <div>
                     <h3 className="text-xl font-bold text-text">{selectedHardware.name}</h3>
@@ -439,7 +441,7 @@ export default function Hardware() {
                 {selectedHardware.notes && <p className="mt-4 text-sm text-text-secondary whitespace-pre-wrap">{selectedHardware.notes}</p>}
               </Card>
 
-              <Card className="border border-border bg-content p-0 overflow-hidden">
+              <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
                   <h4 className="font-semibold text-text">Services on this hardware</h4>
                   <button onClick={handleAddDeployment} className="text-sm text-primary hover:text-primary/80">+ Add service</button>
@@ -458,7 +460,7 @@ export default function Hardware() {
                 </div>
               </Card>
 
-              <Card className="border border-border bg-content p-0 overflow-hidden">
+              <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
                   <h4 className="font-semibold text-text">Disks / Storage</h4>
                   <button onClick={handleAddStorage} className="text-sm text-primary hover:text-primary/80">+ Add storage</button>
@@ -477,7 +479,7 @@ export default function Hardware() {
                 </div>
               </Card>
 
-              <Card className="border border-border bg-content p-0 overflow-hidden">
+              <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
                 <div className="px-4 py-3 border-b border-border bg-background flex items-center justify-between gap-3">
                   <h4 className="font-semibold text-text">Linked markdown documents (hardware + services)</h4>
                   <button onClick={handleAddDoc} className="text-sm text-primary hover:text-primary/80">+ Add markdown</button>
