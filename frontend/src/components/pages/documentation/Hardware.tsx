@@ -34,6 +34,7 @@ export default function Hardware() {
   const [storageItems, setStorageItems] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
   const [selectedHardwareId, setSelectedHardwareId] = useState<string>('');
+  const normalizedSelectedHardwareId = selectedHardwareId ? String(selectedHardwareId) : '';
 
   const [isHardwareModalOpen, setIsHardwareModalOpen] = useState(false);
   const [isDeploymentModalOpen, setIsDeploymentModalOpen] = useState(false);
@@ -75,6 +76,8 @@ export default function Hardware() {
     Authorization: `Bearer ${token}`
   }), [token]);
 
+  const isSelectedHardware = (hardwareId: unknown) => String(hardwareId) === normalizedSelectedHardwareId;
+
   const fetchData = async () => {
     if (!token) return;
     try {
@@ -94,10 +97,10 @@ export default function Hardware() {
       setDocs(await docsRes.json());
 
       if (!selectedHardwareId && hwData.length > 0) {
-        setSelectedHardwareId(hwData[0].id);
+        setSelectedHardwareId(String(hwData[0].id));
       }
-      if (selectedHardwareId && !hwData.some((hw: any) => hw.id === selectedHardwareId)) {
-        setSelectedHardwareId(hwData[0]?.id || '');
+      if (selectedHardwareId && !hwData.some((hw: any) => isSelectedHardware(hw.id))) {
+        setSelectedHardwareId(hwData[0]?.id ? String(hwData[0].id) : '');
       }
     } catch (error) {
       console.error(error);
@@ -108,10 +111,10 @@ export default function Hardware() {
     fetchData();
   }, [token]);
 
-  const selectedHardware = hardware.find(hw => hw.id === selectedHardwareId);
-  const selectedDeployments = deployments.filter(dep => dep.hardwareAssetId === selectedHardwareId);
-  const selectedStorage = storageItems.filter(item => item.hardwareAssetId === selectedHardwareId);
-  const selectedDocs = docs.filter(doc => doc.hardwareAssetId === selectedHardwareId);
+  const selectedHardware = hardware.find(hw => isSelectedHardware(hw.id));
+  const selectedDeployments = deployments.filter(dep => String(dep.hardwareAssetId) === normalizedSelectedHardwareId);
+  const selectedStorage = storageItems.filter(item => String(item.hardwareAssetId) === normalizedSelectedHardwareId);
+  const selectedDocs = docs.filter(doc => String(doc.hardwareAssetId) === normalizedSelectedHardwareId);
   const selectedServiceIds = new Set(selectedDeployments.map(dep => dep.softwareUnitId).filter(Boolean));
   const selectedServices = services.filter(sw => selectedServiceIds.has(sw.id));
   const selectedServiceDocs = docs.filter(doc => doc.softwareUnitId && selectedServiceIds.has(doc.softwareUnitId));
@@ -177,7 +180,7 @@ export default function Hardware() {
       setIsHardwareModalOpen(false);
       await fetchData();
       if (!hardwareEditId) {
-        setSelectedHardwareId(saved.id);
+        setSelectedHardwareId(String(saved.id));
       }
       return;
     }
@@ -383,12 +386,16 @@ export default function Hardware() {
             {hardware.map(hw => (
               <button
                 key={hw.id}
-                onClick={() => setSelectedHardwareId(hw.id)}
-                className={`w-full text-left px-4 py-3 transition-all border-l-4 ${selectedHardwareId === hw.id ? 'bg-primary/20 border-primary shadow-md' : 'hover:bg-background/60 border-transparent'}`}
+                onClick={() => setSelectedHardwareId(String(hw.id))}
+                className={`relative w-full text-left pl-5 pr-4 py-3 transition-all ${isSelectedHardware(hw.id) ? 'bg-primary/20 shadow-md' : 'hover:bg-background/60'}`}
               >
+                <span
+                  aria-hidden="true"
+                  className={`absolute left-0 top-0 h-full w-1 ${isSelectedHardware(hw.id) ? 'bg-primary' : 'bg-border'}`}
+                />
                 <div className="flex justify-between items-start gap-3">
                   <div>
-                    <p className={`font-medium ${selectedHardwareId === hw.id ? 'text-primary' : 'text-text'}`}>{hw.name}</p>
+                    <p className={`font-medium ${isSelectedHardware(hw.id) ? 'text-primary' : 'text-text'}`}>{hw.name}</p>
                     <p className="text-xs text-text-secondary">{hw.type} • {hw.status}</p>
                   </div>
                   <span
