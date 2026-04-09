@@ -189,6 +189,85 @@ export default function Hardware() {
     alert(`Error: ${errorData.error || 'Failed to save hardware'}`);
   };
 
+  const deleteHardware = async () => {
+    if (!token || !hardwareEditId) return;
+
+    const impactedServices = selectedServices;
+    const impactedServiceIds = new Set(impactedServices.map((service) => service.id));
+    const impactedDocs = Array.from(
+      new Map(
+        [...selectedDocs, ...selectedServiceDocs].map((doc) => [doc.id, doc])
+      ).values()
+    );
+
+    const relatedDeployments = deployments.filter((dep) => String(dep.hardwareAssetId) === String(hardwareEditId));
+    const relatedStorageByHardware = storageItems.filter((item) => String(item.hardwareAssetId) === String(hardwareEditId));
+    const relatedStorageByService = storageItems.filter(
+      (item) => item.softwareUnitId && impactedServiceIds.has(String(item.softwareUnitId))
+    );
+    const totalRelatedStorage = Array.from(
+      new Set([
+        ...relatedStorageByHardware.map((item) => item.id),
+        ...relatedStorageByService.map((item) => item.id)
+      ])
+    ).length;
+
+    const externalDeploymentsImpacted = deployments.filter(
+      (dep) =>
+        dep.softwareUnitId &&
+        impactedServiceIds.has(String(dep.softwareUnitId)) &&
+        String(dep.hardwareAssetId) !== String(hardwareEditId)
+    );
+
+    const summaryLines = [
+      `• Hardware: ${selectedHardware?.name || 'Selected hardware'}`,
+      `• Deployments: ${relatedDeployments.length}`,
+      `• Services: ${impactedServices.length}`,
+      `• Storage entries: ${totalRelatedStorage}`,
+      `• Markdown documents: ${impactedDocs.length}`
+    ];
+
+    if (impactedServices.length > 0) {
+      const serviceNames = impactedServices.map((service) => service.name).slice(0, 6);
+      summaryLines.push(`• Service list: ${serviceNames.join(', ')}${impactedServices.length > 6 ? ' …' : ''}`);
+    }
+
+    if (impactedDocs.length > 0) {
+      const docTitles = impactedDocs.map((doc) => doc.title).slice(0, 6);
+      summaryLines.push(`• Markdown list: ${docTitles.join(', ')}${impactedDocs.length > 6 ? ' …' : ''}`);
+    }
+
+    if (externalDeploymentsImpacted.length > 0) {
+      summaryLines.push(`• WARNING: ${externalDeploymentsImpacted.length} deployment(s) on other hardware will also be removed because their services are deleted.`);
+    }
+
+    const confirmationText = [
+      'Delete hardware and related data?',
+      '',
+      'The following will be removed:',
+      ...summaryLines,
+      '',
+      'This action cannot be undone.'
+    ].join('\n');
+
+    if (!window.confirm(confirmationText)) return;
+
+    const response = await fetch(`${API_BASE}/hardware/${hardwareEditId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      alert(`Error: ${errorData.error || 'Failed to delete hardware'}`);
+      return;
+    }
+
+    setIsHardwareModalOpen(false);
+    setHardwareEditId(null);
+    await fetchData();
+  };
+
   const handleAddDeployment = () => {
     setDeploymentEditId(null);
     setSoftwareUnitId('');
@@ -231,6 +310,26 @@ export default function Hardware() {
 
     const errorData = await response.json();
     alert(`Error: ${errorData.error || 'Failed to save deployment'}`);
+  };
+
+  const deleteDeployment = async () => {
+    if (!token || !deploymentEditId) return;
+    if (!window.confirm('Delete this deployment?')) return;
+
+    const response = await fetch(`${API_BASE}/deployments/${deploymentEditId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      alert(`Error: ${errorData.error || 'Failed to delete deployment'}`);
+      return;
+    }
+
+    setIsDeploymentModalOpen(false);
+    setDeploymentEditId(null);
+    await fetchData();
   };
 
   const handleAddStorage = () => {
@@ -288,6 +387,26 @@ export default function Hardware() {
     alert(`Error: ${errorData.error || 'Failed to save storage'}`);
   };
 
+  const deleteStorage = async () => {
+    if (!token || !storageEditId) return;
+    if (!window.confirm('Delete this storage item?')) return;
+
+    const response = await fetch(`${API_BASE}/storage/${storageEditId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      alert(`Error: ${errorData.error || 'Failed to delete storage'}`);
+      return;
+    }
+
+    setIsStorageModalOpen(false);
+    setStorageEditId(null);
+    await fetchData();
+  };
+
   const handleAddDoc = () => {
     setDocEditId(null);
     setDocTitle('');
@@ -341,6 +460,71 @@ export default function Hardware() {
 
     const errorData = await response.json();
     alert(`Error: ${errorData.error || 'Failed to save document'}`);
+  };
+
+  const deleteDoc = async () => {
+    if (!token || !docEditId) return;
+
+    const targetDoc = docs.find((doc) => doc.id === docEditId);
+
+    const childrenByParent = new Map<string, string[]>();
+    for (const doc of docs) {
+      if (!doc.parentDocId) continue;
+      const existing = childrenByParent.get(doc.parentDocId) || [];
+      existing.push(doc.id);
+      childrenByParent.set(doc.parentDocId, existing);
+    }
+
+    const subtreeIds = new Set<string>();
+    const stack = [docEditId];
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+      if (subtreeIds.has(current)) continue;
+      subtreeIds.add(current);
+
+      const children = childrenByParent.get(current) || [];
+      for (const childId of children) {
+        if (!subtreeIds.has(childId)) stack.push(childId);
+      }
+    }
+
+    const subtreeDocs = docs.filter((doc) => subtreeIds.has(doc.id));
+    const childCount = Math.max(0, subtreeDocs.length - 1);
+    const childTitles = subtreeDocs
+      .filter((doc) => doc.id !== docEditId)
+      .map((doc) => doc.title)
+      .slice(0, 8);
+
+    const confirmationLines = [
+      `Delete markdown document "${targetDoc?.title || 'Selected document'}"?`,
+      '',
+      'The following will be removed:',
+      `• Document: ${targetDoc?.title || docEditId}`,
+      `• Child documents: ${childCount}`
+    ];
+
+    if (childTitles.length > 0) {
+      confirmationLines.push(`• Child list: ${childTitles.join(', ')}${childCount > childTitles.length ? ' …' : ''}`);
+    }
+
+    confirmationLines.push('', 'This action cannot be undone.');
+
+    if (!window.confirm(confirmationLines.join('\n'))) return;
+
+    const response = await fetch(`${API_BASE}/docs/${docEditId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      alert(`Error: ${errorData.error || 'Failed to delete document'}`);
+      return;
+    }
+
+    setIsDocModalOpen(false);
+    setDocEditId(null);
+    await fetchData();
   };
 
   const displaySpace = (gb: number | undefined | null) => {
@@ -554,6 +738,15 @@ export default function Hardware() {
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
+                {hardwareEditId && (
+                  <button
+                    type="button"
+                    onClick={deleteHardware}
+                    className="mr-auto px-4 py-2 rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
                 <button type="button" onClick={() => setIsHardwareModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
                 <button type="submit" className="bg-primary hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Hardware</button>
               </div>
@@ -593,6 +786,15 @@ export default function Hardware() {
                 </select>
               </div>
               <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
+                {deploymentEditId && (
+                  <button
+                    type="button"
+                    onClick={deleteDeployment}
+                    className="mr-auto px-4 py-2 rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
                 <button type="button" onClick={() => setIsDeploymentModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
                 <button type="submit" className="bg-primary flex-1 hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Deployment</button>
               </div>
@@ -638,6 +840,15 @@ export default function Hardware() {
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
+                {storageEditId && (
+                  <button
+                    type="button"
+                    onClick={deleteStorage}
+                    className="mr-auto px-4 py-2 rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
                 <button type="button" onClick={() => setIsStorageModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
                 <button type="submit" className="bg-primary flex-1 hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Storage</button>
               </div>
@@ -699,6 +910,15 @@ export default function Hardware() {
               </div>
 
               <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border shrink-0">
+                {docEditId && (
+                  <button
+                    type="button"
+                    onClick={deleteDoc}
+                    className="mr-auto px-4 py-2 rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
                 <button type="button" onClick={() => setIsDocModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
                 <button type="submit" className="bg-primary flex-1 hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Document</button>
               </div>

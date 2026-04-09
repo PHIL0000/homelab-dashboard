@@ -232,6 +232,81 @@ export default function MarkdownDocs() {
     }
   };
 
+  const handleDeleteDoc = async () => {
+    if (!token || !selectedDoc) return;
+
+    const childrenByParent = new Map<string, string[]>();
+    for (const doc of docs) {
+      if (!doc.parentDocId) continue;
+      const existing = childrenByParent.get(doc.parentDocId) || [];
+      existing.push(doc.id);
+      childrenByParent.set(doc.parentDocId, existing);
+    }
+
+    const subtreeIds = new Set<string>();
+    const stack = [selectedDoc.id];
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+      if (subtreeIds.has(current)) continue;
+      subtreeIds.add(current);
+
+      const children = childrenByParent.get(current) || [];
+      for (const childId of children) {
+        if (!subtreeIds.has(childId)) stack.push(childId);
+      }
+    }
+
+    const subtreeDocs = docs.filter((doc) => subtreeIds.has(doc.id));
+    const childCount = Math.max(0, subtreeDocs.length - 1);
+    const childTitles = subtreeDocs
+      .filter((doc) => doc.id !== selectedDoc.id)
+      .map((doc) => doc.title)
+      .slice(0, 8);
+
+    const confirmationLines = [
+      `Delete markdown document "${selectedDoc.title}"?`,
+      '',
+      'The following will be removed:',
+      `• Document: ${selectedDoc.title}`,
+      `• Child documents: ${childCount}`
+    ];
+
+    if (childTitles.length > 0) {
+      confirmationLines.push(`• Child list: ${childTitles.join(', ')}${childCount > childTitles.length ? ' …' : ''}`);
+    }
+
+    confirmationLines.push('', 'This action cannot be undone.');
+
+    if (!window.confirm(confirmationLines.join('\n'))) return;
+
+    setIsSaving(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/infrastructure/docs/${selectedDoc.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete markdown file');
+      }
+
+      setMessage({ type: 'success', text: 'Markdown file deleted.' });
+      setIsEditing(false);
+      setEditTitle('');
+      setEditContent('');
+      await fetchData();
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error?.message || 'Failed to delete markdown file' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
   <div className="documentation-area p-6 h-full overflow-auto relative">
       <div className="flex justify-between items-center mb-6">
@@ -329,6 +404,16 @@ export default function MarkdownDocs() {
                     />
                   </div>
                   <div className="flex justify-end gap-2">
+                    {selectedDoc && (
+                      <button
+                        type="button"
+                        onClick={handleDeleteDoc}
+                        disabled={isSaving}
+                        className="mr-auto px-3 py-1.5 text-sm rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 disabled:opacity-60 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => {

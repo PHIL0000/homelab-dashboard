@@ -83,6 +83,32 @@ export default function Deployments() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!token || !editId) return;
+    if (!window.confirm('Delete this deployment?')) return;
+
+    try {
+      const res = await fetch(`http://localhost:3001/api/infrastructure/deployments/${editId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        setIsModalOpen(false);
+        setEditId(null);
+        fetchData();
+      } else {
+        const errorData = await res.json();
+        alert('Error: ' + (errorData.error || 'Failed to delete deployment'));
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete deployment');
+    }
+  };
+
   return (
   <div className="documentation-area p-6 max-w-4xl h-full overflow-auto relative">
       <div className="flex justify-between items-center mb-6">
@@ -162,6 +188,15 @@ export default function Deployments() {
               </div>
               
               <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
+                {editId && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="mr-auto px-4 py-2 rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
                 <button type="submit" className="bg-primary flex-1 hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Deployment</button>
               </div>
