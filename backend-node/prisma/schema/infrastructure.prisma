@@ -83,6 +83,10 @@ model Storage {
   id              String         @id @default(uuid()) @db.Uuid
   name            String
   storageType     String?        // array, zfs, btrfs, lvm, single, etc.
+  make            String?
+  model           String?
+  serialNumber    String?
+  interface       String?        // SATA, SAS, NVMe, USB, iSCSI, etc.
   raidType        String?        // raid0, raid1, raid5, raidz2
   driveCount      Int?
   rawSpaceGB      Float?

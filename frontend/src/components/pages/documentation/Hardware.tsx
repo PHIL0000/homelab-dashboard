@@ -72,6 +72,10 @@ export default function Hardware() {
 
   const [storageName, setStorageName] = useState('');
   const [storageType, setStorageType] = useState('SSD');
+  const [storageMake, setStorageMake] = useState('');
+  const [storageModel, setStorageModel] = useState('');
+  const [storageSerialNumber, setStorageSerialNumber] = useState('');
+  const [storageInterface, setStorageInterface] = useState('');
   const [usableSpace, setUsableSpace] = useState<number | ''>('');
   const [spaceUnit, setSpaceUnit] = useState<'GB' | 'TB'>('GB');
 
@@ -403,6 +407,10 @@ export default function Hardware() {
     setStorageEditId(null);
     setStorageName('');
     setStorageType('SSD');
+    setStorageMake('');
+    setStorageModel('');
+    setStorageSerialNumber('');
+    setStorageInterface('');
     setUsableSpace('');
     setSpaceUnit('GB');
     setIsStorageModalOpen(true);
@@ -412,6 +420,10 @@ export default function Hardware() {
     setStorageEditId(item.id);
     setStorageName(item.name || '');
     setStorageType(item.storageType || 'SSD');
+    setStorageMake(item.make || '');
+    setStorageModel(item.model || '');
+    setStorageSerialNumber(item.serialNumber || '');
+    setStorageInterface(item.interface || '');
 
     if (item.usableSpaceGB && item.usableSpaceGB >= 1000 && item.usableSpaceGB % 1000 === 0) {
       setUsableSpace(item.usableSpaceGB / 1000);
@@ -439,6 +451,10 @@ export default function Hardware() {
       body: JSON.stringify({
         name: storageName,
         storageType,
+        make: storageMake || null,
+        model: storageModel || null,
+        serialNumber: storageSerialNumber || null,
+        interface: storageInterface || null,
         usableSpaceGB,
         hardwareAssetId: selectedHardwareId
       })
@@ -742,6 +758,11 @@ export default function Hardware() {
                       <div>
                         <p className="font-medium text-text">{item.name}</p>
                         <p className="text-xs text-text-secondary">{item.storageType || '-'} • {displaySpace(item.usableSpaceGB)}</p>
+                        <p className="text-xs text-text-secondary mt-0.5">
+                          {[item.make, item.model].filter(Boolean).join(' ') || '-'}
+                          {item.serialNumber ? ` • S/N ${item.serialNumber}` : ''}
+                          {item.interface ? ` • ${item.interface}` : ''}
+                        </p>
                       </div>
                       <button onClick={() => handleEditStorage(item)} className="text-sm text-primary hover:text-primary/80">Edit</button>
                     </div>
@@ -963,6 +984,24 @@ export default function Hardware() {
                   <option value="NAS">NAS / Network</option>
                   <option value="USB">USB Drive</option>
                 </select>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Make / Brand</label>
+                  <input type="text" value={storageMake} onChange={e => setStorageMake(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Model</label>
+                  <input type="text" value={storageModel} onChange={e => setStorageModel(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Serial Number</label>
+                  <input type="text" value={storageSerialNumber} onChange={e => setStorageSerialNumber(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Interface / Bus</label>
+                  <input type="text" value={storageInterface} onChange={e => setStorageInterface(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" placeholder="z.B. SATA, SAS, NVMe" />
+                </div>
               </div>
               <div className="flex gap-2 items-end">
                 <div className="flex-1">

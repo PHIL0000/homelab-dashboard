@@ -38,6 +38,8 @@ export default function StorageItems() {
             <tr className="bg-background border-b border-border">
               <th className="px-4 py-3 text-sm font-medium text-text-secondary">Name</th>
               <th className="px-4 py-3 text-sm font-medium text-text-secondary">Type</th>
+              <th className="px-4 py-3 text-sm font-medium text-text-secondary">Make / Model</th>
+              <th className="px-4 py-3 text-sm font-medium text-text-secondary">Serial</th>
               <th className="px-4 py-3 text-sm font-medium text-text-secondary">Size</th>
               <th className="px-4 py-3 text-sm font-medium text-text-secondary">Hardware Node</th>
               <th className="px-4 py-3 text-sm font-medium text-text-secondary">Service</th>
@@ -45,12 +47,14 @@ export default function StorageItems() {
           </thead>
           <tbody className="divide-y divide-border">
             {storageItems.length === 0 && (
-              <tr><td colSpan={5} className="p-4 text-center text-text-secondary">No storage items found.</td></tr>
+              <tr><td colSpan={7} className="p-4 text-center text-text-secondary">No storage items found.</td></tr>
             )}
             {storageItems.map(item => (
               <tr key={item.id} className="hover:bg-background/50 transition-colors">
                 <td className="px-4 py-3 font-medium text-text">{item.name}</td>
                 <td className="px-4 py-3 text-text-secondary">{item.storageType}</td>
+                <td className="px-4 py-3 text-text-secondary">{[item.make, item.model].filter(Boolean).join(' ') || '-'}</td>
+                <td className="px-4 py-3 text-text-secondary">{item.serialNumber || '-'}</td>
                 <td className="px-4 py-3 text-text-secondary">{displaySpace(item.usableSpaceGB)}</td>
                 <td className="px-4 py-3 text-text-secondary">{item.hardwareAsset?.name || 'Unassigned'}</td>
                 <td className="px-4 py-3 text-text-secondary">{item.softwareUnit?.name || '-'}</td>
