@@ -5,6 +5,12 @@ import { authenticate } from './auth';
 const router = Router();
 const prisma = new PrismaClient();
 
+const ensureMarkdownExtension = (title: unknown) => {
+  const normalized = typeof title === 'string' ? title.trim() : '';
+  if (!normalized) return 'untitled.md';
+  return normalized.toLowerCase().endsWith('.md') ? normalized : `${normalized}.md`;
+};
+
 // HW GET
 router.get('/hardware', authenticate, async (req, res) => {
   const hw = await prisma.hardwareAsset.findMany({ include: { deployments: { include: { softwareUnit: true } } } });
@@ -94,18 +100,31 @@ router.put('/storage/:id', authenticate, async (req, res) => {
 
 // DOCS GET
 router.get('/docs', authenticate, async (req, res) => {
-  const docs = await prisma.doc.findMany({ include: { hardwareAsset: true, softwareUnit: true } });
+  const docs = await prisma.doc.findMany({
+    include: {
+      hardwareAsset: true,
+      softwareUnit: true,
+      parentDoc: {
+        select: { id: true, title: true, parentDocId: true }
+      },
+      children: {
+        select: { id: true, title: true, parentDocId: true }
+      }
+    }
+  });
   res.json(docs);
 });
 
 // DOCS POST
 router.post('/docs', authenticate, async (req, res) => {
-  const { hardwareAssetId, softwareUnitId, ...rest } = req.body;
+  const { hardwareAssetId, softwareUnitId, parentDocId, title, ...rest } = req.body;
   const doc = await prisma.doc.create({
     data: {
       ...rest,
+      title: ensureMarkdownExtension(title),
       hardwareAssetId: hardwareAssetId || null,
-      softwareUnitId: softwareUnitId || null
+      softwareUnitId: softwareUnitId || null,
+      parentDocId: parentDocId || null
     }
   });
   res.json(doc);
@@ -113,13 +132,15 @@ router.post('/docs', authenticate, async (req, res) => {
 
 // DOCS PUT
 router.put('/docs/:id', authenticate, async (req, res) => {
-  const { hardwareAssetId, softwareUnitId, ...rest } = req.body;
+  const { hardwareAssetId, softwareUnitId, parentDocId, title, ...rest } = req.body;
   const doc = await prisma.doc.update({
     where: { id: req.params.id },
     data: {
       ...rest,
+      title: ensureMarkdownExtension(title),
       hardwareAssetId: hardwareAssetId || null,
-      softwareUnitId: softwareUnitId || null
+      softwareUnitId: softwareUnitId || null,
+      parentDocId: parentDocId || null
     }
   });
   res.json(doc);

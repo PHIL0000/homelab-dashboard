@@ -4,6 +4,10 @@ model Doc {
   slug              String?
   content           String           @db.Text // Markdown content
 
+  parentDocId       String?          @db.Uuid
+  parentDoc         Doc?             @relation("DocHierarchy", fields: [parentDocId], references: [id], onDelete: SetNull)
+  children          Doc[]            @relation("DocHierarchy")
+
   hardwareAssetId   String?          @db.Uuid
   hardwareAsset     HardwareAsset?   @relation(fields: [hardwareAssetId], references: [id], onDelete: Cascade)
 
@@ -19,4 +23,5 @@ model Doc {
   @@index([hardwareAssetId])
   @@index([softwareUnitId])
   @@index([serviceTemplateId])
+  @@index([parentDocId])
 }

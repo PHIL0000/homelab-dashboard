@@ -5,6 +5,26 @@ import ReactMarkdown from 'react-markdown';
 
 const API_BASE = 'http://localhost:3001/api/infrastructure';
 
+const markdownComponents = {
+  h1: ({ children }: any) => <h1 className="text-lg font-bold text-text mt-3 mb-2">{children}</h1>,
+  h2: ({ children }: any) => <h2 className="text-base font-bold text-text mt-3 mb-2">{children}</h2>,
+  h3: ({ children }: any) => <h3 className="text-sm font-semibold text-text mt-2 mb-1">{children}</h3>,
+  p: ({ children }: any) => <p className="text-sm text-text-secondary leading-relaxed mb-2">{children}</p>,
+  ul: ({ children }: any) => <ul className="list-disc list-inside pl-2 space-y-1 text-sm text-text-secondary">{children}</ul>,
+  ol: ({ children }: any) => <ol className="list-decimal list-inside pl-2 space-y-1 text-sm text-text-secondary">{children}</ol>,
+  li: ({ children }: any) => <li>{children}</li>,
+  strong: ({ children }: any) => <strong className="font-semibold text-text">{children}</strong>,
+  em: ({ children }: any) => <em className="italic text-text">{children}</em>,
+  code: ({ children }: any) => <code className="px-1.5 py-0.5 rounded bg-background border border-border text-xs text-primary">{children}</code>,
+  blockquote: ({ children }: any) => <blockquote className="border-l-2 border-primary pl-3 text-sm text-text-secondary italic my-2">{children}</blockquote>
+};
+
+const ensureMarkdownFilename = (value: string) => {
+  const normalized = value.trim();
+  if (!normalized) return '';
+  return normalized.toLowerCase().endsWith('.md') ? normalized : `${normalized}.md`;
+};
+
 export default function Hardware() {
   const { token } = useAuth();
 
@@ -48,6 +68,7 @@ export default function Hardware() {
   const [docContent, setDocContent] = useState('');
   const [docHardwareAssetId, setDocHardwareAssetId] = useState('');
   const [docSoftwareUnitId, setDocSoftwareUnitId] = useState('');
+  const [docParentDocId, setDocParentDocId] = useState('');
 
   const authHeaders = useMemo(() => ({
     'Content-Type': 'application/json',
@@ -95,6 +116,10 @@ export default function Hardware() {
   const selectedServices = services.filter(sw => selectedServiceIds.has(sw.id));
   const selectedServiceDocs = docs.filter(doc => doc.softwareUnitId && selectedServiceIds.has(doc.softwareUnitId));
   const visibleDocs = Array.from(new Map([...selectedDocs, ...selectedServiceDocs].map(doc => [doc.id, doc])).values());
+  const visibleDocIds = new Set(visibleDocs.map(doc => doc.id));
+  const rootVisibleDocs = visibleDocs.filter(doc => !doc.parentDocId || !visibleDocIds.has(doc.parentDocId));
+
+  const getDocChildren = (docId: string) => visibleDocs.filter(doc => doc.parentDocId === docId);
 
   const handleAddHardware = () => {
     setHardwareEditId(null);
@@ -266,6 +291,7 @@ export default function Hardware() {
     setDocContent('');
     setDocHardwareAssetId(selectedHardwareId || '');
     setDocSoftwareUnitId('');
+    setDocParentDocId('');
     setIsDocModalOpen(true);
   };
 
@@ -275,12 +301,19 @@ export default function Hardware() {
     setDocContent(doc.content || '');
     setDocHardwareAssetId(doc.hardwareAssetId || selectedHardwareId || '');
     setDocSoftwareUnitId(doc.softwareUnitId || '');
+    setDocParentDocId(doc.parentDocId || '');
     setIsDocModalOpen(true);
   };
 
   const saveDoc = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
+
+    const normalizedTitle = ensureMarkdownFilename(docTitle);
+    if (!normalizedTitle) {
+      alert('Title is required');
+      return;
+    }
 
     const url = docEditId ? `${API_BASE}/docs/${docEditId}` : `${API_BASE}/docs`;
     const method = docEditId ? 'PUT' : 'POST';
@@ -289,10 +322,11 @@ export default function Hardware() {
       method,
       headers: authHeaders,
       body: JSON.stringify({
-        title: docTitle,
+        title: normalizedTitle,
         content: docContent,
         hardwareAssetId: docHardwareAssetId || undefined,
-        softwareUnitId: docSoftwareUnitId || undefined
+        softwareUnitId: docSoftwareUnitId || undefined,
+        parentDocId: docParentDocId || undefined
       })
     });
 
@@ -312,6 +346,27 @@ export default function Hardware() {
     if (gb >= 1000) return `${(gb / 1000).toFixed(2)} TB`;
     return `${gb} GB`;
   };
+
+  const renderDocNode = (doc: any, depth = 0) => (
+    <div key={doc.id} className={`px-4 py-3 ${depth > 0 ? 'ml-5 border-l border-border' : ''}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-text">{doc.title}</p>
+          <div className="flex flex-wrap gap-2 my-2">
+            {doc.hardwareAsset?.name && <span className="text-xs bg-primary/15 text-primary px-2 py-1 rounded-full">HW: {doc.hardwareAsset.name}</span>}
+            {doc.softwareUnit?.name && <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-1 rounded-full">Service: {doc.softwareUnit.name}</span>}
+            {doc.parentDoc?.title && <span className="text-xs bg-purple-500/15 text-purple-300 px-2 py-1 rounded-full">Parent: {doc.parentDoc.title}</span>}
+          </div>
+          <div className="max-h-32 overflow-auto">
+            <ReactMarkdown components={markdownComponents}>{doc.content || ''}</ReactMarkdown>
+          </div>
+        </div>
+        <button onClick={() => handleEditDoc(doc)} className="text-sm text-primary hover:text-primary/80 shrink-0">Edit</button>
+      </div>
+
+      {getDocChildren(doc.id).map(child => renderDocNode(child, depth + 1))}
+    </div>
+  );
 
   return (
     <div className="p-6 h-full overflow-auto">
@@ -422,21 +477,7 @@ export default function Hardware() {
                 </div>
                 <div className="divide-y divide-border">
                   {visibleDocs.length === 0 && <p className="p-4 text-sm text-text-secondary">Keine Dokumente mit dieser Hardware oder deren Services verknüpft.</p>}
-                  {visibleDocs.map(doc => (
-                    <div key={doc.id} className="px-4 py-3 flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-text">{doc.title}</p>
-                        <div className="flex flex-wrap gap-2 my-2">
-                          {doc.hardwareAsset?.name && <span className="text-xs bg-primary/15 text-primary px-2 py-1 rounded-full">HW: {doc.hardwareAsset.name}</span>}
-                          {doc.softwareUnit?.name && <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-1 rounded-full">Service: {doc.softwareUnit.name}</span>}
-                        </div>
-                        <div className="prose prose-invert prose-sm max-w-none max-h-32 overflow-auto text-text-secondary">
-                          <ReactMarkdown>{doc.content || ''}</ReactMarkdown>
-                        </div>
-                      </div>
-                      <button onClick={() => handleEditDoc(doc)} className="text-sm text-primary hover:text-primary/80 shrink-0">Edit</button>
-                    </div>
-                  ))}
+                  {rootVisibleDocs.map(doc => renderDocNode(doc))}
                 </div>
               </Card>
             </>
@@ -626,6 +667,15 @@ export default function Hardware() {
                   {selectedServices.map(sw => <option key={sw.id} value={sw.id}>{sw.name}</option>)}
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Parent Document</label>
+                <select value={docParentDocId} onChange={e => setDocParentDocId(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
+                  <option value="">None (Root)</option>
+                  {docs.filter(doc => doc.id !== docEditId).map(doc => (
+                    <option key={doc.id} value={doc.id}>{doc.title}</option>
+                  ))}
+                </select>
+              </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 mb-4">
                 <div className="flex flex-col min-h-0">
                   <label className="block text-sm font-medium text-text-secondary mb-1">Markdown Content *</label>
@@ -633,8 +683,8 @@ export default function Hardware() {
                 </div>
                 <div className="flex flex-col min-h-0">
                   <label className="block text-sm font-medium text-text-secondary mb-1">Live Preview</label>
-                  <div className="w-full flex-1 min-h-[260px] overflow-auto bg-content border border-border rounded-lg px-4 py-3 prose prose-invert prose-sm max-w-none">
-                    <ReactMarkdown>{docContent || '*Keine Inhalte vorhanden*'}</ReactMarkdown>
+                  <div className="w-full flex-1 min-h-[260px] overflow-auto bg-content border border-border rounded-lg px-4 py-3">
+                    <ReactMarkdown components={markdownComponents}>{docContent || '*Keine Inhalte vorhanden*'}</ReactMarkdown>
                   </div>
                 </div>
               </div>
