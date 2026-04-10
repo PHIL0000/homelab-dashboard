@@ -74,7 +74,7 @@ export default function AddMarkdown({
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Hardware (optional)</span>
-							<select value={hardwareAssetId} onChange={(e) => onHardwareAssetIdChange(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text">
+							<select value={hardwareAssetId} onChange={(e) => onHardwareAssetIdChange(e.target.value)} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
 								<option value="">None</option>
 								{hardwareOptions.map((option) => (
 									<option key={option.id} value={option.id}>{option.name || option.title || option.id}</option>
@@ -83,7 +83,7 @@ export default function AddMarkdown({
 						</label>
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Service (optional)</span>
-							<select value={softwareUnitId} onChange={(e) => onSoftwareUnitIdChange(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text">
+							<select value={softwareUnitId} onChange={(e) => onSoftwareUnitIdChange(e.target.value)} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
 								<option value="">None</option>
 								{serviceOptions.map((option) => (
 									<option key={option.id} value={option.id}>{option.name || option.title || option.id}</option>
@@ -92,7 +92,7 @@ export default function AddMarkdown({
 						</label>
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Parent Doc (optional)</span>
-							<select value={parentDocId} onChange={(e) => onParentDocIdChange(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text">
+							<select value={parentDocId} onChange={(e) => onParentDocIdChange(e.target.value)} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
 								<option value="">None</option>
 								{parentDocOptions.map((option) => (
 									<option key={option.id} value={option.id}>{option.title || option.name || option.id}</option>

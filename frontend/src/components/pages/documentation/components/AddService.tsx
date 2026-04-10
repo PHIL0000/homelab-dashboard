@@ -3,6 +3,9 @@ type AddServiceProps = {
 	isEdit?: boolean;
 	title?: string;
 	submitLabel?: string;
+	hardwareAssetId?: string;
+	hardwareOptions?: Array<{ id: string; name: string }>;
+	showHardwareSelector?: boolean;
 	name: string;
 	type: string;
 	port: string;
@@ -20,6 +23,7 @@ type AddServiceProps = {
 	onUrlChange: (value: string) => void;
 	onImageChange: (value: string) => void;
 	onInternalIpChange?: (value: string) => void;
+	onHardwareAssetIdChange?: (value: string) => void;
 };
 
 const SOFTWARE_TYPE_OPTIONS = [
@@ -35,6 +39,9 @@ export default function AddService({
 	isEdit,
 	title,
 	submitLabel,
+	hardwareAssetId,
+	hardwareOptions,
+	showHardwareSelector,
 	name,
 	type,
 	port,
@@ -51,7 +58,8 @@ export default function AddService({
 	onPortChange,
 	onUrlChange,
 	onImageChange,
-	onInternalIpChange
+	onInternalIpChange,
+	onHardwareAssetIdChange
 }: AddServiceProps) {
 	if (!isOpen) return null;
 
@@ -66,6 +74,22 @@ export default function AddService({
 				<form onSubmit={onSubmit} className="p-5 space-y-4">
 					{createHint && <p className="text-xs rounded-lg border border-border bg-background px-3 py-2 text-text-secondary">{createHint}</p>}
 
+					{showHardwareSelector && (
+						<label className="space-y-1 block">
+							<span className="text-xs text-text-secondary">Hardware</span>
+							<select
+								value={hardwareAssetId || ''}
+								onChange={(e) => onHardwareAssetIdChange?.(e.target.value)}
+								className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text"
+							>
+								<option value="">Select hardware</option>
+								{(hardwareOptions || []).map((option) => (
+									<option key={option.id} value={option.id}>{option.name}</option>
+								))}
+							</select>
+						</label>
+					)}
+
 					<label className="space-y-1 block">
 						<span className="text-xs text-text-secondary">Name *</span>
 						<input value={name} onChange={(e) => onNameChange(e.target.value)} required className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" />
@@ -74,7 +98,7 @@ export default function AddService({
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Type</span>
-							<select value={type} onChange={(e) => onTypeChange(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text">
+							<select value={type} onChange={(e) => onTypeChange(e.target.value)} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
 								{SOFTWARE_TYPE_OPTIONS.map((option) => (
 									<option key={option.value} value={option.value}>{option.label}</option>
 								))}

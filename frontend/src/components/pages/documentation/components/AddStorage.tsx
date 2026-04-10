@@ -73,7 +73,7 @@ export default function AddStorage({
 							<select
 								value={hardwareAssetId || ''}
 								onChange={(e) => onHardwareAssetIdChange(e.target.value)}
-								className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text"
+								className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text"
 							>
 								<option value="">Select hardware</option>
 								{(hardwareOptions || []).map((option) => (
@@ -91,7 +91,7 @@ export default function AddStorage({
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Type</span>
-							<select value={type} onChange={(e) => onTypeChange(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text">
+							<select value={type} onChange={(e) => onTypeChange(e.target.value)} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
 								<option value="SSD">SSD</option>
 								<option value="HDD">HDD</option>
 								<option value="NVME">NVME</option>
@@ -130,7 +130,7 @@ export default function AddStorage({
 							</label>
 							<label className="space-y-1">
 								<span className="text-xs text-text-secondary">Unit</span>
-								<select value={spaceUnit} onChange={(e) => onSpaceUnitChange(e.target.value as 'GB' | 'TB')} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text">
+								<select value={spaceUnit} onChange={(e) => onSpaceUnitChange(e.target.value as 'GB' | 'TB')} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
 									<option value="GB">GB</option>
 									<option value="TB">TB</option>
 								</select>

@@ -102,7 +102,7 @@ export default function AddHardware({
 						</label>
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Type</span>
-							<select value={type} onChange={(e) => onTypeChange(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text">
+							<select value={type} onChange={(e) => onTypeChange(e.target.value)} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
 								{HARDWARE_TYPE_OPTIONS.map((option) => (
 									<option key={option.value} value={option.value}>{option.label}</option>
 								))}

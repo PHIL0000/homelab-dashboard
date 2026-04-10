@@ -6,6 +6,11 @@ import AddHardware from './components/AddHardware';
 import AddService from './components/AddService';
 import AddStorage from './components/AddStorage';
 import AddMarkdown from './components/AddMarkdown';
+import EditHardware from './components/EditHardware';
+import EditService from './components/EditService';
+import EditStorage from './components/EditStorage';
+import EditMarkdown from './components/EditMarkdown';
+import DeleteWarning from './components/DeleteWarning';
 
 const API_BASE = 'http://localhost:3001/api/infrastructure';
 const DEFAULT_HARDWARE_TYPE = 'SERVER';
@@ -69,6 +74,7 @@ export default function DocsOverview() {
   const [notes, setNotes] = useState('');
 
   const [softwareUnitId, setSoftwareUnitId] = useState('');
+  const [deploymentHardwareAssetId, setDeploymentHardwareAssetId] = useState('');
   const [internalIp, setInternalIp] = useState('');
   const [deploymentModalMode, setDeploymentModalMode] = useState<'create-service' | 'edit-deployment'>('create-service');
   const [newServiceName, setNewServiceName] = useState('');
@@ -108,6 +114,22 @@ export default function DocsOverview() {
     title: string;
     childCount: number;
     childPreview: string[];
+  } | null>(null);
+  const [pendingServiceDelete, setPendingServiceDelete] = useState<{
+    id: string;
+    name: string;
+    deployments: number;
+    storage: number;
+    docs: number;
+    deploymentPreview: string[];
+    docPreview: string[];
+    hardwareImpact: number;
+  } | null>(null);
+  const [pendingStorageDelete, setPendingStorageDelete] = useState<{
+    id: string;
+    name: string;
+    hardwareName?: string;
+    serviceName?: string;
   } | null>(null);
 
   const authHeaders = useMemo(() => ({
@@ -167,6 +189,34 @@ export default function DocsOverview() {
     visibleDocs
       .filter(doc => doc.parentDocId === docId)
       .sort((a, b) => String(a.title || '').localeCompare(String(b.title || '')));
+
+  const collectDocSubtreeIds = (rootDocIds: string[]) => {
+    if (rootDocIds.length === 0) return new Set<string>();
+
+    const childrenByParent = new Map<string, string[]>();
+    for (const doc of docs) {
+      if (!doc.parentDocId) continue;
+      const children = childrenByParent.get(doc.parentDocId) || [];
+      children.push(doc.id);
+      childrenByParent.set(doc.parentDocId, children);
+    }
+
+    const visited = new Set<string>();
+    const stack = [...rootDocIds];
+
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
+
+      const children = childrenByParent.get(current) || [];
+      for (const childId of children) {
+        if (!visited.has(childId)) stack.push(childId);
+      }
+    }
+
+    return visited;
+  };
 
   const handleAddHardware = () => {
     setHardwareEditId(null);
@@ -318,6 +368,7 @@ export default function DocsOverview() {
     setDeploymentModalMode('create-service');
     setDeploymentEditId(null);
     setSoftwareUnitId('');
+    setDeploymentHardwareAssetId(selectedHardwareId || '');
     setNewServiceName('');
   setNewServiceType(DEFAULT_SOFTWARE_TYPE);
     setNewServiceImage('');
@@ -331,6 +382,7 @@ export default function DocsOverview() {
     setDeploymentModalMode('edit-deployment');
     setDeploymentEditId(dep.id);
     setSoftwareUnitId(dep.softwareUnitId || '');
+    setDeploymentHardwareAssetId(dep.hardwareAssetId ? String(dep.hardwareAssetId) : (selectedHardwareId || ''));
     const linkedService = dep.softwareUnit || services.find((sw) => String(sw.id) === String(dep.softwareUnitId));
     setNewServiceName(linkedService?.name || '');
   setNewServiceType(linkedService?.type || DEFAULT_SOFTWARE_TYPE);
@@ -343,7 +395,13 @@ export default function DocsOverview() {
 
   const saveDeployment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !selectedHardwareId) return;
+    if (!token) return;
+
+    const targetHardwareId = deploymentHardwareAssetId || selectedHardwareId;
+    if (!targetHardwareId) {
+      alert('Hardware selection is required');
+      return;
+    }
 
     if (!newServiceName.trim()) {
       alert('Service name is required');
@@ -405,7 +463,7 @@ export default function DocsOverview() {
       method,
       headers: authHeaders,
       body: JSON.stringify({
-        hardwareAssetId: selectedHardwareId,
+        hardwareAssetId: targetHardwareId,
         softwareUnitId: targetSoftwareUnitId,
         internalIp
       })
@@ -422,22 +480,49 @@ export default function DocsOverview() {
   };
 
   const deleteDeployment = async () => {
-    if (!token || !deploymentEditId) return;
-    if (!window.confirm('Delete this deployment?')) return;
+    if (!token || !softwareUnitId) return;
 
-    const response = await fetch(`${API_BASE}/deployments/${deploymentEditId}`, {
+    const targetService = services.find((service) => String(service.id) === String(softwareUnitId));
+    const relatedDeployments = deployments.filter((dep) => String(dep.softwareUnitId) === String(softwareUnitId));
+    const relatedStorage = storageItems.filter((item) => String(item.softwareUnitId) === String(softwareUnitId));
+    const rootServiceDocs = docs.filter((doc) => String(doc.softwareUnitId) === String(softwareUnitId));
+    const docSubtreeIds = collectDocSubtreeIds(rootServiceDocs.map((doc) => doc.id));
+    const impactedDocs = docs.filter((doc) => docSubtreeIds.has(doc.id));
+    const hardwareImpact = new Set(relatedDeployments.map((dep) => String(dep.hardwareAssetId)).filter(Boolean)).size;
+
+    setPendingServiceDelete({
+      id: String(softwareUnitId),
+      name: targetService?.name || newServiceName || 'Selected service',
+      deployments: relatedDeployments.length,
+      storage: relatedStorage.length,
+      docs: impactedDocs.length,
+      deploymentPreview: relatedDeployments
+        .map((dep) => dep.hardwareAsset?.name)
+        .filter(Boolean)
+        .slice(0, 4),
+      docPreview: impactedDocs.map((doc) => doc.title).slice(0, 4),
+      hardwareImpact
+    });
+  };
+
+  const confirmDeleteService = async () => {
+    if (!token || !pendingServiceDelete) return;
+
+    const response = await fetch(`${API_BASE}/services/${pendingServiceDelete.id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to delete deployment'}`);
+      alert(`Error: ${errorData.error || 'Failed to delete service'}`);
       return;
     }
 
+    setPendingServiceDelete(null);
     setIsDeploymentModalOpen(false);
     setDeploymentEditId(null);
+    setSoftwareUnitId('');
     await fetchData();
   };
 
@@ -509,10 +594,21 @@ export default function DocsOverview() {
   };
 
   const deleteStorage = async () => {
-    if (!token || !storageEditId) return;
-    if (!window.confirm('Delete this storage item?')) return;
+    if (!storageEditId) return;
 
-    const response = await fetch(`${API_BASE}/storage/${storageEditId}`, {
+    const storageItem = storageItems.find((item) => String(item.id) === String(storageEditId));
+    setPendingStorageDelete({
+      id: String(storageEditId),
+      name: storageItem?.name || storageName || 'Selected storage',
+      hardwareName: storageItem?.hardwareAsset?.name,
+      serviceName: storageItem?.softwareUnit?.name
+    });
+  };
+
+  const confirmDeleteStorage = async () => {
+    if (!token || !pendingStorageDelete) return;
+
+    const response = await fetch(`${API_BASE}/storage/${pendingStorageDelete.id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -523,6 +619,7 @@ export default function DocsOverview() {
       return;
     }
 
+    setPendingStorageDelete(null);
     setIsStorageModalOpen(false);
     setStorageEditId(null);
     await fetchData();
@@ -667,7 +764,9 @@ export default function DocsOverview() {
     handleEditDoc,
     saveDoc,
     deleteDoc,
-    confirmDeleteDoc
+    confirmDeleteDoc,
+    confirmDeleteService,
+    confirmDeleteStorage
   ];
 
   const displaySpace = (gb: number | undefined | null) => {
@@ -682,22 +781,27 @@ export default function DocsOverview() {
 
     return (
       <div key={doc.id} className={`${depth > 0 ? 'ml-5 border-l border-border' : ''}`}>
-        <button
-          type="button"
-          onClick={() => setPreviewDoc(doc)}
-          className="w-full px-4 py-2.5 text-left hover:bg-background/50 transition-colors"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="font-medium text-text truncate">{doc.title}</p>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {doc.softwareUnit?.name && <span className="text-[11px] bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded-full">Service</span>}
-                {doc.hardwareAsset?.name && <span className="text-[11px] bg-primary/15 text-primary px-2 py-0.5 rounded-full">Hardware</span>}
-                {childCount > 0 && <span className="text-[11px] bg-background border border-border text-text-secondary px-2 py-0.5 rounded-full">{childCount} child</span>}
-              </div>
+        <div className="px-4 py-2.5 flex items-start justify-between gap-3 hover:bg-background/50 transition-colors">
+          <button
+            type="button"
+            onClick={() => setPreviewDoc(doc)}
+            className="min-w-0 flex-1 text-left"
+          >
+            <p className="font-medium text-text truncate">{doc.title}</p>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {doc.softwareUnit?.name && <span className="text-[11px] bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded-full">Service</span>}
+              {doc.hardwareAsset?.name && <span className="text-[11px] bg-primary/15 text-primary px-2 py-0.5 rounded-full">Hardware</span>}
+              {childCount > 0 && <span className="text-[11px] bg-background border border-border text-text-secondary px-2 py-0.5 rounded-full">{childCount} child</span>}
             </div>
-          </div>
-        </button>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleEditDoc(doc)}
+            className="text-xs text-primary hover:text-primary/80"
+          >
+            Edit
+          </button>
+        </div>
 
         {getDocChildren(doc.id).map(child => renderDocNode(child, depth + 1))}
       </div>
@@ -751,9 +855,18 @@ export default function DocsOverview() {
           {selectedHardware && (
             <>
               <Card className="rounded-xl border border-border bg-content p-6">
-                <div>
-                  <h3 className="text-xl font-bold text-text">{selectedHardware.name}</h3>
-                  <p className="text-sm text-text-secondary mt-1">{selectedHardware.type} • {selectedHardware.status}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-xl font-bold text-text">{selectedHardware.name}</h3>
+                    <p className="text-sm text-text-secondary mt-1">{selectedHardware.type} • {selectedHardware.status}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleEditHardware(selectedHardware)}
+                    className="text-xs text-primary hover:text-primary/80"
+                  >
+                    Edit
+                  </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
                   <p className="text-text-secondary">Hostname: <span className="text-text">{selectedHardware.hostname || '-'}</span></p>
@@ -778,11 +891,18 @@ export default function DocsOverview() {
                 <div className="divide-y divide-border">
                   {selectedDeployments.length === 0 && <p className="p-4 text-sm text-text-secondary">No services assigned.</p>}
                   {selectedDeployments.map(dep => (
-                    <div key={dep.id} className="px-4 py-3">
-                      <div>
+                    <div key={dep.id} className="px-4 py-3 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
                         <p className="font-medium text-text">{dep.softwareUnit?.name || 'Unknown service'}</p>
                         <p className="text-xs text-text-secondary">{dep.softwareUnit?.type || '-'} • {dep.internalIp || '-'} • {dep.status || 'UNKNOWN'}</p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => handleEditDeployment(dep)}
+                        className="text-xs text-primary hover:text-primary/80"
+                      >
+                        Edit
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -796,8 +916,8 @@ export default function DocsOverview() {
                 <div className="divide-y divide-border">
                   {selectedStorage.length === 0 && <p className="p-4 text-sm text-text-secondary">No storage assigned.</p>}
                   {selectedStorage.map(item => (
-                    <div key={item.id} className="px-4 py-3">
-                      <div>
+                    <div key={item.id} className="px-4 py-3 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
                         <p className="font-medium text-text">{item.name}</p>
                         <p className="text-xs text-text-secondary">{item.storageType || '-'} • {displaySpace(item.usableSpaceGB)}</p>
                         <p className="text-xs text-text-secondary mt-0.5">
@@ -806,6 +926,13 @@ export default function DocsOverview() {
                           {item.interface ? ` • ${item.interface}` : ''}
                         </p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => handleEditStorage(item)}
+                        className="text-xs text-primary hover:text-primary/80"
+                      >
+                        Edit
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -828,199 +955,316 @@ export default function DocsOverview() {
       </div>
       </div>
 
-      <AddHardware
-        isOpen={isHardwareModalOpen}
-        isEdit={Boolean(hardwareEditId)}
-        name={name}
-        hostname={hostname}
-        type={type}
-        ip={ip}
-        mac={mac}
-        cpu={cpu}
-        cpuCores={cpuCores}
-        make={make}
-        model={model}
-        ram={ram}
-        serialNumber={serialNumber}
-        location={location}
-        icon={icon}
-        os={os}
-        notes={notes}
-        onClose={() => setIsHardwareModalOpen(false)}
-        onSubmit={saveHardware}
-        onDelete={deleteHardware}
-        onNameChange={setName}
-        onHostnameChange={setHostname}
-        onTypeChange={setType}
-        onIpChange={setIp}
-        onMacChange={setMac}
-        onCpuChange={setCpu}
-        onCpuCoresChange={setCpuCores}
-        onMakeChange={setMake}
-        onModelChange={setModel}
-        onRamChange={setRam}
-        onSerialNumberChange={setSerialNumber}
-        onLocationChange={setLocation}
-        onIconChange={setIcon}
-        onOsChange={setOs}
-        onNotesChange={setNotes}
-      />
-
-      <AddService
-        isOpen={isDeploymentModalOpen}
-        isEdit={Boolean(deploymentEditId)}
-        title={deploymentEditId ? 'Edit Service & Deployment' : 'Add service to hardware'}
-        submitLabel="Save Deployment"
-        name={newServiceName}
-        type={newServiceType}
-        port={newServicePort}
-        url={newServiceUrl}
-        image={newServiceImage}
-        internalIp={internalIp}
-        showInternalIp
-        createHint={deploymentModalMode === 'create-service' ? 'The new service will be created and directly linked to this hardware.' : undefined}
-        onClose={() => setIsDeploymentModalOpen(false)}
-        onSubmit={saveDeployment}
-        onDelete={deleteDeployment}
-        onNameChange={setNewServiceName}
-        onTypeChange={setNewServiceType}
-        onPortChange={setNewServicePort}
-        onUrlChange={setNewServiceUrl}
-        onImageChange={setNewServiceImage}
-        onInternalIpChange={setInternalIp}
-      />
-
-      <AddStorage
-        isOpen={isStorageModalOpen}
-        isEdit={Boolean(storageEditId)}
-        name={storageName}
-        type={storageType}
-        make={storageMake}
-        model={storageModel}
-        serialNumber={storageSerialNumber}
-        interfaceType={storageInterface}
-        usableSpace={usableSpace}
-        spaceUnit={spaceUnit}
-        onClose={() => setIsStorageModalOpen(false)}
-        onSubmit={saveStorage}
-        onDelete={deleteStorage}
-        onNameChange={setStorageName}
-        onTypeChange={setStorageType}
-        onMakeChange={setStorageMake}
-        onModelChange={setStorageModel}
-        onSerialNumberChange={setStorageSerialNumber}
-        onInterfaceChange={setStorageInterface}
-        onUsableSpaceChange={setUsableSpace}
-        onSpaceUnitChange={setSpaceUnit}
-      />
-
-      <AddMarkdown
-        isOpen={isDocModalOpen}
-        isEdit={Boolean(docEditId)}
-        title={docTitle}
-        content={docContent}
-        hardwareAssetId={docHardwareAssetId}
-        softwareUnitId={docSoftwareUnitId}
-        parentDocId={docParentDocId}
-        hardwareOptions={hardware}
-        serviceOptions={selectedServices}
-        parentDocOptions={docs.filter((doc) => doc.id !== docEditId)}
-        markdownComponents={markdownComponents}
-        onClose={() => setIsDocModalOpen(false)}
-        onSubmit={saveDoc}
-        onDelete={deleteDoc}
-        onTitleChange={setDocTitle}
-        onContentChange={setDocContent}
-        onHardwareAssetIdChange={setDocHardwareAssetId}
-        onSoftwareUnitIdChange={setDocSoftwareUnitId}
-        onParentDocIdChange={setDocParentDocId}
-      />
-
-      {pendingHardwareDelete && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-xl border border-border bg-content p-5 shadow-2xl">
-            <h3 className="text-lg font-semibold text-text">Delete {pendingHardwareDelete.name}?</h3>
-            <p className="mt-1 text-sm text-text-secondary">Related child entries will be removed too.</p>
-
-            <ul className="mt-4 space-y-1.5 text-sm text-text-secondary">
-              <li>• {pendingHardwareDelete.deployments} deployment(s)</li>
-              <li>• {pendingHardwareDelete.services} service(s)</li>
-              <li>• {pendingHardwareDelete.storage} storage entry/entries</li>
-              <li>• {pendingHardwareDelete.docs} markdown doc(s)</li>
-            </ul>
-
-            {pendingHardwareDelete.servicePreview.length > 0 && (
-              <p className="mt-3 text-xs text-text-secondary/90">
-                Services: {pendingHardwareDelete.servicePreview.join(', ')}{pendingHardwareDelete.services > pendingHardwareDelete.servicePreview.length ? ' …' : ''}
-              </p>
-            )}
-            {pendingHardwareDelete.docPreview.length > 0 && (
-              <p className="mt-1 text-xs text-text-secondary/90">
-                Docs: {pendingHardwareDelete.docPreview.join(', ')}{pendingHardwareDelete.docs > pendingHardwareDelete.docPreview.length ? ' …' : ''}
-              </p>
-            )}
-            {pendingHardwareDelete.externalImpact > 0 && (
-              <p className="mt-2 text-xs text-amber-300">
-                Warning: {pendingHardwareDelete.externalImpact} deployment(s) on other hardware are also affected.
-              </p>
-            )}
-
-            <div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
-              <button
-                type="button"
-                onClick={() => setPendingHardwareDelete(null)}
-                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeleteHardware}
-                className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+      {hardwareEditId ? (
+        <EditHardware
+          isOpen={isHardwareModalOpen}
+          name={name}
+          hostname={hostname}
+          type={type}
+          ip={ip}
+          mac={mac}
+          cpu={cpu}
+          cpuCores={cpuCores}
+          make={make}
+          model={model}
+          ram={ram}
+          serialNumber={serialNumber}
+          location={location}
+          icon={icon}
+          os={os}
+          notes={notes}
+          onClose={() => setIsHardwareModalOpen(false)}
+          onSubmit={saveHardware}
+          onDelete={deleteHardware}
+          onNameChange={setName}
+          onHostnameChange={setHostname}
+          onTypeChange={setType}
+          onIpChange={setIp}
+          onMacChange={setMac}
+          onCpuChange={setCpu}
+          onCpuCoresChange={setCpuCores}
+          onMakeChange={setMake}
+          onModelChange={setModel}
+          onRamChange={setRam}
+          onSerialNumberChange={setSerialNumber}
+          onLocationChange={setLocation}
+          onIconChange={setIcon}
+          onOsChange={setOs}
+          onNotesChange={setNotes}
+        />
+      ) : (
+        <AddHardware
+          isOpen={isHardwareModalOpen}
+          name={name}
+          hostname={hostname}
+          type={type}
+          ip={ip}
+          mac={mac}
+          cpu={cpu}
+          cpuCores={cpuCores}
+          make={make}
+          model={model}
+          ram={ram}
+          serialNumber={serialNumber}
+          location={location}
+          icon={icon}
+          os={os}
+          notes={notes}
+          onClose={() => setIsHardwareModalOpen(false)}
+          onSubmit={saveHardware}
+          onNameChange={setName}
+          onHostnameChange={setHostname}
+          onTypeChange={setType}
+          onIpChange={setIp}
+          onMacChange={setMac}
+          onCpuChange={setCpu}
+          onCpuCoresChange={setCpuCores}
+          onMakeChange={setMake}
+          onModelChange={setModel}
+          onRamChange={setRam}
+          onSerialNumberChange={setSerialNumber}
+          onLocationChange={setLocation}
+          onIconChange={setIcon}
+          onOsChange={setOs}
+          onNotesChange={setNotes}
+        />
       )}
 
-      {pendingDocDelete && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-xl border border-border bg-content p-5 shadow-2xl">
-            <h3 className="text-lg font-semibold text-text">Delete {pendingDocDelete.title}?</h3>
-            <p className="mt-1 text-sm text-text-secondary">Child markdown files are removed too.</p>
-
-            <ul className="mt-4 space-y-1.5 text-sm text-text-secondary">
-              <li>• 1 selected document</li>
-              <li>• {pendingDocDelete.childCount} child document(s)</li>
-            </ul>
-
-            {pendingDocDelete.childPreview.length > 0 && (
-              <p className="mt-3 text-xs text-text-secondary/90">
-                Child docs: {pendingDocDelete.childPreview.join(', ')}{pendingDocDelete.childCount > pendingDocDelete.childPreview.length ? ' …' : ''}
-              </p>
-            )}
-
-            <div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
-              <button
-                type="button"
-                onClick={() => setPendingDocDelete(null)}
-                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeleteDoc}
-                className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+      {deploymentEditId ? (
+        <EditService
+          isOpen={isDeploymentModalOpen}
+          title="Edit Service & Deployment"
+          submitLabel="Save Deployment"
+          hardwareAssetId={deploymentHardwareAssetId}
+          hardwareOptions={hardware.map((hw) => ({ id: String(hw.id), name: hw.name }))}
+          showHardwareSelector
+          name={newServiceName}
+          type={newServiceType}
+          port={newServicePort}
+          url={newServiceUrl}
+          image={newServiceImage}
+          internalIp={internalIp}
+          showInternalIp
+          onClose={() => setIsDeploymentModalOpen(false)}
+          onSubmit={saveDeployment}
+          onDelete={deleteDeployment}
+          onNameChange={setNewServiceName}
+          onTypeChange={setNewServiceType}
+          onPortChange={setNewServicePort}
+          onUrlChange={setNewServiceUrl}
+          onImageChange={setNewServiceImage}
+          onInternalIpChange={setInternalIp}
+          onHardwareAssetIdChange={setDeploymentHardwareAssetId}
+        />
+      ) : (
+        <AddService
+          isOpen={isDeploymentModalOpen}
+          title="Add service to hardware"
+          submitLabel="Save Deployment"
+          name={newServiceName}
+          type={newServiceType}
+          port={newServicePort}
+          url={newServiceUrl}
+          image={newServiceImage}
+          internalIp={internalIp}
+          showInternalIp
+          createHint="The new service will be created and directly linked to this hardware."
+          onClose={() => setIsDeploymentModalOpen(false)}
+          onSubmit={saveDeployment}
+          onNameChange={setNewServiceName}
+          onTypeChange={setNewServiceType}
+          onPortChange={setNewServicePort}
+          onUrlChange={setNewServiceUrl}
+          onImageChange={setNewServiceImage}
+          onInternalIpChange={setInternalIp}
+        />
       )}
+
+      {storageEditId ? (
+        <EditStorage
+          isOpen={isStorageModalOpen}
+          name={storageName}
+          type={storageType}
+          make={storageMake}
+          model={storageModel}
+          serialNumber={storageSerialNumber}
+          interfaceType={storageInterface}
+          usableSpace={usableSpace}
+          spaceUnit={spaceUnit}
+          onClose={() => setIsStorageModalOpen(false)}
+          onSubmit={saveStorage}
+          onDelete={deleteStorage}
+          onNameChange={setStorageName}
+          onTypeChange={setStorageType}
+          onMakeChange={setStorageMake}
+          onModelChange={setStorageModel}
+          onSerialNumberChange={setStorageSerialNumber}
+          onInterfaceChange={setStorageInterface}
+          onUsableSpaceChange={setUsableSpace}
+          onSpaceUnitChange={setSpaceUnit}
+        />
+      ) : (
+        <AddStorage
+          isOpen={isStorageModalOpen}
+          name={storageName}
+          type={storageType}
+          make={storageMake}
+          model={storageModel}
+          serialNumber={storageSerialNumber}
+          interfaceType={storageInterface}
+          usableSpace={usableSpace}
+          spaceUnit={spaceUnit}
+          onClose={() => setIsStorageModalOpen(false)}
+          onSubmit={saveStorage}
+          onNameChange={setStorageName}
+          onTypeChange={setStorageType}
+          onMakeChange={setStorageMake}
+          onModelChange={setStorageModel}
+          onSerialNumberChange={setStorageSerialNumber}
+          onInterfaceChange={setStorageInterface}
+          onUsableSpaceChange={setUsableSpace}
+          onSpaceUnitChange={setSpaceUnit}
+        />
+      )}
+
+      {docEditId ? (
+        <EditMarkdown
+          isOpen={isDocModalOpen}
+          title={docTitle}
+          content={docContent}
+          hardwareAssetId={docHardwareAssetId}
+          softwareUnitId={docSoftwareUnitId}
+          parentDocId={docParentDocId}
+          hardwareOptions={hardware}
+          serviceOptions={selectedServices}
+          parentDocOptions={docs.filter((doc) => doc.id !== docEditId)}
+          markdownComponents={markdownComponents}
+          onClose={() => setIsDocModalOpen(false)}
+          onSubmit={saveDoc}
+          onDelete={deleteDoc}
+          onTitleChange={setDocTitle}
+          onContentChange={setDocContent}
+          onHardwareAssetIdChange={setDocHardwareAssetId}
+          onSoftwareUnitIdChange={setDocSoftwareUnitId}
+          onParentDocIdChange={setDocParentDocId}
+        />
+      ) : (
+        <AddMarkdown
+          isOpen={isDocModalOpen}
+          title={docTitle}
+          content={docContent}
+          hardwareAssetId={docHardwareAssetId}
+          softwareUnitId={docSoftwareUnitId}
+          parentDocId={docParentDocId}
+          hardwareOptions={hardware}
+          serviceOptions={selectedServices}
+          parentDocOptions={docs.filter((doc) => doc.id !== docEditId)}
+          markdownComponents={markdownComponents}
+          onClose={() => setIsDocModalOpen(false)}
+          onSubmit={saveDoc}
+          onTitleChange={setDocTitle}
+          onContentChange={setDocContent}
+          onHardwareAssetIdChange={setDocHardwareAssetId}
+          onSoftwareUnitIdChange={setDocSoftwareUnitId}
+          onParentDocIdChange={setDocParentDocId}
+        />
+      )}
+
+      <DeleteWarning
+        isOpen={Boolean(pendingHardwareDelete)}
+        title={`Delete ${pendingHardwareDelete?.name || 'hardware'}?`}
+        description="Related child entries will be removed too."
+        impacts={pendingHardwareDelete ? [
+          { label: 'deployment(s)', count: pendingHardwareDelete.deployments },
+          { label: 'service(s)', count: pendingHardwareDelete.services },
+          { label: 'storage item(s)', count: pendingHardwareDelete.storage },
+          { label: 'markdown doc(s)', count: pendingHardwareDelete.docs }
+        ] : []}
+        previewSections={pendingHardwareDelete ? [
+          {
+            label: 'Services',
+            items: pendingHardwareDelete.servicePreview,
+            hasMore: pendingHardwareDelete.services > pendingHardwareDelete.servicePreview.length
+          },
+          {
+            label: 'Docs',
+            items: pendingHardwareDelete.docPreview,
+            hasMore: pendingHardwareDelete.docs > pendingHardwareDelete.docPreview.length
+          }
+        ] : []}
+        warningText={pendingHardwareDelete && pendingHardwareDelete.externalImpact > 0
+          ? `${pendingHardwareDelete.externalImpact} deployment(s) on other hardware are also affected.`
+          : undefined}
+        onCancel={() => setPendingHardwareDelete(null)}
+        onConfirm={confirmDeleteHardware}
+      />
+
+      <DeleteWarning
+        isOpen={Boolean(pendingServiceDelete)}
+        title={`Delete ${pendingServiceDelete?.name || 'service'}?`}
+        description="The service and all dependent child entries will be removed."
+        impacts={pendingServiceDelete ? [
+          { label: 'service', count: 1 },
+          { label: 'deployment(s)', count: pendingServiceDelete.deployments },
+          { label: 'storage item(s)', count: pendingServiceDelete.storage },
+          { label: 'markdown doc(s)', count: pendingServiceDelete.docs }
+        ] : []}
+        previewSections={pendingServiceDelete ? [
+          {
+            label: 'Deployments on hardware',
+            items: pendingServiceDelete.deploymentPreview,
+            hasMore: pendingServiceDelete.deployments > pendingServiceDelete.deploymentPreview.length
+          },
+          {
+            label: 'Docs',
+            items: pendingServiceDelete.docPreview,
+            hasMore: pendingServiceDelete.docs > pendingServiceDelete.docPreview.length
+          }
+        ] : []}
+        warningText={pendingServiceDelete && pendingServiceDelete.hardwareImpact > 1
+          ? `This service is deployed on ${pendingServiceDelete.hardwareImpact} hardware nodes.`
+          : undefined}
+        onCancel={() => setPendingServiceDelete(null)}
+        onConfirm={confirmDeleteService}
+      />
+
+      <DeleteWarning
+        isOpen={Boolean(pendingStorageDelete)}
+        title={`Delete ${pendingStorageDelete?.name || 'storage item'}?`}
+        description="Only this storage entry will be removed."
+        impacts={[{ label: 'storage item', count: pendingStorageDelete ? 1 : 0 }]}
+        previewSections={pendingStorageDelete ? [
+          {
+            label: 'Linked hardware',
+            items: pendingStorageDelete.hardwareName ? [pendingStorageDelete.hardwareName] : []
+          },
+          {
+            label: 'Linked service',
+            items: pendingStorageDelete.serviceName ? [pendingStorageDelete.serviceName] : []
+          }
+        ] : []}
+        onCancel={() => setPendingStorageDelete(null)}
+        onConfirm={confirmDeleteStorage}
+      />
+
+      <DeleteWarning
+        isOpen={Boolean(pendingDocDelete)}
+        title={`Delete ${pendingDocDelete?.title || 'document'}?`}
+        description="Child markdown files are removed too."
+        impacts={pendingDocDelete ? [
+          { label: 'selected document', count: 1 },
+          { label: 'child document(s)', count: pendingDocDelete.childCount }
+        ] : []}
+        previewSections={pendingDocDelete ? [
+          {
+            label: 'Child docs',
+            items: pendingDocDelete.childPreview,
+            hasMore: pendingDocDelete.childCount > pendingDocDelete.childPreview.length
+          }
+        ] : []}
+        onCancel={() => setPendingDocDelete(null)}
+        onConfirm={confirmDeleteDoc}
+      />
 
       {previewDoc && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
