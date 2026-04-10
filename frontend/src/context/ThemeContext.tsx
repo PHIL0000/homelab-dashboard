@@ -31,7 +31,7 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#0a0616",
       text: "#f8fafc",
       textSecondary: "#94a3b8",
-      border: "#261a3f",
+  border: "#4a3578",
     },
   },
   oled: {
@@ -46,7 +46,7 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#050505", /* Fast unsichtbar */
       text: "#fafafa",
       textSecondary: "#a1a1aa",
-      border: "#18181b",
+  border: "#3b3b45",
     },
   },
   cyberpunk: {
@@ -61,7 +61,7 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#090819",
       text: "#e0def4",
       textSecondary: "#908caa",
-      border: "#2a2559",
+  border: "#4a4290",
     },
   },
   github: {
@@ -76,7 +76,7 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#010409",
       text: "#c9d1d9",
       textSecondary: "#8b949e",
-      border: "#30363d",
+  border: "#5b646f",
     },
   },
   japan: {
@@ -91,7 +91,7 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#140909",
       text: "#fef2f2",
       textSecondary: "#fecdd3",
-      border: "#3f1d1d",
+  border: "#6f3434",
     },
   },
   forest: {
@@ -106,7 +106,7 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#030b06",
       text: "#f0fdf4",
       textSecondary: "#86efac",
-      border: "#123321",
+  border: "#255c3b",
     },
   },
 };
