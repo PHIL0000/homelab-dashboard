@@ -65,8 +65,8 @@ const App: React.FC = () => {
               <Route path="/storage/gitlab" element={<PlaceholderPage />} />
               <Route path="/ai/chat" element={<PlaceholderPage />} />
               <Route path="/ai/image-gen" element={<PlaceholderPage />} />
-              <Route path="/documentation/overview" element={<Hardware />} />
-              <Route path="/documentation/hardware" element={<DocsOverview />} />
+              <Route path="/documentation/overview" element={<DocsOverview />} />
+              <Route path="/documentation/hardware" element={<Hardware />} />
               <Route path="/documentation/services" element={<Services />} />
               <Route path="/documentation/storage" element={<StorageItems />} />
               <Route path="/documentation/docs" element={<MarkdownDocs />} />

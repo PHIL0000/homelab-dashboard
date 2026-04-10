@@ -1,23 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
-import ReactMarkdown from 'react-markdown';
+import { useLanguage } from '@/context/LanguageContext';
+import AddHardware from './components/AddHardware';
+import AddService from './components/AddService';
+import AddStorage from './components/AddStorage';
+import AddMarkdown from './components/AddMarkdown';
 
 const API_BASE = 'http://localhost:3001/api/infrastructure';
-
-const markdownComponents = {
-  h1: ({ children }: any) => <h1 className="text-lg font-bold text-text mt-3 mb-2">{children}</h1>,
-  h2: ({ children }: any) => <h2 className="text-base font-bold text-text mt-3 mb-2">{children}</h2>,
-  h3: ({ children }: any) => <h3 className="text-sm font-semibold text-text mt-2 mb-1">{children}</h3>,
-  p: ({ children }: any) => <p className="text-sm text-text-secondary leading-relaxed mb-2">{children}</p>,
-  ul: ({ children }: any) => <ul className="list-disc list-inside pl-2 space-y-1 text-sm text-text-secondary">{children}</ul>,
-  ol: ({ children }: any) => <ol className="list-decimal list-inside pl-2 space-y-1 text-sm text-text-secondary">{children}</ol>,
-  li: ({ children }: any) => <li>{children}</li>,
-  strong: ({ children }: any) => <strong className="font-semibold text-text">{children}</strong>,
-  em: ({ children }: any) => <em className="italic text-text">{children}</em>,
-  code: ({ children }: any) => <code className="px-1.5 py-0.5 rounded bg-background border border-border text-xs text-primary">{children}</code>,
-  blockquote: ({ children }: any) => <blockquote className="border-l-2 border-primary pl-3 text-sm text-text-secondary italic my-2">{children}</blockquote>
-};
 
 const ensureMarkdownFilename = (value: string) => {
   const normalized = value.trim();
@@ -26,25 +16,18 @@ const ensureMarkdownFilename = (value: string) => {
 };
 
 export default function Hardware() {
+  const { t } = useLanguage();
   const { token } = useAuth();
-
   const [hardware, setHardware] = useState<any[]>([]);
-  const [services, setServices] = useState<any[]>([]);
   const [deployments, setDeployments] = useState<any[]>([]);
   const [storageItems, setStorageItems] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
-  const [selectedHardwareId, setSelectedHardwareId] = useState<string>('');
-  const normalizedSelectedHardwareId = selectedHardwareId ? String(selectedHardwareId) : '';
 
   const [isHardwareModalOpen, setIsHardwareModalOpen] = useState(false);
-  const [isDeploymentModalOpen, setIsDeploymentModalOpen] = useState(false);
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [isStorageModalOpen, setIsStorageModalOpen] = useState(false);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
-
-  const [hardwareEditId, setHardwareEditId] = useState<string | null>(null);
-  const [deploymentEditId, setDeploymentEditId] = useState<string | null>(null);
-  const [storageEditId, setStorageEditId] = useState<string | null>(null);
-  const [docEditId, setDocEditId] = useState<string | null>(null);
 
   const [name, setName] = useState('');
   const [hostname, setHostname] = useState('');
@@ -62,13 +45,11 @@ export default function Hardware() {
   const [icon, setIcon] = useState('');
   const [notes, setNotes] = useState('');
 
-  const [softwareUnitId, setSoftwareUnitId] = useState('');
-  const [internalIp, setInternalIp] = useState('');
-  const [deploymentModalMode, setDeploymentModalMode] = useState<'create-service' | 'edit-deployment'>('create-service');
-  const [newServiceName, setNewServiceName] = useState('');
-  const [newServiceType, setNewServiceType] = useState('OTHER');
-  const [newServicePort, setNewServicePort] = useState('');
-  const [newServiceUrl, setNewServiceUrl] = useState('');
+  const [serviceName, setServiceName] = useState('');
+  const [serviceType, setServiceType] = useState('DOCKER_CONTAINER');
+  const [serviceImage, setServiceImage] = useState('');
+  const [servicePort, setServicePort] = useState('');
+  const [serviceUrl, setServiceUrl] = useState('');
 
   const [storageName, setStorageName] = useState('');
   const [storageType, setStorageType] = useState('SSD');
@@ -78,138 +59,47 @@ export default function Hardware() {
   const [storageInterface, setStorageInterface] = useState('');
   const [usableSpace, setUsableSpace] = useState<number | ''>('');
   const [spaceUnit, setSpaceUnit] = useState<'GB' | 'TB'>('GB');
+  const [storageHardwareAssetId, setStorageHardwareAssetId] = useState('');
 
   const [docTitle, setDocTitle] = useState('');
   const [docContent, setDocContent] = useState('');
   const [docHardwareAssetId, setDocHardwareAssetId] = useState('');
   const [docSoftwareUnitId, setDocSoftwareUnitId] = useState('');
   const [docParentDocId, setDocParentDocId] = useState('');
-  const [previewDoc, setPreviewDoc] = useState<any | null>(null);
-  const [pendingHardwareDelete, setPendingHardwareDelete] = useState<{
-    id: string;
-    name: string;
-    deployments: number;
-    services: number;
-    storage: number;
-    docs: number;
-    servicePreview: string[];
-    docPreview: string[];
-    externalImpact: number;
-  } | null>(null);
-  const [pendingDocDelete, setPendingDocDelete] = useState<{
-    id: string;
-    title: string;
-    childCount: number;
-    childPreview: string[];
-  } | null>(null);
 
   const authHeaders = useMemo(() => ({
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`
   }), [token]);
 
-  const isSelectedHardware = (hardwareId: unknown) => String(hardwareId) === normalizedSelectedHardwareId;
-
   const fetchData = async () => {
     if (!token) return;
-    try {
-      const [hwRes, swRes, depRes, storageRes, docsRes] = await Promise.all([
-        fetch(`${API_BASE}/hardware`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_BASE}/services`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_BASE}/deployments`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_BASE}/storage`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_BASE}/docs`, { headers: { Authorization: `Bearer ${token}` } })
-      ]);
 
-      const hwData = await hwRes.json();
-      setHardware(hwData);
-      setServices(await swRes.json());
-      setDeployments(await depRes.json());
-      setStorageItems(await storageRes.json());
-      setDocs(await docsRes.json());
+    const [hwRes, depRes, storageRes, servicesRes, docsRes] = await Promise.all([
+      fetch(`${API_BASE}/hardware`, { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${API_BASE}/deployments`, { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${API_BASE}/storage`, { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${API_BASE}/services`, { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${API_BASE}/docs`, { headers: { Authorization: `Bearer ${token}` } })
+    ]);
 
-      if (!selectedHardwareId && hwData.length > 0) {
-        setSelectedHardwareId(String(hwData[0].id));
-      }
-      if (selectedHardwareId && !hwData.some((hw: any) => isSelectedHardware(hw.id))) {
-        setSelectedHardwareId(hwData[0]?.id ? String(hwData[0].id) : '');
-      }
-    } catch (error) {
-      console.error(error);
-    }
+    setHardware(await hwRes.json());
+    setDeployments(await depRes.json());
+    setStorageItems(await storageRes.json());
+    setServices(await servicesRes.json());
+    setDocs(await docsRes.json());
   };
 
   useEffect(() => {
     fetchData();
   }, [token]);
 
-  const selectedHardware = hardware.find(hw => isSelectedHardware(hw.id));
-  const selectedDeployments = deployments.filter(dep => String(dep.hardwareAssetId) === normalizedSelectedHardwareId);
-  const selectedStorage = storageItems.filter(item => String(item.hardwareAssetId) === normalizedSelectedHardwareId);
-  const selectedDocs = docs.filter(doc => String(doc.hardwareAssetId) === normalizedSelectedHardwareId);
-  const selectedServiceIds = new Set(selectedDeployments.map(dep => dep.softwareUnitId).filter(Boolean));
-  const selectedServices = services.filter(sw => selectedServiceIds.has(sw.id));
-  const selectedServiceDocs = docs.filter(doc => doc.softwareUnitId && selectedServiceIds.has(doc.softwareUnitId));
-  const visibleDocs = Array.from(new Map([...selectedDocs, ...selectedServiceDocs].map(doc => [doc.id, doc])).values());
-  const visibleDocIds = new Set(visibleDocs.map(doc => doc.id));
-  const rootVisibleDocs = visibleDocs
-    .filter(doc => !doc.parentDocId || !visibleDocIds.has(doc.parentDocId))
-    .sort((a, b) => String(a.title || '').localeCompare(String(b.title || '')));
-
-  const getDocChildren = (docId: string) =>
-    visibleDocs
-      .filter(doc => doc.parentDocId === docId)
-      .sort((a, b) => String(a.title || '').localeCompare(String(b.title || '')));
-
-  const handleAddHardware = () => {
-    setHardwareEditId(null);
-    setName('');
-    setHostname('');
-    setType('SERVER');
-    setCpu('');
-    setCpuCores('');
-    setRam('');
-    setOs('');
-    setIp('');
-    setMac('');
-    setMake('');
-    setModel('');
-    setSerialNumber('');
-    setLocation('');
-    setIcon('');
-    setNotes('');
-    setIsHardwareModalOpen(true);
-  };
-
-  const handleEditHardware = (hw: any) => {
-    setHardwareEditId(hw.id);
-    setName(hw.name || '');
-    setHostname(hw.hostname || '');
-    setType(hw.type || 'SERVER');
-    setCpu(hw.cpu || '');
-    setCpuCores(hw.cpuCores ? String(hw.cpuCores) : '');
-    setRam(hw.ram ? hw.ram.toString() : '');
-    setOs(hw.os || '');
-    setIp(hw.ip || '');
-    setMac(hw.mac || '');
-    setMake(hw.make || '');
-    setModel(hw.model || '');
-    setSerialNumber(hw.serialNumber || '');
-    setLocation(hw.location || '');
-    setIcon(hw.icon || '');
-    setNotes(hw.notes || '');
-    setIsHardwareModalOpen(true);
-  };
-
   const saveHardware = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
 
-    const url = hardwareEditId ? `${API_BASE}/hardware/${hardwareEditId}` : `${API_BASE}/hardware`;
-    const method = hardwareEditId ? 'PUT' : 'POST';
-
-    const response = await fetch(url, {
-      method,
+    const response = await fetch(`${API_BASE}/hardware`, {
+      method: 'POST',
       headers: authHeaders,
       body: JSON.stringify({
         name,
@@ -230,223 +120,52 @@ export default function Hardware() {
       })
     });
 
-    if (response.ok) {
-      const saved = await response.json();
-      setIsHardwareModalOpen(false);
-      await fetchData();
-      if (!hardwareEditId) {
-        setSelectedHardwareId(String(saved.id));
-      }
-      return;
-    }
-
-    const errorData = await response.json();
-    alert(`Error: ${errorData.error || 'Failed to save hardware'}`);
-  };
-
-  const deleteHardware = async () => {
-    if (!token || !hardwareEditId) return;
-
-    const impactedServices = selectedServices;
-    const impactedServiceIds = new Set(impactedServices.map((service) => service.id));
-    const impactedDocs = Array.from(
-      new Map(
-        [...selectedDocs, ...selectedServiceDocs].map((doc) => [doc.id, doc])
-      ).values()
-    );
-
-    const relatedDeployments = deployments.filter((dep) => String(dep.hardwareAssetId) === String(hardwareEditId));
-    const relatedStorageByHardware = storageItems.filter((item) => String(item.hardwareAssetId) === String(hardwareEditId));
-    const relatedStorageByService = storageItems.filter(
-      (item) => item.softwareUnitId && impactedServiceIds.has(String(item.softwareUnitId))
-    );
-    const totalRelatedStorage = Array.from(
-      new Set([
-        ...relatedStorageByHardware.map((item) => item.id),
-        ...relatedStorageByService.map((item) => item.id)
-      ])
-    ).length;
-
-    const externalDeploymentsImpacted = deployments.filter(
-      (dep) =>
-        dep.softwareUnitId &&
-        impactedServiceIds.has(String(dep.softwareUnitId)) &&
-        String(dep.hardwareAssetId) !== String(hardwareEditId)
-    );
-
-    setPendingHardwareDelete({
-      id: String(hardwareEditId),
-      name: selectedHardware?.name || 'Selected hardware',
-      deployments: relatedDeployments.length,
-      services: impactedServices.length,
-      storage: totalRelatedStorage,
-      docs: impactedDocs.length,
-      servicePreview: impactedServices.map((service) => service.name).slice(0, 4),
-      docPreview: impactedDocs.map((doc) => doc.title).slice(0, 4),
-      externalImpact: externalDeploymentsImpacted.length
-    });
-  };
-
-  const confirmDeleteHardware = async () => {
-    if (!token || !pendingHardwareDelete) return;
-
-    const response = await fetch(`${API_BASE}/hardware/${pendingHardwareDelete.id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to delete hardware'}`);
+      alert(`Error: ${errorData.error || 'Failed to save hardware'}`);
       return;
     }
 
-    setPendingHardwareDelete(null);
     setIsHardwareModalOpen(false);
-    setHardwareEditId(null);
     await fetchData();
   };
 
-  const handleAddDeployment = () => {
-    setDeploymentModalMode('create-service');
-    setDeploymentEditId(null);
-    setSoftwareUnitId('');
-    setNewServiceName('');
-    setNewServiceType('OTHER');
-    setNewServicePort('');
-    setNewServiceUrl('');
-    setInternalIp('');
-    setIsDeploymentModalOpen(true);
-  };
-
-  const handleEditDeployment = (dep: any) => {
-    setDeploymentModalMode('edit-deployment');
-    setDeploymentEditId(dep.id);
-    setSoftwareUnitId(dep.softwareUnitId || '');
-    setInternalIp(dep.internalIp || '');
-    setIsDeploymentModalOpen(true);
-  };
-
-  const saveDeployment = async (e: React.FormEvent) => {
+  const saveService = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !selectedHardwareId) return;
+    if (!token) return;
 
-    let targetSoftwareUnitId = softwareUnitId;
-
-    if (deploymentModalMode === 'create-service') {
-      if (!newServiceName.trim()) {
-        alert('Service name is required');
-        return;
-      }
-
-      const createServiceRes = await fetch(`${API_BASE}/services`, {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({
-          name: newServiceName.trim(),
-          type: newServiceType,
-          port: newServicePort ? Number(newServicePort) : undefined,
-          url: newServiceUrl || undefined
-        })
-      });
-
-      if (!createServiceRes.ok) {
-        const createServiceError = await createServiceRes.json().catch(() => ({}));
-        alert(`Error: ${createServiceError.error || 'Failed to create service'}`);
-        return;
-      }
-
-      const createdService = await createServiceRes.json();
-      targetSoftwareUnitId = String(createdService.id);
-    }
-
-    const url = deploymentEditId ? `${API_BASE}/deployments/${deploymentEditId}` : `${API_BASE}/deployments`;
-    const method = deploymentEditId ? 'PUT' : 'POST';
-
-    const response = await fetch(url, {
-      method,
+    const response = await fetch(`${API_BASE}/services`, {
+      method: 'POST',
       headers: authHeaders,
       body: JSON.stringify({
-        hardwareAssetId: selectedHardwareId,
-        softwareUnitId: targetSoftwareUnitId,
-        internalIp
+        name: serviceName.trim(),
+        type: serviceType,
+        image: serviceImage.trim() || null,
+        port: servicePort ? Number(servicePort) : null,
+        url: serviceUrl.trim() || null
       })
     });
 
-    if (response.ok) {
-      setIsDeploymentModalOpen(false);
-      await fetchData();
-      return;
-    }
-
-    const errorData = await response.json();
-    alert(`Error: ${errorData.error || 'Failed to save deployment'}`);
-  };
-
-  const deleteDeployment = async () => {
-    if (!token || !deploymentEditId) return;
-    if (!window.confirm('Delete this deployment?')) return;
-
-    const response = await fetch(`${API_BASE}/deployments/${deploymentEditId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to delete deployment'}`);
+      alert(`Error: ${errorData.error || 'Failed to save service'}`);
       return;
     }
 
-    setIsDeploymentModalOpen(false);
-    setDeploymentEditId(null);
+    setIsServiceModalOpen(false);
     await fetchData();
-  };
-
-  const handleAddStorage = () => {
-    setStorageEditId(null);
-    setStorageName('');
-    setStorageType('SSD');
-    setStorageMake('');
-    setStorageModel('');
-    setStorageSerialNumber('');
-    setStorageInterface('');
-    setUsableSpace('');
-    setSpaceUnit('GB');
-    setIsStorageModalOpen(true);
-  };
-
-  const handleEditStorage = (item: any) => {
-    setStorageEditId(item.id);
-    setStorageName(item.name || '');
-    setStorageType(item.storageType || 'SSD');
-    setStorageMake(item.make || '');
-    setStorageModel(item.model || '');
-    setStorageSerialNumber(item.serialNumber || '');
-    setStorageInterface(item.interface || '');
-
-    if (item.usableSpaceGB && item.usableSpaceGB >= 1000 && item.usableSpaceGB % 1000 === 0) {
-      setUsableSpace(item.usableSpaceGB / 1000);
-      setSpaceUnit('TB');
-    } else {
-      setUsableSpace(item.usableSpaceGB || '');
-      setSpaceUnit('GB');
-    }
-
-    setIsStorageModalOpen(true);
   };
 
   const saveStorage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !selectedHardwareId) return;
-
-    const url = storageEditId ? `${API_BASE}/storage/${storageEditId}` : `${API_BASE}/storage`;
-    const method = storageEditId ? 'PUT' : 'POST';
+    if (!token || !storageHardwareAssetId) {
+      alert('Please select a hardware node.');
+      return;
+    }
 
     const usableSpaceGB = spaceUnit === 'TB' ? Number(usableSpace) * 1000 : Number(usableSpace);
-
-    const response = await fetch(url, {
-      method,
+    const response = await fetch(`${API_BASE}/storage`, {
+      method: 'POST',
       headers: authHeaders,
       body: JSON.stringify({
         name: storageName,
@@ -456,61 +175,21 @@ export default function Hardware() {
         serialNumber: storageSerialNumber || null,
         interface: storageInterface || null,
         usableSpaceGB,
-        hardwareAssetId: selectedHardwareId
+        hardwareAssetId: storageHardwareAssetId
       })
-    });
-
-    if (response.ok) {
-      setIsStorageModalOpen(false);
-      await fetchData();
-      return;
-    }
-
-    const errorData = await response.json();
-    alert(`Error: ${errorData.error || 'Failed to save storage'}`);
-  };
-
-  const deleteStorage = async () => {
-    if (!token || !storageEditId) return;
-    if (!window.confirm('Delete this storage item?')) return;
-
-    const response = await fetch(`${API_BASE}/storage/${storageEditId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to delete storage'}`);
+      alert(`Error: ${errorData.error || 'Failed to save storage'}`);
       return;
     }
 
     setIsStorageModalOpen(false);
-    setStorageEditId(null);
     await fetchData();
   };
 
-  const handleAddDoc = () => {
-    setDocEditId(null);
-    setDocTitle('');
-    setDocContent('');
-    setDocHardwareAssetId(selectedHardwareId || '');
-    setDocSoftwareUnitId('');
-    setDocParentDocId('');
-    setIsDocModalOpen(true);
-  };
-
-  const handleEditDoc = (doc: any) => {
-    setDocEditId(doc.id);
-    setDocTitle(doc.title || '');
-    setDocContent(doc.content || '');
-    setDocHardwareAssetId(doc.hardwareAssetId || selectedHardwareId || '');
-    setDocSoftwareUnitId(doc.softwareUnitId || '');
-    setDocParentDocId(doc.parentDocId || '');
-    setIsDocModalOpen(true);
-  };
-
-  const saveDoc = async (e: React.FormEvent) => {
+  const saveMarkdown = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
 
@@ -520,11 +199,8 @@ export default function Hardware() {
       return;
     }
 
-    const url = docEditId ? `${API_BASE}/docs/${docEditId}` : `${API_BASE}/docs`;
-    const method = docEditId ? 'PUT' : 'POST';
-
-    const response = await fetch(url, {
-      method,
+    const response = await fetch(`${API_BASE}/docs`, {
+      method: 'POST',
       headers: authHeaders,
       body: JSON.stringify({
         title: normalizedTitle,
@@ -535,704 +211,169 @@ export default function Hardware() {
       })
     });
 
-    if (response.ok) {
-      setIsDocModalOpen(false);
-      await fetchData();
-      return;
-    }
-
-    const errorData = await response.json();
-    alert(`Error: ${errorData.error || 'Failed to save document'}`);
-  };
-
-  const deleteDoc = async () => {
-    if (!token || !docEditId) return;
-
-    const targetDoc = docs.find((doc) => doc.id === docEditId);
-
-    const childrenByParent = new Map<string, string[]>();
-    for (const doc of docs) {
-      if (!doc.parentDocId) continue;
-      const existing = childrenByParent.get(doc.parentDocId) || [];
-      existing.push(doc.id);
-      childrenByParent.set(doc.parentDocId, existing);
-    }
-
-    const subtreeIds = new Set<string>();
-    const stack = [docEditId];
-    while (stack.length > 0) {
-      const current = stack.pop()!;
-      if (subtreeIds.has(current)) continue;
-      subtreeIds.add(current);
-
-      const children = childrenByParent.get(current) || [];
-      for (const childId of children) {
-        if (!subtreeIds.has(childId)) stack.push(childId);
-      }
-    }
-
-    const subtreeDocs = docs.filter((doc) => subtreeIds.has(doc.id));
-    const childCount = Math.max(0, subtreeDocs.length - 1);
-    const childTitles = subtreeDocs
-      .filter((doc) => doc.id !== docEditId)
-      .map((doc) => doc.title)
-      .slice(0, 8);
-
-    setPendingDocDelete({
-      id: docEditId,
-      title: targetDoc?.title || 'Selected document',
-      childCount,
-      childPreview: childTitles
-    });
-  };
-
-  const confirmDeleteDoc = async () => {
-    if (!token || !pendingDocDelete) return;
-
-    const response = await fetch(`${API_BASE}/docs/${pendingDocDelete.id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to delete document'}`);
+      alert(`Error: ${errorData.error || 'Failed to save document'}`);
       return;
     }
 
-    setPendingDocDelete(null);
     setIsDocModalOpen(false);
-    setDocEditId(null);
     await fetchData();
   };
 
-  const displaySpace = (gb: number | undefined | null) => {
-    if (!gb) return '-';
-    if (gb >= 1000 && gb % 1000 === 0) return `${gb / 1000} TB`;
-    if (gb >= 1000) return `${(gb / 1000).toFixed(2)} TB`;
-    return `${gb} GB`;
-  };
+  const deploymentCountByHardware = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const dep of deployments) {
+      const key = dep.hardwareAssetId;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return counts;
+  }, [deployments]);
 
-  const renderDocNode = (doc: any, depth = 0) => {
-    const childCount = getDocChildren(doc.id).length;
-
-    return (
-      <div key={doc.id} className={`${depth > 0 ? 'ml-5 border-l border-border' : ''}`}>
-        <button
-          type="button"
-          onClick={() => setPreviewDoc(doc)}
-          className="w-full px-4 py-2.5 text-left hover:bg-background/50 transition-colors"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="font-medium text-text truncate">{doc.title}</p>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {doc.softwareUnit?.name && <span className="text-[11px] bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded-full">Service</span>}
-                {doc.hardwareAsset?.name && <span className="text-[11px] bg-primary/15 text-primary px-2 py-0.5 rounded-full">Hardware</span>}
-                {childCount > 0 && <span className="text-[11px] bg-background border border-border text-text-secondary px-2 py-0.5 rounded-full">{childCount} child</span>}
-              </div>
-            </div>
-            <span
-              role="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditDoc(doc);
-              }}
-              className="text-xs text-primary hover:text-primary/80 shrink-0"
-            >
-              Edit
-            </span>
-          </div>
-        </button>
-
-        {getDocChildren(doc.id).map(child => renderDocNode(child, depth + 1))}
-      </div>
-    );
-  };
+  const storageCountByHardware = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of storageItems) {
+      const key = item.hardwareAssetId;
+      if (!key) continue;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return counts;
+  }, [storageItems]);
 
   return (
   <div className="documentation-area page-shell">
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
-          <h2 className="page-title">Hardware Documentation</h2>
+          <h2 className="page-title">{t('nav.docs.hardware')}</h2>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0">
-  <Card className="xl:col-span-4 rounded-xl border border-border bg-content p-0 overflow-hidden h-full min-h-0 flex flex-col">
-          <div className="px-4 py-3 border-b border-border bg-background flex items-center justify-between gap-3">
-            <span className="text-sm font-semibold text-text-secondary">Hardware Nodes</span>
-            <button onClick={handleAddHardware} className="bg-primary hover:bg-primary/90 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-colors">+ Add Hardware</button>
-          </div>
-          <div className="divide-y divide-border overflow-y-auto min-h-0">
-            {hardware.length === 0 && <p className="p-4 text-text-secondary">No hardware found.</p>}
-            {hardware.map(hw => (
-              <button
-                key={hw.id}
-                onClick={() => setSelectedHardwareId(String(hw.id))}
-                className={`relative w-full text-left pl-5 pr-4 py-3 transition-all ${isSelectedHardware(hw.id) ? 'bg-primary/20 shadow-md' : 'hover:bg-background/60'}`}
-              >
-                <span
-                  aria-hidden="true"
-                  className={`absolute left-0 top-0 h-full w-1 ${isSelectedHardware(hw.id) ? 'bg-primary' : 'bg-border'}`}
-                />
-                <div className="flex justify-between items-start gap-3">
-                  <div>
-                    <p className={`font-medium ${isSelectedHardware(hw.id) ? 'text-primary' : 'text-text'}`}>{hw.name}</p>
-                    <p className="text-xs text-text-secondary">{hw.type} • {hw.status}</p>
-                  </div>
-                  <span
-                    role="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditHardware(hw);
-                    }}
-                    className="text-xs text-primary hover:text-primary/80"
-                  >
-                    Edit
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </Card>
+        <div className="space-y-6 flex-1 min-h-0 overflow-y-auto pr-1">
+        {hardware.length === 0 && (
+          <Card className="rounded-xl p-4 bg-content border border-border text-text-secondary">
+            No hardware entries available.
+          </Card>
+        )}
 
-        <div className="xl:col-span-8 min-h-0 overflow-y-auto pr-1">
-          <div className="space-y-6">
-          {!selectedHardware && (
-            <Card className="rounded-xl border border-border bg-content p-6 text-text-secondary">
-              Select hardware on the left or create a new one.
-            </Card>
-          )}
-
-          {selectedHardware && (
-            <>
-              <Card className="rounded-xl border border-border bg-content p-6">
-                <div className="flex justify-between items-start gap-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-text">{selectedHardware.name}</h3>
-                    <p className="text-sm text-text-secondary mt-1">{selectedHardware.type} • {selectedHardware.status}</p>
-                  </div>
-                  <button onClick={() => handleEditHardware(selectedHardware)} className="text-sm text-primary hover:text-primary/80">Edit Hardware</button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
-                  <p className="text-text-secondary">Hostname: <span className="text-text">{selectedHardware.hostname || '-'}</span></p>
-                  <p className="text-text-secondary">Make: <span className="text-text">{selectedHardware.make || '-'}</span></p>
-                  <p className="text-text-secondary">Model: <span className="text-text">{selectedHardware.model || '-'}</span></p>
-                  <p className="text-text-secondary">CPU: <span className="text-text">{selectedHardware.cpu || '-'}</span></p>
-                  <p className="text-text-secondary">CPU Cores: <span className="text-text">{selectedHardware.cpuCores ?? '-'}</span></p>
-                  <p className="text-text-secondary">IP: <span className="text-text">{selectedHardware.ip || '-'}</span></p>
-                  <p className="text-text-secondary">OS: <span className="text-text">{selectedHardware.os || '-'}</span></p>
-                  <p className="text-text-secondary">RAM: <span className="text-text">{selectedHardware.ram ? `${selectedHardware.ram} GB` : '-'}</span></p>
-                  <p className="text-text-secondary">Serial: <span className="text-text">{selectedHardware.serialNumber || '-'}</span></p>
-                  <p className="text-text-secondary">Location: <span className="text-text">{selectedHardware.location || '-'}</span></p>
-                </div>
-                {selectedHardware.notes && <p className="mt-4 text-sm text-text-secondary whitespace-pre-wrap">{selectedHardware.notes}</p>}
-              </Card>
-
-              <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
-                  <h4 className="font-semibold text-text">Services on this hardware</h4>
-                  <button onClick={handleAddDeployment} className="text-sm text-primary hover:text-primary/80">+ Add service</button>
-                </div>
-                <div className="divide-y divide-border">
-                  {selectedDeployments.length === 0 && <p className="p-4 text-sm text-text-secondary">No services assigned.</p>}
-                  {selectedDeployments.map(dep => (
-                    <div key={dep.id} className="px-4 py-3 flex items-center justify-between gap-4">
-                      <div>
-                        <p className="font-medium text-text">{dep.softwareUnit?.name || 'Unknown service'}</p>
-                        <p className="text-xs text-text-secondary">{dep.softwareUnit?.type || '-'} • {dep.internalIp || '-'} • {dep.status || 'UNKNOWN'}</p>
-                      </div>
-                      <button onClick={() => handleEditDeployment(dep)} className="text-sm text-primary hover:text-primary/80">Edit</button>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-
-              <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
-                  <h4 className="font-semibold text-text">Disks / Storage</h4>
-                  <button onClick={handleAddStorage} className="text-sm text-primary hover:text-primary/80">+ Add storage</button>
-                </div>
-                <div className="divide-y divide-border">
-                  {selectedStorage.length === 0 && <p className="p-4 text-sm text-text-secondary">No storage assigned.</p>}
-                  {selectedStorage.map(item => (
-                    <div key={item.id} className="px-4 py-3 flex items-center justify-between gap-4">
-                      <div>
-                        <p className="font-medium text-text">{item.name}</p>
-                        <p className="text-xs text-text-secondary">{item.storageType || '-'} • {displaySpace(item.usableSpaceGB)}</p>
-                        <p className="text-xs text-text-secondary mt-0.5">
-                          {[item.make, item.model].filter(Boolean).join(' ') || '-'}
-                          {item.serialNumber ? ` • S/N ${item.serialNumber}` : ''}
-                          {item.interface ? ` • ${item.interface}` : ''}
-                        </p>
-                      </div>
-                      <button onClick={() => handleEditStorage(item)} className="text-sm text-primary hover:text-primary/80">Edit</button>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-
-              <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
-                <div className="px-4 py-3 border-b border-border bg-background flex items-center justify-between gap-3">
-                  <h4 className="font-semibold text-text">Linked markdown documents (hardware + services)</h4>
-                  <button onClick={handleAddDoc} className="text-sm text-primary hover:text-primary/80">+ Add markdown</button>
-                </div>
-                <div className="divide-y divide-border">
-                  {visibleDocs.length === 0 && <p className="p-4 text-sm text-text-secondary">No documents linked to this hardware or its services.</p>}
-                  {rootVisibleDocs.map(doc => renderDocNode(doc))}
-                </div>
-              </Card>
-            </>
-          )}
-          </div>
+        {hardware.map(hw => (
+          <Card key={hw.id} className="rounded-xl p-4 bg-content border border-border flex flex-col gap-2">
+            <h3 className="text-xl font-bold text-primary">{hw.name} <span className="text-sm text-text-secondary">({hw.type})</span></h3>
+            <p className="text-sm text-text-secondary">{hw.ip || '-'} • {hw.os || '-'}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+              <div className="p-3 border border-border rounded-lg bg-background">
+                <p className="text-xs text-text-secondary">RAM</p>
+                <p className="font-semibold text-text">{hw.ram ? `${hw.ram} GB` : '-'}</p>
+              </div>
+              <div className="p-3 border border-border rounded-lg bg-background">
+                <p className="text-xs text-text-secondary">Services (deployed)</p>
+                <p className="font-semibold text-text">{deploymentCountByHardware.get(hw.id) || 0}</p>
+              </div>
+              <div className="p-3 border border-border rounded-lg bg-background">
+                <p className="text-xs text-text-secondary">Storage Items</p>
+                <p className="font-semibold text-text">{storageCountByHardware.get(hw.id) || 0}</p>
+              </div>
+            </div>
+          </Card>
+        ))}
         </div>
       </div>
-      </div>
 
-      {isHardwareModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-background border border-border rounded-xl w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-text">{hardwareEditId ? 'Edit Hardware' : 'Add New Hardware'}</h3>
-              <button onClick={() => setIsHardwareModalOpen(false)} className="text-text-secondary hover:text-text">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-              </button>
-            </div>
-            <form onSubmit={saveHardware} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
-                  <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Hostname</label>
-                  <input type="text" value={hostname} onChange={e => setHostname(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
-                  <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                    <option value="SERVER">Server</option>
-                    <option value="PI">Raspberry Pi</option>
-                    <option value="NAS">NAS</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">IP Address</label>
-                  <input type="text" value={ip} onChange={e => setIp(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">MAC Address</label>
-                  <input type="text" value={mac} onChange={e => setMac(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">CPU</label>
-                  <input type="text" value={cpu} onChange={e => setCpu(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">CPU Cores</label>
-                  <input type="number" value={cpuCores} onChange={e => setCpuCores(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Make</label>
-                  <input type="text" value={make} onChange={e => setMake(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Model</label>
-                  <input type="text" value={model} onChange={e => setModel(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">RAM (GB)</label>
-                  <input type="number" value={ram} onChange={e => setRam(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Serial Number</label>
-                  <input type="text" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Location</label>
-                  <input type="text" value={location} onChange={e => setLocation(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Icon</label>
-                  <input type="text" value={icon} onChange={e => setIcon(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" placeholder="e.g. server, pi, nas" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Operating System</label>
-                  <input type="text" value={os} onChange={e => setOs(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Notes</label>
-                  <textarea value={notes} onChange={e => setNotes(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary min-h-[80px]" />
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
-                {hardwareEditId && (
-                  <button
-                    type="button"
-                    onClick={deleteHardware}
-                    className="mr-auto px-4 py-2 rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-colors"
-                  >
-                    Delete
-                  </button>
-                )}
-                <button type="button" onClick={() => setIsHardwareModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
-                <button type="submit" className="bg-primary hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Hardware</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AddHardware
+        isOpen={isHardwareModalOpen}
+        name={name}
+        hostname={hostname}
+        type={type}
+        ip={ip}
+        mac={mac}
+        cpu={cpu}
+        cpuCores={cpuCores}
+        make={make}
+        model={model}
+        ram={ram}
+        serialNumber={serialNumber}
+        location={location}
+        icon={icon}
+        os={os}
+        notes={notes}
+        onClose={() => setIsHardwareModalOpen(false)}
+        onSubmit={saveHardware}
+        onNameChange={setName}
+        onHostnameChange={setHostname}
+        onTypeChange={setType}
+        onIpChange={setIp}
+        onMacChange={setMac}
+        onCpuChange={setCpu}
+        onCpuCoresChange={setCpuCores}
+        onMakeChange={setMake}
+        onModelChange={setModel}
+        onRamChange={setRam}
+        onSerialNumberChange={setSerialNumber}
+        onLocationChange={setLocation}
+        onIconChange={setIcon}
+        onOsChange={setOs}
+        onNotesChange={setNotes}
+      />
 
-      {isDeploymentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-background border border-border rounded-xl w-full max-w-lg p-6 shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-text">{deploymentEditId ? 'Edit Deployment' : 'Add service to hardware'}</h3>
-              <button onClick={() => setIsDeploymentModalOpen(false)} className="text-text-secondary hover:text-text">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-              </button>
-            </div>
-            <form onSubmit={saveDeployment} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Service Name *</label>
-                {deploymentModalMode === 'create-service' ? (
-                  <input
-                    required
-                    type="text"
-                    value={newServiceName}
-                    onChange={e => setNewServiceName(e.target.value)}
-                    className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary"
-                    placeholder="e.g. Nextcloud"
-                  />
-                ) : (
-                  <select required value={softwareUnitId} onChange={e => setSoftwareUnitId(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                    <option value="" disabled>Select a service</option>
-                    {services.map(sw => <option key={sw.id} value={sw.id}>{sw.name}</option>)}
-                  </select>
-                )}
-              </div>
+      <AddService
+        isOpen={isServiceModalOpen}
+        title="Add Service"
+        submitLabel="Save Service"
+        name={serviceName}
+        type={serviceType}
+        port={servicePort}
+        url={serviceUrl}
+        image={serviceImage}
+        onClose={() => setIsServiceModalOpen(false)}
+        onSubmit={saveService}
+        onNameChange={setServiceName}
+        onTypeChange={setServiceType}
+        onPortChange={setServicePort}
+        onUrlChange={setServiceUrl}
+        onImageChange={setServiceImage}
+      />
 
-              {deploymentModalMode === 'create-service' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-1">Service Type</label>
-                    <select value={newServiceType} onChange={e => setNewServiceType(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                      <option value="OTHER">Other</option>
-                      <option value="DOCKER_CONTAINER">Docker Container</option>
-                      <option value="VM">VM</option>
-                      <option value="POD">Pod</option>
-                      <option value="BARE_METAL_SERVICE">Bare Metal Service</option>
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-text-secondary mb-1">Port</label>
-                      <input type="number" value={newServicePort} onChange={e => setNewServicePort(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-secondary mb-1">URL / Domain</label>
-                      <input type="text" value={newServiceUrl} onChange={e => setNewServiceUrl(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                    </div>
-                  </div>
-                </>
-              )}
+      <AddStorage
+        isOpen={isStorageModalOpen}
+        name={storageName}
+        type={storageType}
+        make={storageMake}
+        model={storageModel}
+        serialNumber={storageSerialNumber}
+        interfaceType={storageInterface}
+        usableSpace={usableSpace}
+        spaceUnit={spaceUnit}
+        hardwareAssetId={storageHardwareAssetId}
+        hardwareOptions={hardware.map((hw) => ({ id: String(hw.id), name: hw.name }))}
+        onClose={() => setIsStorageModalOpen(false)}
+        onSubmit={saveStorage}
+        onNameChange={setStorageName}
+        onTypeChange={setStorageType}
+        onMakeChange={setStorageMake}
+        onModelChange={setStorageModel}
+        onSerialNumberChange={setStorageSerialNumber}
+        onInterfaceChange={setStorageInterface}
+        onUsableSpaceChange={setUsableSpace}
+        onSpaceUnitChange={setSpaceUnit}
+        onHardwareAssetIdChange={setStorageHardwareAssetId}
+      />
 
-              {deploymentModalMode === 'create-service' && (
-                <div className="rounded-lg border border-border bg-background/40 p-3">
-                  <p className="text-xs text-text-secondary">The new service will be created and directly linked to this hardware.</p>
-                </div>
-              )}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Internal IP / Address</label>
-                <input type="text" value={internalIp} onChange={e => setInternalIp(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-              </div>
-              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
-                {deploymentEditId && (
-                  <button
-                    type="button"
-                    onClick={deleteDeployment}
-                    className="mr-auto px-4 py-2 rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-colors"
-                  >
-                    Delete
-                  </button>
-                )}
-                <button type="button" onClick={() => setIsDeploymentModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
-                <button type="submit" className="bg-primary flex-1 hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Deployment</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {isStorageModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-background border border-border rounded-xl w-full max-w-lg p-6 shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-text">{storageEditId ? 'Edit Storage' : 'Add storage to hardware'}</h3>
-              <button onClick={() => setIsStorageModalOpen(false)} className="text-text-secondary hover:text-text">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-              </button>
-            </div>
-            <form onSubmit={saveStorage} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
-                <input required type="text" value={storageName} onChange={e => setStorageName(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Type *</label>
-                <select required value={storageType} onChange={e => setStorageType(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                  <option value="SSD">SSD</option>
-                  <option value="HDD">HDD</option>
-                  <option value="NVME">NVMe</option>
-                  <option value="NAS">NAS / Network</option>
-                  <option value="USB">USB Drive</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Make / Brand</label>
-                  <input type="text" value={storageMake} onChange={e => setStorageMake(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Model</label>
-                  <input type="text" value={storageModel} onChange={e => setStorageModel(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Serial Number</label>
-                  <input type="text" value={storageSerialNumber} onChange={e => setStorageSerialNumber(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Interface / Bus</label>
-                  <input type="text" value={storageInterface} onChange={e => setStorageInterface(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" placeholder="z.B. SATA, SAS, NVMe" />
-                </div>
-              </div>
-              <div className="flex gap-2 items-end">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Usable Space *</label>
-                  <input required type="number" step="0.1" value={usableSpace} onChange={e => setUsableSpace(e.target.value ? Number(e.target.value) : '')} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div className="w-24">
-                  <select value={spaceUnit} onChange={e => setSpaceUnit(e.target.value as 'GB' | 'TB')} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                    <option value="GB">GB</option>
-                    <option value="TB">TB</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
-                {storageEditId && (
-                  <button
-                    type="button"
-                    onClick={deleteStorage}
-                    className="mr-auto px-4 py-2 rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-colors"
-                  >
-                    Delete
-                  </button>
-                )}
-                <button type="button" onClick={() => setIsStorageModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
-                <button type="submit" className="bg-primary flex-1 hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Storage</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {isDocModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-background border border-border rounded-xl w-full max-w-6xl p-6 shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-text">{docEditId ? 'Edit Markdown Document' : 'New Markdown Document'}</h3>
-              <button onClick={() => setIsDocModalOpen(false)} className="text-text-secondary hover:text-text">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-              </button>
-            </div>
-            <form onSubmit={saveDoc} className="space-y-4 flex flex-col flex-1 overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Title *</label>
-                  <input required type="text" value={docTitle} onChange={e => setDocTitle(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Hardware Link</label>
-                  <select value={docHardwareAssetId} onChange={e => setDocHardwareAssetId(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                    <option value="">None</option>
-                    {hardware.map(hw => <option key={hw.id} value={hw.id}>{hw.name}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Service Link</label>
-                <select value={docSoftwareUnitId} onChange={e => setDocSoftwareUnitId(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                  <option value="">None</option>
-                  {selectedServices.map(sw => <option key={sw.id} value={sw.id}>{sw.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Parent Document</label>
-                <select value={docParentDocId} onChange={e => setDocParentDocId(e.target.value)} className="w-full bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                  <option value="">None (Root)</option>
-                  {docs.filter(doc => doc.id !== docEditId).map(doc => (
-                    <option key={doc.id} value={doc.id}>{doc.title}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 mb-4">
-                <div className="flex flex-col min-h-0">
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Markdown Content *</label>
-                  <textarea required value={docContent} onChange={e => setDocContent(e.target.value)} className="w-full flex-1 min-h-[260px] bg-content border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary font-mono text-sm resize-none" />
-                </div>
-                <div className="flex flex-col min-h-0">
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Live Preview</label>
-                  <div className="w-full flex-1 min-h-[260px] overflow-auto bg-content border border-border rounded-lg px-4 py-3">
-                    <ReactMarkdown components={markdownComponents}>{docContent || '*No content available*'}</ReactMarkdown>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border shrink-0">
-                {docEditId && (
-                  <button
-                    type="button"
-                    onClick={deleteDoc}
-                    className="mr-auto px-4 py-2 rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-colors"
-                  >
-                    Delete
-                  </button>
-                )}
-                <button type="button" onClick={() => setIsDocModalOpen(false)} className="px-4 py-2 text-text-secondary hover:text-text transition-colors">Cancel</button>
-                <button type="submit" className="bg-primary flex-1 hover:bg-primary/90 px-6 py-2 rounded-lg text-white transition-colors">Save Document</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {pendingHardwareDelete && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-xl border border-border bg-content p-5 shadow-2xl">
-            <h3 className="text-lg font-semibold text-text">Delete {pendingHardwareDelete.name}?</h3>
-            <p className="mt-1 text-sm text-text-secondary">Related child entries will be removed too.</p>
-
-            <ul className="mt-4 space-y-1.5 text-sm text-text-secondary">
-              <li>• {pendingHardwareDelete.deployments} deployment(s)</li>
-              <li>• {pendingHardwareDelete.services} service(s)</li>
-              <li>• {pendingHardwareDelete.storage} storage entry/entries</li>
-              <li>• {pendingHardwareDelete.docs} markdown doc(s)</li>
-            </ul>
-
-            {pendingHardwareDelete.servicePreview.length > 0 && (
-              <p className="mt-3 text-xs text-text-secondary/90">
-                Services: {pendingHardwareDelete.servicePreview.join(', ')}{pendingHardwareDelete.services > pendingHardwareDelete.servicePreview.length ? ' …' : ''}
-              </p>
-            )}
-            {pendingHardwareDelete.docPreview.length > 0 && (
-              <p className="mt-1 text-xs text-text-secondary/90">
-                Docs: {pendingHardwareDelete.docPreview.join(', ')}{pendingHardwareDelete.docs > pendingHardwareDelete.docPreview.length ? ' …' : ''}
-              </p>
-            )}
-            {pendingHardwareDelete.externalImpact > 0 && (
-              <p className="mt-2 text-xs text-amber-300">
-                Warning: {pendingHardwareDelete.externalImpact} deployment(s) on other hardware are also affected.
-              </p>
-            )}
-
-            <div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
-              <button
-                type="button"
-                onClick={() => setPendingHardwareDelete(null)}
-                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeleteHardware}
-                className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {pendingDocDelete && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-xl border border-border bg-content p-5 shadow-2xl">
-            <h3 className="text-lg font-semibold text-text">Delete {pendingDocDelete.title}?</h3>
-            <p className="mt-1 text-sm text-text-secondary">Child markdown files are removed too.</p>
-
-            <ul className="mt-4 space-y-1.5 text-sm text-text-secondary">
-              <li>• 1 selected document</li>
-              <li>• {pendingDocDelete.childCount} child document(s)</li>
-            </ul>
-
-            {pendingDocDelete.childPreview.length > 0 && (
-              <p className="mt-3 text-xs text-text-secondary/90">
-                Child docs: {pendingDocDelete.childPreview.join(', ')}{pendingDocDelete.childCount > pendingDocDelete.childPreview.length ? ' …' : ''}
-              </p>
-            )}
-
-            <div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
-              <button
-                type="button"
-                onClick={() => setPendingDocDelete(null)}
-                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeleteDoc}
-                className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {previewDoc && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-4xl max-h-[85vh] overflow-hidden rounded-xl border border-border bg-content shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between border-b border-border px-4 py-3 bg-background">
-              <div className="min-w-0">
-                <h3 className="text-lg font-semibold text-text truncate">{previewDoc.title}</h3>
-                <div className="flex gap-2 mt-1 flex-wrap">
-                  {previewDoc.hardwareAsset?.name && <span className="text-xs bg-primary/15 text-primary px-2 py-0.5 rounded-full">HW: {previewDoc.hardwareAsset.name}</span>}
-                  {previewDoc.softwareUnit?.name && <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded-full">Service: {previewDoc.softwareUnit.name}</span>}
-                </div>
-              </div>
-              <button onClick={() => setPreviewDoc(null)} className="text-text-secondary hover:text-text">✕</button>
-            </div>
-
-            <div className="p-4 overflow-auto flex-1">
-              <ReactMarkdown components={markdownComponents}>{previewDoc.content || '*No content available*'}</ReactMarkdown>
-            </div>
-
-            <div className="border-t border-border p-3 bg-background flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setPreviewDoc(null);
-                  handleEditDoc(previewDoc);
-                }}
-                className="px-3 py-1.5 text-sm rounded-lg border border-border bg-content hover:bg-primary/15 hover:text-primary transition-colors"
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                onClick={() => setPreviewDoc(null)}
-                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AddMarkdown
+        isOpen={isDocModalOpen}
+        title={docTitle}
+        content={docContent}
+        hardwareAssetId={docHardwareAssetId}
+        softwareUnitId={docSoftwareUnitId}
+        parentDocId={docParentDocId}
+        hardwareOptions={hardware}
+        serviceOptions={services}
+        parentDocOptions={docs}
+        onClose={() => setIsDocModalOpen(false)}
+        onSubmit={saveMarkdown}
+        onTitleChange={setDocTitle}
+        onContentChange={setDocContent}
+        onHardwareAssetIdChange={setDocHardwareAssetId}
+        onSoftwareUnitIdChange={setDocSoftwareUnitId}
+        onParentDocIdChange={setDocParentDocId}
+      />
     </div>
   );
 }

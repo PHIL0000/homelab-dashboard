@@ -24,27 +24,10 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-const ensureMarkdownFilename = (value: string) => {
-  const normalized = value.trim();
-  if (!normalized) return '';
-  return normalized.toLowerCase().endsWith('.md') ? normalized : `${normalized}.md`;
-};
-
 export default function MarkdownDocs() {
   const { token } = useAuth();
   const [docs, setDocs] = useState<DocItem[]>([]);
   const [selectedDocId, setSelectedDocId] = useState<string>('');
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState('');
-  const [editContent, setEditContent] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<{
-    id: string;
-    title: string;
-    childCount: number;
-    childPreview: string[];
-  } | null>(null);
 
   const docsById = useMemo(() => {
     return new Map(docs.map((doc) => [doc.id, doc]));
@@ -172,148 +155,11 @@ export default function MarkdownDocs() {
     fetchData();
   }, [token]);
 
-  useEffect(() => {
-    if (!selectedDoc) {
-      setEditTitle('');
-      setEditContent('');
-      setIsEditing(false);
-      return;
-    }
-
-    setEditTitle(selectedDoc.title || '');
-    setEditContent(selectedDoc.content || '');
-  }, [selectedDoc?.id]);
-
-  useEffect(() => {
-    if (message?.type !== 'success') return;
-
-    const timeoutId = window.setTimeout(() => {
-      setMessage(null);
-    }, 2500);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [message]);
-
-  const handleSaveEdit = async () => {
-    if (!token || !selectedDoc) return;
-
-    const normalizedTitle = ensureMarkdownFilename(editTitle);
-    if (!normalizedTitle) {
-      setMessage({ type: 'error', text: 'Filename cannot be empty.' });
-      return;
-    }
-
-    setIsSaving(true);
-    setMessage(null);
-
-    try {
-      const response = await fetch(`http://localhost:3001/api/infrastructure/docs/${selectedDoc.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title: normalizedTitle,
-          content: editContent,
-          hardwareAssetId: selectedDoc.hardwareAssetId || undefined,
-          softwareUnitId: selectedDoc.softwareUnitId || undefined,
-          parentDocId: selectedDoc.parentDocId || undefined
-        })
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to save markdown file');
-      }
-
-      setMessage({ type: 'success', text: 'Markdown file saved.' });
-      setIsEditing(false);
-      await fetchData();
-      setSelectedDocId(data.id || selectedDoc.id);
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error?.message || 'Failed to save markdown file' });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const requestDeleteDoc = () => {
-    if (!token || !selectedDoc) return;
-
-    const childrenByParent = new Map<string, string[]>();
-    for (const doc of docs) {
-      if (!doc.parentDocId) continue;
-      const existing = childrenByParent.get(doc.parentDocId) || [];
-      existing.push(doc.id);
-      childrenByParent.set(doc.parentDocId, existing);
-    }
-
-    const subtreeIds = new Set<string>();
-    const stack = [selectedDoc.id];
-    while (stack.length > 0) {
-      const current = stack.pop()!;
-      if (subtreeIds.has(current)) continue;
-      subtreeIds.add(current);
-
-      const children = childrenByParent.get(current) || [];
-      for (const childId of children) {
-        if (!subtreeIds.has(childId)) stack.push(childId);
-      }
-    }
-
-    const subtreeDocs = docs.filter((doc) => subtreeIds.has(doc.id));
-    const childCount = Math.max(0, subtreeDocs.length - 1);
-    const childTitles = subtreeDocs
-      .filter((doc) => doc.id !== selectedDoc.id)
-      .map((doc) => doc.title)
-      .slice(0, 8);
-
-    setPendingDelete({
-      id: selectedDoc.id,
-      title: selectedDoc.title,
-      childCount,
-      childPreview: childTitles
-    });
-  };
-
-  const handleDeleteDoc = async () => {
-    if (!token || !pendingDelete) return;
-
-    setIsSaving(true);
-    setMessage(null);
-
-    try {
-      const response = await fetch(`http://localhost:3001/api/infrastructure/docs/${pendingDelete.id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete markdown file');
-      }
-
-      setMessage({ type: 'success', text: 'Markdown file deleted.' });
-  setPendingDelete(null);
-      setIsEditing(false);
-      setEditTitle('');
-      setEditContent('');
-      await fetchData();
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error?.message || 'Failed to delete markdown file' });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
   <div className="documentation-area page-shell relative">
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
-          <h2 className="page-title">Markdown Documents (Top Level)</h2>
+          <h2 className="page-title">Markdown Documents</h2>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 page-content-scroll">
@@ -364,85 +210,8 @@ export default function MarkdownDocs() {
                 </div>
               </div>
 
-              {message && (
-                <div className={`p-3 rounded-lg text-sm ${message.type === 'success' ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
-                  {message.text}
-                </div>
-              )}
-
-              <div className="flex items-center gap-2">
-                {!isEditing && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditing(true);
-                      setMessage(null);
-                    }}
-                    className="px-3 py-1.5 text-sm rounded-lg border border-border bg-background hover:bg-primary/15 hover:text-primary transition-colors"
-                  >
-                    Edit File
-                  </button>
-                )}
-              </div>
-
-              {isEditing && (
-                <div className="border border-border rounded-lg p-4 bg-background/40 space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-text-secondary mb-1">Filename</label>
-                    <input
-                      type="text"
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      className="w-full bg-content border border-border rounded-lg px-3 py-2 text-text focus:outline-none focus:border-primary"
-                      placeholder="z. B. hardware-overview.md"
-                    />
-                    <p className="text-[11px] text-text-secondary mt-1">`.md` is added automatically when missing.</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-text-secondary mb-1">Content</label>
-                    <textarea
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      className="w-full min-h-[200px] bg-content border border-border rounded-lg px-3 py-2 text-text focus:outline-none focus:border-primary font-mono text-sm"
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    {selectedDoc && (
-                      <button
-                        type="button"
-                        onClick={requestDeleteDoc}
-                        disabled={isSaving}
-                        className="mr-auto px-3 py-1.5 text-sm rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10 disabled:opacity-60 transition-colors"
-                      >
-                        Delete
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditing(false);
-                        setEditTitle(selectedDoc.title || '');
-                        setEditContent(selectedDoc.content || '');
-                        setMessage(null);
-                      }}
-                      className="px-3 py-1.5 text-sm rounded-lg text-text-secondary hover:text-text"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSaveEdit}
-                      disabled={isSaving}
-                      className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-60"
-                    >
-                      {isSaving ? 'Saving...' : 'Save'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
               <div className="border border-border rounded-lg p-4 bg-background/40 max-h-[460px] overflow-auto break-words">
-                <ReactMarkdown components={markdownComponents}>{isEditing ? editContent : selectedDoc.content || ''}</ReactMarkdown>
+                <ReactMarkdown components={markdownComponents}>{selectedDoc.content || ''}</ReactMarkdown>
               </div>
 
               {selectedDocChildren.length > 0 && (
@@ -467,44 +236,6 @@ export default function MarkdownDocs() {
         </Card>
       </div>
       </div>
-
-      {pendingDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-xl border border-border bg-content p-5 shadow-2xl">
-            <h3 className="text-lg font-semibold text-text">Delete {pendingDelete.title}?</h3>
-            <p className="mt-1 text-sm text-text-secondary">This also removes child markdown files.</p>
-
-            <ul className="mt-4 space-y-1.5 text-sm text-text-secondary">
-              <li>• 1 selected document</li>
-              <li>• {pendingDelete.childCount} child document(s)</li>
-            </ul>
-
-            {pendingDelete.childPreview.length > 0 && (
-              <p className="mt-3 text-xs text-text-secondary/90">
-                Child docs: {pendingDelete.childPreview.join(', ')}{pendingDelete.childCount > pendingDelete.childPreview.length ? ' …' : ''}
-              </p>
-            )}
-
-            <div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
-              <button
-                type="button"
-                onClick={() => setPendingDelete(null)}
-                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteDoc}
-                disabled={isSaving}
-                className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20 disabled:opacity-60"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

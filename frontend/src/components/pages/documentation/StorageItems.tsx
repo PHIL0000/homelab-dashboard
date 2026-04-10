@@ -31,7 +31,7 @@ export default function StorageItems() {
   <div className="documentation-area page-shell relative">
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
-          <h2 className="page-title">Storage (Overview)</h2>
+          <h2 className="page-title">Storage</h2>
         </div>
         <div className="page-content-scroll">
   <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
