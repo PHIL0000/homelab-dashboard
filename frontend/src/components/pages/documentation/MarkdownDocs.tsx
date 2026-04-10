@@ -2,6 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 import ReactMarkdown from 'react-markdown';
+import AddMarkdown, { type MarkdownFormValues } from './components/AddMarkdown';
+import EditMarkdown from './components/EditMarkdown';
+
+const API_BASE = 'http://localhost:3001/api/infrastructure';
 
 type DocItem = {
   id: string;
@@ -24,10 +28,26 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
+const ensureMarkdownFilename = (value: string) => {
+  const normalized = value.trim();
+  if (!normalized) return '';
+  return normalized.toLowerCase().endsWith('.md') ? normalized : `${normalized}.md`;
+};
+
 export default function MarkdownDocs() {
   const { token } = useAuth();
   const [docs, setDocs] = useState<DocItem[]>([]);
+  const [hardware, setHardware] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
   const [selectedDocId, setSelectedDocId] = useState<string>('');
+  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
+  const [docEditId, setDocEditId] = useState<string | null>(null);
+  const [editingDoc, setEditingDoc] = useState<DocItem | null>(null);
+
+  const authHeaders = useMemo(() => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`
+  }), [token]);
 
   const docsById = useMemo(() => {
     return new Map(docs.map((doc) => [doc.id, doc]));
@@ -126,8 +146,15 @@ export default function MarkdownDocs() {
   const fetchData = async () => {
     if (!token) return;
     try {
-      const docsRes = await fetch('http://localhost:3001/api/infrastructure/docs', { headers: { Authorization: `Bearer ${token}` } });
+      const [docsRes, hardwareRes, servicesRes] = await Promise.all([
+        fetch(`${API_BASE}/docs`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/hardware`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/services`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+
       const docsData: DocItem[] = await docsRes.json();
+      setHardware(await hardwareRes.json());
+      setServices(await servicesRes.json());
       setDocs(docsData);
 
       if (docsData.length === 0) {
@@ -155,11 +182,86 @@ export default function MarkdownDocs() {
     fetchData();
   }, [token]);
 
+  const handleAddDoc = () => {
+    setDocEditId(null);
+    setEditingDoc(null);
+    setIsDocModalOpen(true);
+  };
+
+  const handleEditDoc = (doc: DocItem) => {
+    setDocEditId(doc.id);
+    setEditingDoc(doc);
+    setIsDocModalOpen(true);
+  };
+
+  const saveDoc = async (values: MarkdownFormValues) => {
+    if (!token) return;
+
+    const normalizedTitle = ensureMarkdownFilename(values.title);
+    if (!normalizedTitle) {
+      alert('Title is required');
+      return;
+    }
+
+    const url = docEditId
+      ? `${API_BASE}/docs/${docEditId}`
+      : `${API_BASE}/docs`;
+    const method = docEditId ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method,
+      headers: authHeaders,
+      body: JSON.stringify({
+        title: normalizedTitle,
+        content: values.content,
+        hardwareAssetId: values.hardwareAssetId || undefined,
+        softwareUnitId: values.softwareUnitId || undefined,
+        parentDocId: values.parentDocId || undefined
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      alert(`Error: ${errorData.error || 'Failed to save markdown'}`);
+      return;
+    }
+
+    setIsDocModalOpen(false);
+    setDocEditId(null);
+    setEditingDoc(null);
+    await fetchData();
+  };
+
+  const deleteDoc = async () => {
+    if (!token || !docEditId) return;
+    if (!window.confirm('Delete this markdown document and all child docs?')) return;
+
+    const response = await fetch(`${API_BASE}/docs/${docEditId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      alert(`Error: ${errorData.error || 'Failed to delete markdown'}`);
+      return;
+    }
+
+    setIsDocModalOpen(false);
+    setDocEditId(null);
+    setEditingDoc(null);
+    if (selectedDocId === docEditId) {
+      setSelectedDocId('');
+    }
+    await fetchData();
+  };
+
   return (
   <div className="documentation-area page-shell relative">
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
           <h2 className="page-title">Markdown Documents</h2>
+          <button onClick={handleAddDoc} className="text-sm text-primary hover:text-primary/80">+ Add markdown</button>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 page-content-scroll">
@@ -199,7 +301,10 @@ export default function MarkdownDocs() {
           {selectedDoc && (
             <div className="space-y-4">
               <div>
-                <h3 className="text-xl font-bold text-text break-words">{selectedDoc.title}</h3>
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-xl font-bold text-text break-words">{selectedDoc.title}</h3>
+                  <button type="button" onClick={() => handleEditDoc(selectedDoc)} className="text-xs text-primary hover:text-primary/80">Edit</button>
+                </div>
                 <div className="flex gap-2 mt-2 flex-wrap">
                   {selectedDoc.hardwareAsset?.name && <span className="text-xs bg-primary/15 text-primary px-2 py-1 rounded-full">HW: {selectedDoc.hardwareAsset.name}</span>}
                   {selectedDoc.softwareUnit?.name && <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-1 rounded-full">Service: {selectedDoc.softwareUnit.name}</span>}
@@ -236,6 +341,30 @@ export default function MarkdownDocs() {
         </Card>
       </div>
       </div>
+
+      {docEditId ? (
+        <EditMarkdown
+          isOpen={isDocModalOpen}
+          doc={editingDoc}
+          hardwareOptions={hardware}
+          serviceOptions={services}
+          parentDocOptions={docs.filter((doc) => doc.id !== docEditId)}
+          markdownComponents={markdownComponents}
+          onClose={() => setIsDocModalOpen(false)}
+          onSave={saveDoc}
+          onDelete={deleteDoc}
+        />
+      ) : (
+        <AddMarkdown
+          isOpen={isDocModalOpen}
+          hardwareOptions={hardware}
+          serviceOptions={services}
+          parentDocOptions={docs}
+          markdownComponents={markdownComponents}
+          onClose={() => setIsDocModalOpen(false)}
+          onSave={saveDoc}
+        />
+      )}
     </div>
   );
 }

@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
-import ReactMarkdown from 'react-markdown';
-import AddHardware from './components/AddHardware';
+import AddHardware, { type HardwareFormValues } from './components/AddHardware';
 import AddService from './components/AddService';
-import AddStorage from './components/AddStorage';
-import AddMarkdown from './components/AddMarkdown';
+import AddStorage, { type StorageFormValues } from './components/AddStorage';
+import AddMarkdown, { type MarkdownFormValues } from './components/AddMarkdown';
 import EditHardware from './components/EditHardware';
 import EditService from './components/EditService';
 import EditStorage from './components/EditStorage';
 import EditMarkdown from './components/EditMarkdown';
 import DeleteWarning from './components/DeleteWarning';
+import DocPreviewModal from './components/DocPreviewModal';
 
 const API_BASE = 'http://localhost:3001/api/infrastructure';
 const DEFAULT_HARDWARE_TYPE = 'SERVER';
@@ -53,50 +53,21 @@ export default function DocsOverview() {
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
 
   const [hardwareEditId, setHardwareEditId] = useState<string | null>(null);
-  const [deploymentEditId, setDeploymentEditId] = useState<string | null>(null);
   const [storageEditId, setStorageEditId] = useState<string | null>(null);
   const [docEditId, setDocEditId] = useState<string | null>(null);
+  const [editingHardware, setEditingHardware] = useState<any | null>(null);
+  const [editingStorage, setEditingStorage] = useState<any | null>(null);
+  const [editingDoc, setEditingDoc] = useState<any | null>(null);
+  const [editingDeployment, setEditingDeployment] = useState<any | null>(null);
+  const [editingService, setEditingService] = useState<any | null>(null);
 
-  const [name, setName] = useState('');
-  const [hostname, setHostname] = useState('');
-  const [type, setType] = useState(DEFAULT_HARDWARE_TYPE);
-  const [cpu, setCpu] = useState('');
-  const [cpuCores, setCpuCores] = useState('');
-  const [ram, setRam] = useState('');
-  const [os, setOs] = useState('');
-  const [ip, setIp] = useState('');
-  const [mac, setMac] = useState('');
-  const [make, setMake] = useState('');
-  const [model, setModel] = useState('');
-  const [serialNumber, setSerialNumber] = useState('');
-  const [location, setLocation] = useState('');
-  const [icon, setIcon] = useState('');
-  const [notes, setNotes] = useState('');
-
-  const [softwareUnitId, setSoftwareUnitId] = useState('');
-  const [deploymentHardwareAssetId, setDeploymentHardwareAssetId] = useState('');
-  const [internalIp, setInternalIp] = useState('');
-  const [deploymentModalMode, setDeploymentModalMode] = useState<'create-service' | 'edit-deployment'>('create-service');
   const [newServiceName, setNewServiceName] = useState('');
   const [newServiceType, setNewServiceType] = useState(DEFAULT_SOFTWARE_TYPE);
   const [newServiceImage, setNewServiceImage] = useState('');
   const [newServicePort, setNewServicePort] = useState('');
   const [newServiceUrl, setNewServiceUrl] = useState('');
+  const [newDeploymentInternalIp, setNewDeploymentInternalIp] = useState('');
 
-  const [storageName, setStorageName] = useState('');
-  const [storageType, setStorageType] = useState('SSD');
-  const [storageMake, setStorageMake] = useState('');
-  const [storageModel, setStorageModel] = useState('');
-  const [storageSerialNumber, setStorageSerialNumber] = useState('');
-  const [storageInterface, setStorageInterface] = useState('');
-  const [usableSpace, setUsableSpace] = useState<number | ''>('');
-  const [spaceUnit, setSpaceUnit] = useState<'GB' | 'TB'>('GB');
-
-  const [docTitle, setDocTitle] = useState('');
-  const [docContent, setDocContent] = useState('');
-  const [docHardwareAssetId, setDocHardwareAssetId] = useState('');
-  const [docSoftwareUnitId, setDocSoftwareUnitId] = useState('');
-  const [docParentDocId, setDocParentDocId] = useState('');
   const [previewDoc, setPreviewDoc] = useState<any | null>(null);
   const [pendingHardwareDelete, setPendingHardwareDelete] = useState<{
     id: string;
@@ -220,46 +191,17 @@ export default function DocsOverview() {
 
   const handleAddHardware = () => {
     setHardwareEditId(null);
-    setName('');
-    setHostname('');
-  setType(DEFAULT_HARDWARE_TYPE);
-    setCpu('');
-    setCpuCores('');
-    setRam('');
-    setOs('');
-    setIp('');
-    setMac('');
-    setMake('');
-    setModel('');
-    setSerialNumber('');
-    setLocation('');
-    setIcon('');
-    setNotes('');
+    setEditingHardware(null);
     setIsHardwareModalOpen(true);
   };
 
   const handleEditHardware = (hw: any) => {
     setHardwareEditId(hw.id);
-    setName(hw.name || '');
-    setHostname(hw.hostname || '');
-  setType(hw.type || DEFAULT_HARDWARE_TYPE);
-    setCpu(hw.cpu || '');
-    setCpuCores(hw.cpuCores ? String(hw.cpuCores) : '');
-    setRam(hw.ram ? hw.ram.toString() : '');
-    setOs(hw.os || '');
-    setIp(hw.ip || '');
-    setMac(hw.mac || '');
-    setMake(hw.make || '');
-    setModel(hw.model || '');
-    setSerialNumber(hw.serialNumber || '');
-    setLocation(hw.location || '');
-    setIcon(hw.icon || '');
-    setNotes(hw.notes || '');
+    setEditingHardware(hw);
     setIsHardwareModalOpen(true);
   };
 
-  const saveHardware = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const saveHardware = async (values: HardwareFormValues) => {
     if (!token) return;
 
     const url = hardwareEditId ? `${API_BASE}/hardware/${hardwareEditId}` : `${API_BASE}/hardware`;
@@ -269,21 +211,21 @@ export default function DocsOverview() {
       method,
       headers: authHeaders,
       body: JSON.stringify({
-        name,
-        hostname: hostname || null,
-        type,
-        cpu,
-        cpuCores: cpuCores ? parseInt(cpuCores, 10) : null,
-        ram: ram ? parseInt(ram, 10) : null,
-        os,
-        ip,
-        mac,
-        make: make || null,
-        model: model || null,
-        serialNumber: serialNumber || null,
-        location: location || null,
-        icon: icon || null,
-        notes
+        name: values.name,
+        hostname: values.hostname || null,
+        type: values.type,
+        cpu: values.cpu,
+        cpuCores: values.cpuCores ? parseInt(values.cpuCores, 10) : null,
+        ram: values.ram ? parseInt(values.ram, 10) : null,
+        os: values.os,
+        ip: values.ip,
+        mac: values.mac,
+        make: values.make || null,
+        model: values.model || null,
+        serialNumber: values.serialNumber || null,
+        location: values.location || null,
+        icon: values.icon || null,
+        notes: values.notes
       })
     });
 
@@ -365,39 +307,29 @@ export default function DocsOverview() {
   };
 
   const handleAddDeployment = () => {
-    setDeploymentModalMode('create-service');
-    setDeploymentEditId(null);
-    setSoftwareUnitId('');
-    setDeploymentHardwareAssetId(selectedHardwareId || '');
+    setEditingDeployment(null);
+    setEditingService(null);
     setNewServiceName('');
-  setNewServiceType(DEFAULT_SOFTWARE_TYPE);
+    setNewServiceType(DEFAULT_SOFTWARE_TYPE);
     setNewServiceImage('');
     setNewServicePort('');
     setNewServiceUrl('');
-    setInternalIp('');
+    setNewDeploymentInternalIp('');
     setIsDeploymentModalOpen(true);
   };
 
   const handleEditDeployment = (dep: any) => {
-    setDeploymentModalMode('edit-deployment');
-    setDeploymentEditId(dep.id);
-    setSoftwareUnitId(dep.softwareUnitId || '');
-    setDeploymentHardwareAssetId(dep.hardwareAssetId ? String(dep.hardwareAssetId) : (selectedHardwareId || ''));
     const linkedService = dep.softwareUnit || services.find((sw) => String(sw.id) === String(dep.softwareUnitId));
-    setNewServiceName(linkedService?.name || '');
-  setNewServiceType(linkedService?.type || DEFAULT_SOFTWARE_TYPE);
-    setNewServiceImage(linkedService?.image || '');
-    setNewServicePort(linkedService?.port ? String(linkedService.port) : '');
-    setNewServiceUrl(linkedService?.url || '');
-    setInternalIp(dep.internalIp || '');
+    setEditingDeployment(dep);
+    setEditingService(linkedService || null);
     setIsDeploymentModalOpen(true);
   };
 
-  const saveDeployment = async (e: React.FormEvent) => {
+  const saveNewDeployment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
 
-    const targetHardwareId = deploymentHardwareAssetId || selectedHardwareId;
+    const targetHardwareId = selectedHardwareId;
     if (!targetHardwareId) {
       alert('Hardware selection is required');
       return;
@@ -408,64 +340,33 @@ export default function DocsOverview() {
       return;
     }
 
-    let targetSoftwareUnitId = softwareUnitId;
+    const createServiceRes = await fetch(`${API_BASE}/services`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify({
+        name: newServiceName.trim(),
+        type: newServiceType,
+        image: newServiceImage.trim() || null,
+        port: newServicePort ? Number(newServicePort) : null,
+        url: newServiceUrl.trim() || null
+      })
+    });
 
-    if (deploymentModalMode === 'create-service') {
-      const createServiceRes = await fetch(`${API_BASE}/services`, {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({
-          name: newServiceName.trim(),
-          type: newServiceType,
-          image: newServiceImage.trim() || null,
-          port: newServicePort ? Number(newServicePort) : null,
-          url: newServiceUrl.trim() || null
-        })
-      });
-
-      if (!createServiceRes.ok) {
-        const createServiceError = await createServiceRes.json().catch(() => ({}));
-        alert(`Error: ${createServiceError.error || 'Failed to create service'}`);
-        return;
-      }
-
-      const createdService = await createServiceRes.json();
-      targetSoftwareUnitId = String(createdService.id);
-    } else {
-      if (!targetSoftwareUnitId) {
-        alert('Linked service is missing on this deployment');
-        return;
-      }
-
-      const updateServiceRes = await fetch(`${API_BASE}/services/${targetSoftwareUnitId}`, {
-        method: 'PUT',
-        headers: authHeaders,
-        body: JSON.stringify({
-          name: newServiceName.trim(),
-          type: newServiceType,
-          image: newServiceImage.trim() || null,
-          port: newServicePort ? Number(newServicePort) : null,
-          url: newServiceUrl.trim() || null
-        })
-      });
-
-      if (!updateServiceRes.ok) {
-        const updateServiceError = await updateServiceRes.json().catch(() => ({}));
-        alert(`Error: ${updateServiceError.error || 'Failed to update service'}`);
-        return;
-      }
+    if (!createServiceRes.ok) {
+      const createServiceError = await createServiceRes.json().catch(() => ({}));
+      alert(`Error: ${createServiceError.error || 'Failed to create service'}`);
+      return;
     }
 
-    const url = deploymentEditId ? `${API_BASE}/deployments/${deploymentEditId}` : `${API_BASE}/deployments`;
-    const method = deploymentEditId ? 'PUT' : 'POST';
+    const createdService = await createServiceRes.json();
 
-    const response = await fetch(url, {
-      method,
+    const response = await fetch(`${API_BASE}/deployments`, {
+      method: 'POST',
       headers: authHeaders,
       body: JSON.stringify({
         hardwareAssetId: targetHardwareId,
-        softwareUnitId: targetSoftwareUnitId,
-        internalIp
+        softwareUnitId: String(createdService.id),
+        internalIp: newDeploymentInternalIp
       })
     });
 
@@ -479,20 +380,82 @@ export default function DocsOverview() {
     alert(`Error: ${errorData.error || 'Failed to save deployment'}`);
   };
 
-  const deleteDeployment = async () => {
-    if (!token || !softwareUnitId) return;
+  const saveEditedService = async (values: {
+    serviceId: string;
+    name: string;
+    type: string;
+    port: string;
+    url: string;
+    image: string;
+    deploymentId?: string;
+    hardwareAssetId: string;
+    internalIp: string;
+  }) => {
+    if (!token) return;
 
-    const targetService = services.find((service) => String(service.id) === String(softwareUnitId));
-    const relatedDeployments = deployments.filter((dep) => String(dep.softwareUnitId) === String(softwareUnitId));
-    const relatedStorage = storageItems.filter((item) => String(item.softwareUnitId) === String(softwareUnitId));
-    const rootServiceDocs = docs.filter((doc) => String(doc.softwareUnitId) === String(softwareUnitId));
+    const updateServiceRes = await fetch(`${API_BASE}/services/${values.serviceId}`, {
+      method: 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify({
+        name: values.name,
+        type: values.type,
+        image: values.image || null,
+        port: values.port ? Number(values.port) : null,
+        url: values.url || null
+      })
+    });
+
+    if (!updateServiceRes.ok) {
+      const updateServiceError = await updateServiceRes.json().catch(() => ({}));
+      alert(`Error: ${updateServiceError.error || 'Failed to update service'}`);
+      return;
+    }
+
+    if (values.deploymentId) {
+      if (!values.hardwareAssetId) {
+        alert('Hardware selection is required');
+        return;
+      }
+
+      const updateDeploymentRes = await fetch(`${API_BASE}/deployments/${values.deploymentId}`, {
+        method: 'PUT',
+        headers: authHeaders,
+        body: JSON.stringify({
+          hardwareAssetId: values.hardwareAssetId,
+          softwareUnitId: values.serviceId,
+          internalIp: values.internalIp
+        })
+      });
+
+      if (!updateDeploymentRes.ok) {
+        const updateDeploymentError = await updateDeploymentRes.json().catch(() => ({}));
+        alert(`Error: ${updateDeploymentError.error || 'Failed to update deployment'}`);
+        return;
+      }
+    }
+
+    setIsDeploymentModalOpen(false);
+    setEditingDeployment(null);
+    setEditingService(null);
+    await fetchData();
+  };
+
+  const deleteDeployment = async () => {
+    if (!token || !editingService?.id) return;
+
+    const editingServiceId = String(editingService.id);
+
+    const targetService = services.find((service) => String(service.id) === editingServiceId);
+    const relatedDeployments = deployments.filter((dep) => String(dep.softwareUnitId) === editingServiceId);
+    const relatedStorage = storageItems.filter((item) => String(item.softwareUnitId) === editingServiceId);
+    const rootServiceDocs = docs.filter((doc) => String(doc.softwareUnitId) === editingServiceId);
     const docSubtreeIds = collectDocSubtreeIds(rootServiceDocs.map((doc) => doc.id));
     const impactedDocs = docs.filter((doc) => docSubtreeIds.has(doc.id));
     const hardwareImpact = new Set(relatedDeployments.map((dep) => String(dep.hardwareAssetId)).filter(Boolean)).size;
 
     setPendingServiceDelete({
-      id: String(softwareUnitId),
-      name: targetService?.name || newServiceName || 'Selected service',
+      id: editingServiceId,
+      name: targetService?.name || 'Selected service',
       deployments: relatedDeployments.length,
       storage: relatedStorage.length,
       docs: impactedDocs.length,
@@ -521,65 +484,46 @@ export default function DocsOverview() {
 
     setPendingServiceDelete(null);
     setIsDeploymentModalOpen(false);
-    setDeploymentEditId(null);
-    setSoftwareUnitId('');
+    setEditingDeployment(null);
+    setEditingService(null);
     await fetchData();
   };
 
   const handleAddStorage = () => {
     setStorageEditId(null);
-    setStorageName('');
-    setStorageType('SSD');
-    setStorageMake('');
-    setStorageModel('');
-    setStorageSerialNumber('');
-    setStorageInterface('');
-    setUsableSpace('');
-    setSpaceUnit('GB');
+    setEditingStorage(null);
     setIsStorageModalOpen(true);
   };
 
   const handleEditStorage = (item: any) => {
     setStorageEditId(item.id);
-    setStorageName(item.name || '');
-    setStorageType(item.storageType || 'SSD');
-    setStorageMake(item.make || '');
-    setStorageModel(item.model || '');
-    setStorageSerialNumber(item.serialNumber || '');
-    setStorageInterface(item.interface || '');
-
-    if (item.usableSpaceGB && item.usableSpaceGB >= 1000 && item.usableSpaceGB % 1000 === 0) {
-      setUsableSpace(item.usableSpaceGB / 1000);
-      setSpaceUnit('TB');
-    } else {
-      setUsableSpace(item.usableSpaceGB || '');
-      setSpaceUnit('GB');
-    }
-
+    setEditingStorage(item);
     setIsStorageModalOpen(true);
   };
 
-  const saveStorage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token || !selectedHardwareId) return;
+  const saveStorage = async (values: StorageFormValues) => {
+    if (!token) return;
+
+    const targetHardwareId = values.hardwareAssetId || selectedHardwareId;
+    if (!targetHardwareId) return;
 
     const url = storageEditId ? `${API_BASE}/storage/${storageEditId}` : `${API_BASE}/storage`;
     const method = storageEditId ? 'PUT' : 'POST';
 
-    const usableSpaceGB = spaceUnit === 'TB' ? Number(usableSpace) * 1000 : Number(usableSpace);
+    const usableSpaceGB = values.spaceUnit === 'TB' ? Number(values.usableSpace) * 1000 : Number(values.usableSpace);
 
     const response = await fetch(url, {
       method,
       headers: authHeaders,
       body: JSON.stringify({
-        name: storageName,
-        storageType,
-        make: storageMake || null,
-        model: storageModel || null,
-        serialNumber: storageSerialNumber || null,
-        interface: storageInterface || null,
+        name: values.name,
+        storageType: values.type,
+        make: values.make || null,
+        model: values.model || null,
+        serialNumber: values.serialNumber || null,
+        interface: values.interfaceType || null,
         usableSpaceGB,
-        hardwareAssetId: selectedHardwareId
+        hardwareAssetId: targetHardwareId
       })
     });
 
@@ -599,7 +543,7 @@ export default function DocsOverview() {
     const storageItem = storageItems.find((item) => String(item.id) === String(storageEditId));
     setPendingStorageDelete({
       id: String(storageEditId),
-      name: storageItem?.name || storageName || 'Selected storage',
+      name: storageItem?.name || editingStorage?.name || 'Selected storage',
       hardwareName: storageItem?.hardwareAsset?.name,
       serviceName: storageItem?.softwareUnit?.name
     });
@@ -627,29 +571,20 @@ export default function DocsOverview() {
 
   const handleAddDoc = () => {
     setDocEditId(null);
-    setDocTitle('');
-    setDocContent('');
-    setDocHardwareAssetId(selectedHardwareId || '');
-    setDocSoftwareUnitId('');
-    setDocParentDocId('');
+    setEditingDoc(null);
     setIsDocModalOpen(true);
   };
 
   const handleEditDoc = (doc: any) => {
     setDocEditId(doc.id);
-    setDocTitle(doc.title || '');
-    setDocContent(doc.content || '');
-    setDocHardwareAssetId(doc.hardwareAssetId || selectedHardwareId || '');
-    setDocSoftwareUnitId(doc.softwareUnitId || '');
-    setDocParentDocId(doc.parentDocId || '');
+    setEditingDoc(doc);
     setIsDocModalOpen(true);
   };
 
-  const saveDoc = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const saveDoc = async (values: MarkdownFormValues) => {
     if (!token) return;
 
-    const normalizedTitle = ensureMarkdownFilename(docTitle);
+    const normalizedTitle = ensureMarkdownFilename(values.title);
     if (!normalizedTitle) {
       alert('Title is required');
       return;
@@ -663,10 +598,10 @@ export default function DocsOverview() {
       headers: authHeaders,
       body: JSON.stringify({
         title: normalizedTitle,
-        content: docContent,
-        hardwareAssetId: docHardwareAssetId || undefined,
-        softwareUnitId: docSoftwareUnitId || undefined,
-        parentDocId: docParentDocId || undefined
+        content: values.content,
+        hardwareAssetId: values.hardwareAssetId || selectedHardwareId || undefined,
+        softwareUnitId: values.softwareUnitId || undefined,
+        parentDocId: values.parentDocId || undefined
       })
     });
 
@@ -740,34 +675,6 @@ export default function DocsOverview() {
     setDocEditId(null);
     await fetchData();
   };
-
-  // Keep advanced handlers referenced even when specific actions are not surfaced in UI.
-  void [
-    isHardwareModalOpen,
-    isDeploymentModalOpen,
-    isStorageModalOpen,
-    isDocModalOpen,
-    handleAddHardware,
-    handleEditHardware,
-    saveHardware,
-    deleteHardware,
-    confirmDeleteHardware,
-    handleAddDeployment,
-    handleEditDeployment,
-    saveDeployment,
-    deleteDeployment,
-    handleAddStorage,
-    handleEditStorage,
-    saveStorage,
-    deleteStorage,
-    handleAddDoc,
-    handleEditDoc,
-    saveDoc,
-    deleteDoc,
-    confirmDeleteDoc,
-    confirmDeleteService,
-    confirmDeleteStorage
-  ];
 
   const displaySpace = (gb: number | undefined | null) => {
     if (!gb) return '-';
@@ -958,103 +865,29 @@ export default function DocsOverview() {
       {hardwareEditId ? (
         <EditHardware
           isOpen={isHardwareModalOpen}
-          name={name}
-          hostname={hostname}
-          type={type}
-          ip={ip}
-          mac={mac}
-          cpu={cpu}
-          cpuCores={cpuCores}
-          make={make}
-          model={model}
-          ram={ram}
-          serialNumber={serialNumber}
-          location={location}
-          icon={icon}
-          os={os}
-          notes={notes}
+          hardware={editingHardware}
           onClose={() => setIsHardwareModalOpen(false)}
-          onSubmit={saveHardware}
+          onSave={saveHardware}
           onDelete={deleteHardware}
-          onNameChange={setName}
-          onHostnameChange={setHostname}
-          onTypeChange={setType}
-          onIpChange={setIp}
-          onMacChange={setMac}
-          onCpuChange={setCpu}
-          onCpuCoresChange={setCpuCores}
-          onMakeChange={setMake}
-          onModelChange={setModel}
-          onRamChange={setRam}
-          onSerialNumberChange={setSerialNumber}
-          onLocationChange={setLocation}
-          onIconChange={setIcon}
-          onOsChange={setOs}
-          onNotesChange={setNotes}
         />
       ) : (
         <AddHardware
           isOpen={isHardwareModalOpen}
-          name={name}
-          hostname={hostname}
-          type={type}
-          ip={ip}
-          mac={mac}
-          cpu={cpu}
-          cpuCores={cpuCores}
-          make={make}
-          model={model}
-          ram={ram}
-          serialNumber={serialNumber}
-          location={location}
-          icon={icon}
-          os={os}
-          notes={notes}
           onClose={() => setIsHardwareModalOpen(false)}
-          onSubmit={saveHardware}
-          onNameChange={setName}
-          onHostnameChange={setHostname}
-          onTypeChange={setType}
-          onIpChange={setIp}
-          onMacChange={setMac}
-          onCpuChange={setCpu}
-          onCpuCoresChange={setCpuCores}
-          onMakeChange={setMake}
-          onModelChange={setModel}
-          onRamChange={setRam}
-          onSerialNumberChange={setSerialNumber}
-          onLocationChange={setLocation}
-          onIconChange={setIcon}
-          onOsChange={setOs}
-          onNotesChange={setNotes}
+          initialValues={{ type: DEFAULT_HARDWARE_TYPE }}
+          onSave={saveHardware}
         />
       )}
 
-      {deploymentEditId ? (
+      {editingService ? (
         <EditService
           isOpen={isDeploymentModalOpen}
-          title="Edit Service & Deployment"
-          submitLabel="Save Deployment"
-          hardwareAssetId={deploymentHardwareAssetId}
+          service={editingService}
+          deployment={editingDeployment}
           hardwareOptions={hardware.map((hw) => ({ id: String(hw.id), name: hw.name }))}
-          showHardwareSelector
-          name={newServiceName}
-          type={newServiceType}
-          port={newServicePort}
-          url={newServiceUrl}
-          image={newServiceImage}
-          internalIp={internalIp}
-          showInternalIp
           onClose={() => setIsDeploymentModalOpen(false)}
-          onSubmit={saveDeployment}
+          onSave={saveEditedService}
           onDelete={deleteDeployment}
-          onNameChange={setNewServiceName}
-          onTypeChange={setNewServiceType}
-          onPortChange={setNewServicePort}
-          onUrlChange={setNewServiceUrl}
-          onImageChange={setNewServiceImage}
-          onInternalIpChange={setInternalIp}
-          onHardwareAssetIdChange={setDeploymentHardwareAssetId}
         />
       ) : (
         <AddService
@@ -1066,107 +899,61 @@ export default function DocsOverview() {
           port={newServicePort}
           url={newServiceUrl}
           image={newServiceImage}
-          internalIp={internalIp}
+          internalIp={newDeploymentInternalIp}
           showInternalIp
           createHint="The new service will be created and directly linked to this hardware."
           onClose={() => setIsDeploymentModalOpen(false)}
-          onSubmit={saveDeployment}
+          onSubmit={saveNewDeployment}
           onNameChange={setNewServiceName}
           onTypeChange={setNewServiceType}
           onPortChange={setNewServicePort}
           onUrlChange={setNewServiceUrl}
           onImageChange={setNewServiceImage}
-          onInternalIpChange={setInternalIp}
+          onInternalIpChange={setNewDeploymentInternalIp}
         />
       )}
 
       {storageEditId ? (
         <EditStorage
           isOpen={isStorageModalOpen}
-          name={storageName}
-          type={storageType}
-          make={storageMake}
-          model={storageModel}
-          serialNumber={storageSerialNumber}
-          interfaceType={storageInterface}
-          usableSpace={usableSpace}
-          spaceUnit={spaceUnit}
+          storage={editingStorage}
+          hardwareOptions={hardware.map((hw) => ({ id: String(hw.id), name: hw.name }))}
           onClose={() => setIsStorageModalOpen(false)}
-          onSubmit={saveStorage}
+          onSave={saveStorage}
           onDelete={deleteStorage}
-          onNameChange={setStorageName}
-          onTypeChange={setStorageType}
-          onMakeChange={setStorageMake}
-          onModelChange={setStorageModel}
-          onSerialNumberChange={setStorageSerialNumber}
-          onInterfaceChange={setStorageInterface}
-          onUsableSpaceChange={setUsableSpace}
-          onSpaceUnitChange={setSpaceUnit}
         />
       ) : (
         <AddStorage
           isOpen={isStorageModalOpen}
-          name={storageName}
-          type={storageType}
-          make={storageMake}
-          model={storageModel}
-          serialNumber={storageSerialNumber}
-          interfaceType={storageInterface}
-          usableSpace={usableSpace}
-          spaceUnit={spaceUnit}
+          initialValues={{ type: 'SSD', hardwareAssetId: selectedHardwareId }}
+          hardwareOptions={hardware.map((hw) => ({ id: String(hw.id), name: hw.name }))}
           onClose={() => setIsStorageModalOpen(false)}
-          onSubmit={saveStorage}
-          onNameChange={setStorageName}
-          onTypeChange={setStorageType}
-          onMakeChange={setStorageMake}
-          onModelChange={setStorageModel}
-          onSerialNumberChange={setStorageSerialNumber}
-          onInterfaceChange={setStorageInterface}
-          onUsableSpaceChange={setUsableSpace}
-          onSpaceUnitChange={setSpaceUnit}
+          onSave={saveStorage}
         />
       )}
 
       {docEditId ? (
         <EditMarkdown
           isOpen={isDocModalOpen}
-          title={docTitle}
-          content={docContent}
-          hardwareAssetId={docHardwareAssetId}
-          softwareUnitId={docSoftwareUnitId}
-          parentDocId={docParentDocId}
+          doc={editingDoc}
           hardwareOptions={hardware}
           serviceOptions={selectedServices}
           parentDocOptions={docs.filter((doc) => doc.id !== docEditId)}
           markdownComponents={markdownComponents}
           onClose={() => setIsDocModalOpen(false)}
-          onSubmit={saveDoc}
+          onSave={saveDoc}
           onDelete={deleteDoc}
-          onTitleChange={setDocTitle}
-          onContentChange={setDocContent}
-          onHardwareAssetIdChange={setDocHardwareAssetId}
-          onSoftwareUnitIdChange={setDocSoftwareUnitId}
-          onParentDocIdChange={setDocParentDocId}
         />
       ) : (
         <AddMarkdown
           isOpen={isDocModalOpen}
-          title={docTitle}
-          content={docContent}
-          hardwareAssetId={docHardwareAssetId}
-          softwareUnitId={docSoftwareUnitId}
-          parentDocId={docParentDocId}
+          initialValues={{ hardwareAssetId: selectedHardwareId }}
           hardwareOptions={hardware}
           serviceOptions={selectedServices}
           parentDocOptions={docs.filter((doc) => doc.id !== docEditId)}
           markdownComponents={markdownComponents}
           onClose={() => setIsDocModalOpen(false)}
-          onSubmit={saveDoc}
-          onTitleChange={setDocTitle}
-          onContentChange={setDocContent}
-          onHardwareAssetIdChange={setDocHardwareAssetId}
-          onSoftwareUnitIdChange={setDocSoftwareUnitId}
-          onParentDocIdChange={setDocParentDocId}
+          onSave={saveDoc}
         />
       )}
 
@@ -1266,36 +1053,12 @@ export default function DocsOverview() {
         onConfirm={confirmDeleteDoc}
       />
 
-      {previewDoc && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-4xl max-h-[85vh] overflow-hidden rounded-xl border border-border bg-content shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between border-b border-border px-4 py-3 bg-background">
-              <div className="min-w-0">
-                <h3 className="text-lg font-semibold text-text truncate">{previewDoc.title}</h3>
-                <div className="flex gap-2 mt-1 flex-wrap">
-                  {previewDoc.hardwareAsset?.name && <span className="text-xs bg-primary/15 text-primary px-2 py-0.5 rounded-full">HW: {previewDoc.hardwareAsset.name}</span>}
-                  {previewDoc.softwareUnit?.name && <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded-full">Service: {previewDoc.softwareUnit.name}</span>}
-                </div>
-              </div>
-              <button onClick={() => setPreviewDoc(null)} className="text-text-secondary hover:text-text">✕</button>
-            </div>
-
-            <div className="p-4 overflow-auto flex-1">
-              <ReactMarkdown components={markdownComponents}>{previewDoc.content || '*No content available*'}</ReactMarkdown>
-            </div>
-
-            <div className="border-t border-border p-3 bg-background flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setPreviewDoc(null)}
-                className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DocPreviewModal
+        isOpen={Boolean(previewDoc)}
+        doc={previewDoc}
+        markdownComponents={markdownComponents}
+        onClose={() => setPreviewDoc(null)}
+      />
     </div>
   );
 }
