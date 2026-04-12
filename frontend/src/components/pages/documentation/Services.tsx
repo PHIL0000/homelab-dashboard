@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { Card } from '@heroui/react';
+import { Button, Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 import AddService from './components/AddService';
 import EditService from './components/EditService';
@@ -203,7 +203,7 @@ export default function Services() {
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
           <h2 className="page-title">Software/Services</h2>
-          <button onClick={handleAddService} className="text-sm text-primary hover:text-primary/80">+ Add service</button>
+          <Button onClick={handleAddService} className="text-sm px-3 py-2 rounded-lg bg-primary text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all" variant="primary">+ Add service</Button>
         </div>
         <div className="page-content-scroll">
           <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
@@ -245,7 +245,7 @@ export default function Services() {
                     </td>
                     <td className="px-4 py-3 text-text-secondary text-sm">{deploymentCountByService.get(String(sw.id)) || 0}</td>
                     <td className="px-4 py-3 text-right">
-                      <button type="button" onClick={() => handleEditService(sw)} className="text-xs text-primary hover:text-primary/80">Edit</button>
+                      <Button type="button" onClick={() => handleEditService(sw)} className="text-xs text-primary hover:text-primary/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
                     </td>
                   </tr>
                 ))}

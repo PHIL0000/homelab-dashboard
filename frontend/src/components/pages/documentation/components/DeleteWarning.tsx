@@ -1,3 +1,5 @@
+import { Button } from '@heroui/react';
+
 type DeleteImpact = {
 	label: string;
 	count: number;
@@ -61,20 +63,22 @@ export default function DeleteWarning({
 				{warningText && <p className="mt-2 text-xs text-amber-300">{warningText}</p>}
 
 				<div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
-					<button
+					<Button
 						type="button"
 						onClick={onCancel}
-						className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
+						className="px-3 py-1.5 text-sm text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
+						variant="ghost"
 					>
 						{cancelLabel}
-					</button>
-					<button
+					</Button>
+					<Button
 						type="button"
 						onClick={onConfirm}
 						className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20"
+						variant="danger"
 					>
 						{confirmLabel}
-					</button>
+					</Button>
 				</div>
 			</div>
 		</div>

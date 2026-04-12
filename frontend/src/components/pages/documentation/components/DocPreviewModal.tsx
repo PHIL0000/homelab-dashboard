@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown';
+import { Button } from '@heroui/react';
 
 type DocPreviewModalProps = {
   isOpen: boolean;
@@ -21,7 +22,7 @@ export default function DocPreviewModal({ isOpen, doc, markdownComponents, onClo
               {doc.softwareUnit?.name && <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded-full">Service: {doc.softwareUnit.name}</span>}
             </div>
           </div>
-          <button onClick={onClose} className="text-text-secondary hover:text-text">✕</button>
+          <Button onClick={onClose} className="text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost" isIconOnly>✕</Button>
         </div>
 
         <div className="p-4 overflow-auto flex-1">
@@ -29,13 +30,14 @@ export default function DocPreviewModal({ isOpen, doc, markdownComponents, onClo
         </div>
 
         <div className="border-t border-border p-3 bg-background flex items-center justify-end gap-2">
-          <button
+          <Button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 text-sm text-text-secondary hover:text-text"
+            className="px-3 py-1.5 text-sm text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
+            variant="ghost"
           >
             Close
-          </button>
+          </Button>
         </div>
       </div>
     </div>

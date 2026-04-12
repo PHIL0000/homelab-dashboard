@@ -1,4 +1,4 @@
-import { Card } from '@heroui/react'
+import { Button, Card } from '@heroui/react'
 import { Home, Cloud } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -22,9 +22,9 @@ export default function ConnectionsTab() {
                 <span className="text-xs text-text-secondary inline-block mt-1">{t('account.notConnected')}</span>
               </div>
             </div>
-            <button className="px-4 py-2 border border-border text-text rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-all whitespace-nowrap">
+            <Button className="px-4 py-2 text-text rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-all whitespace-nowrap !border-0 !border-transparent !ring-0 !shadow-none" variant="outline">
               {t('account.connect')}
-            </button>
+            </Button>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 border border-border rounded-lg bg-background">
@@ -38,9 +38,9 @@ export default function ConnectionsTab() {
                 <span className="text-xs text-text-secondary inline-block mt-1">{t('account.notConnected')}</span>
               </div>
             </div>
-            <button className="px-4 py-2 border border-border text-text rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-all whitespace-nowrap">
+            <Button className="px-4 py-2 text-text rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-all whitespace-nowrap !border-0 !border-transparent !ring-0 !shadow-none" variant="outline">
               {t('account.connect')}
-            </button>
+            </Button>
           </div>
         </div>
       </Card>

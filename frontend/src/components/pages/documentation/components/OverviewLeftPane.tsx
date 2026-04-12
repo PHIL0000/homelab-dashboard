@@ -1,4 +1,4 @@
-import { Card } from '@heroui/react';
+import { Button, Card } from '@heroui/react';
 
 type OverviewLeftPaneProps = {
   hardware: any[];
@@ -19,15 +19,16 @@ export default function OverviewLeftPane({
     <Card className="xl:col-span-4 rounded-xl border border-border bg-content p-0 overflow-hidden h-full min-h-0 flex flex-col">
       <div className="px-4 py-3 border-b border-border bg-background flex items-center justify-between gap-3">
         <span className="text-sm font-semibold text-text-secondary">Hardware Nodes</span>
-        <button onClick={onAddHardware} className="text-sm text-primary hover:text-primary/80">+ Add hardware</button>
+        <Button onClick={onAddHardware} className="text-sm px-3 py-2 rounded-lg bg-primary text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all" variant="primary">+ Add hardware</Button>
       </div>
       <div className="divide-y divide-border overflow-y-auto min-h-0">
         {hardware.length === 0 && <p className="p-4 text-text-secondary">No hardware found.</p>}
         {hardware.map(hw => (
-          <button
+          <Button
             key={hw.id}
             onClick={() => onSelectHardware(String(hw.id))}
-            className={`relative w-full text-left pl-5 pr-4 py-3 transition-all ${isSelectedHardware(hw.id) ? 'bg-primary/20 shadow-md' : 'hover:bg-background/60'}`}
+            className={`relative w-full text-left pl-5 pr-4 py-3 transition-all !border-0 !border-transparent !ring-0 ${isSelectedHardware(hw.id) ? 'bg-primary/20 shadow-md' : 'hover:bg-background/60 !shadow-none'}`}
+            variant="ghost"
           >
             <span
               aria-hidden="true"
@@ -39,7 +40,7 @@ export default function OverviewLeftPane({
                 <p className="text-xs text-text-secondary">{hw.type} • {hw.status}</p>
               </div>
             </div>
-          </button>
+          </Button>
         ))}
       </div>
     </Card>

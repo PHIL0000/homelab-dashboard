@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { Button } from "@heroui/react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -8,61 +9,97 @@ import NotificationsTab from "./tabs/NotificationsTab";
 import AdvancedTab from "./tabs/AdvancedTab";
 import UsersTab from "./tabs/UsersTab";
 
+type SettingsTabId = "general" | "appearance" | "notifications" | "users" | "advanced";
+
+type TabBoundaryProps = {
+  children: React.ReactNode;
+  tab: SettingsTabId;
+};
+
+type TabBoundaryState = {
+  hasError: boolean;
+};
+
+class SettingsTabBoundary extends React.Component<TabBoundaryProps, TabBoundaryState> {
+  constructor(props: TabBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): TabBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidUpdate(prevProps: TabBoundaryProps) {
+    if (prevProps.tab !== this.props.tab && this.state.hasError) {
+      this.setState({ hasError: false });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 rounded-lg border border-red-500/40 bg-red-500/10 text-red-300">
+          Dieser Settings-Tab konnte nicht geladen werden.
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 export default function Settings() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'notifications' | 'users' | 'advanced'>('general');                           
-  const tabTitles = {
-    general: t('settings.general'),
-    appearance: t('settings.appearance'),
-    notifications: t('settings.notifications'),
-    users: t('settings.users') || 'Users',
-    advanced: t('settings.advanced')
+  const [activeTab, setActiveTab] = useState<SettingsTabId>("general");
+
+  const tabTitles: Record<SettingsTabId, string> = {
+    general: t("settings.general"),
+    appearance: t("settings.appearance"),
+    notifications: t("settings.notifications"),
+    users: t("settings.users") || "Users",
+    advanced: t("settings.advanced")
   };
 
-  const tabDescriptions = {
-    general: t('settings.general.desc'),
-    appearance: t('settings.appearance.desc'),
-    notifications: t('settings.notifications.desc'),
-    users: t('settings.users.desc') || 'Manage and create user accounts',
-    advanced: t('settings.advanced.desc')
+  const tabDescriptions: Record<SettingsTabId, string> = {
+    general: t("settings.general.desc"),
+    appearance: t("settings.appearance.desc"),
+    notifications: t("settings.notifications.desc"),
+    users: t("settings.users.desc") || "Manage and create user accounts",
+    advanced: t("settings.advanced.desc")
   };
+
+  const tabButtonClass = (tabId: SettingsTabId) =>
+    `w-full justify-start px-4 py-2 rounded-lg transition-colors !border-0 !border-transparent !ring-0 !shadow-none ${
+      activeTab === tabId
+        ? "bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium"
+        : "text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary"
+    }`;
 
   return (
-    <div className="flex h-[80vh] overflow-hidden">
-      {/* Sidebar Navigation for Modal */}
-      <div className="w-64 border-r border-border bg-content/50 p-4 shrink-0 overflow-y-auto hidden md:block">                                      
-        <h2 className="text-xl font-bold mb-6 text-text px-2">{t('settings.title')}</h2>                                                            
+    <div className="flex h-[80vh] overflow-hidden rounded-3xl bg-content/40">
+      <div className="w-64 border-r border-border bg-background/60 p-4 shrink-0 overflow-y-auto hidden md:block">
+        <h2 className="text-xl font-bold mb-6 text-text px-2">{t("settings.title")}</h2>
         <nav className="space-y-1">
-          <button 
-            onClick={() => setActiveTab('general')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'general' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}                                                              >
-            {t('settings.general')}
-          </button>
-          <button 
-            onClick={() => setActiveTab('appearance')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'appearance' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}                                                           >
-            {t('settings.appearance')}
-          </button>
-          <button 
-            onClick={() => setActiveTab('notifications')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'notifications' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}                                                        >
-            {t('settings.notifications')}
-          </button>
-          
-          {user && user.role === 'ADMIN' && (
+          <Button onClick={() => setActiveTab("general")} className={tabButtonClass("general")} variant="ghost">
+            {t("settings.general")}
+          </Button>
+          <Button onClick={() => setActiveTab("appearance")} className={tabButtonClass("appearance")} variant="ghost">
+            {t("settings.appearance")}
+          </Button>
+          <Button onClick={() => setActiveTab("notifications")} className={tabButtonClass("notifications")} variant="ghost">
+            {t("settings.notifications")}
+          </Button>
+
+          {user?.role === "ADMIN" && (
             <>
-              <button 
-                onClick={() => setActiveTab('users')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'users' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
-              >
-                {t('settings.users') || 'Users'}
-              </button>
-              <button 
-                onClick={() => setActiveTab('advanced')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'advanced' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}                                                             >
-                {t('settings.advanced')}
-              </button>
+              <Button onClick={() => setActiveTab("users")} className={tabButtonClass("users")} variant="ghost">
+                {t("settings.users") || "Users"}
+              </Button>
+              <Button onClick={() => setActiveTab("advanced")} className={tabButtonClass("advanced")} variant="ghost">
+                {t("settings.advanced")}
+              </Button>
             </>
           )}
         </nav>
@@ -74,11 +111,13 @@ export default function Settings() {
           <p className="text-sm text-text-secondary">{tabDescriptions[activeTab]}</p>
         </div>
 
-        {activeTab === 'general' && <GeneralTab />}
-        {activeTab === 'appearance' && <AppearanceTab />}
-        {activeTab === 'notifications' && <NotificationsTab />}
-        {activeTab === 'users' && user?.role === 'ADMIN' && <UsersTab />}
-        {activeTab === 'advanced' && user?.role === 'ADMIN' && <AdvancedTab />}
+        <SettingsTabBoundary tab={activeTab}>
+          {activeTab === "general" && <GeneralTab />}
+          {activeTab === "appearance" && <AppearanceTab />}
+          {activeTab === "notifications" && <NotificationsTab />}
+          {activeTab === "users" && user?.role === "ADMIN" && <UsersTab />}
+          {activeTab === "advanced" && user?.role === "ADMIN" && <AdvancedTab />}
+        </SettingsTabBoundary>
       </div>
     </div>
   );

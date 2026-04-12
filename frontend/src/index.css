@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   color-scheme: dark;
@@ -23,6 +21,7 @@
 
 * {
   box-sizing: border-box;
+  border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
 }
 
 body {
@@ -100,3 +99,4 @@ html.light {
 .documentation-area .rounded-xl {
   border-radius: 1rem;
 }
+

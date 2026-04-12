@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card } from '@heroui/react'
+import { Button, Card, Input } from '@heroui/react'
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -60,39 +60,40 @@ export default function SecurityTab() {
         <div className="space-y-4 mt-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">{t('account.currentPassword')}</label>
-            <input 
+            <Input
               type="password" 
               placeholder="••••••••" 
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" 
+              className="w-full"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">{t('account.newPassword')}</label>
-            <input 
+            <Input
               type="password" 
               placeholder="••••••••" 
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" 
+              className="w-full"
             />
           </div>
-          <button 
+          <Button
             onClick={handleUpdatePassword}
-            disabled={isSaving}
+            isDisabled={isSaving}
             className="px-4 py-2 bg-primary text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all disabled:opacity-50"
+            variant="primary"
           >
             {isSaving ? 'Updating...' : t('account.updatePassword')}
-          </button>
+          </Button>
         </div>
       </Card>
       <Card className="p-6 bg-content border border-border">
         <h2 className="text-xl font-semibold mb-2 text-text">{t('account.2fa')}</h2>
         <p className="text-text-secondary mb-4">{t('account.2fa.desc')}</p>
-        <button className="px-4 py-2 border border-border text-text rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-all">
+        <Button className="px-4 py-2 text-text rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-all !border-0 !border-transparent !ring-0 !shadow-none" variant="outline">
           {t('account.2fa.setup')}
-        </button>
+        </Button>
       </Card>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button } from '@heroui/react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -29,30 +30,34 @@ export default function Account() {
       <div className="w-64 border-r border-border bg-content/50 p-4 shrink-0 overflow-y-auto hidden md:block">
         <h2 className="text-xl font-bold mb-6 text-text px-2">{t('account.title')}</h2>
         <nav className="space-y-1">
-          <button 
+          <Button
             onClick={() => setActiveTab('profile')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'profile' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            className={`w-full text-left px-4 py-2 rounded-lg transition-colors !border-0 !border-transparent !ring-0 !shadow-none ${activeTab === 'profile' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            variant="ghost"
           >
             {t('account.profile')}
-          </button>
-          <button 
+          </Button>
+          <Button
             onClick={() => setActiveTab('security')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'security' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            className={`w-full text-left px-4 py-2 rounded-lg transition-colors !border-0 !border-transparent !ring-0 !shadow-none ${activeTab === 'security' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            variant="ghost"
           >
             {t('account.security')}
-          </button>
-          <button 
+          </Button>
+          <Button
             onClick={() => setActiveTab('connections')}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${activeTab === 'connections' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            className={`w-full text-left px-4 py-2 rounded-lg transition-colors !border-0 !border-transparent !ring-0 !shadow-none ${activeTab === 'connections' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium' : 'text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary'}`}
+            variant="ghost"
           >
             {t('account.connections')}
-          </button>
-          <button 
+          </Button>
+          <Button
             onClick={() => logout()}
-            className="w-full text-left px-4 py-2 rounded-lg text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-colors mt-8 text-red-400 hover:text-red-500 hover:bg-red-500/10"
+            className="w-full text-left px-4 py-2 rounded-lg text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-colors mt-8 text-red-400 hover:text-red-500 hover:bg-red-500/10 !border-0 !border-transparent !ring-0 !shadow-none"
+            variant="ghost"
           >
             {t('account.logout')}
-          </button>
+          </Button>
         </nav>
       </div>
 

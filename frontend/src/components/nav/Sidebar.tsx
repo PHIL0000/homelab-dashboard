@@ -1,5 +1,6 @@
 // components/nav/Sidebar.tsx
 import React, { useState, useEffect } from "react";
+import { Button } from "@heroui/react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -43,6 +44,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   }, [isCollapsed]);
 
   const isActive = (path: string) => location.pathname === path;
+  const activeNavItemClass = "bg-[color-mix(in_srgb,var(--color-primary)_78%,black)] text-white ring-1 ring-[color-mix(in_srgb,var(--color-primary)_55%,transparent)] shadow-[0_0_24px_color-mix(in_srgb,var(--color-primary)_55%,transparent)]";
+  const inactiveNavItemClass = "text-text hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_18%,transparent)] hover:translate-x-1";
+  const sidebarButtonBaseClass = "rounded-lg transition-all duration-200";
+  const dropdownToggleClass = "w-full flex items-center justify-between px-3 py-2.5 text-white hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_18%,transparent)] !border-0 !border-transparent !ring-0 !shadow-none";
 
   const topItems = [
     { label: t("nav.dashboard"), path: "/dashboard", icon: LayoutDashboard },
@@ -81,17 +86,24 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
       <div className={`p-6 border-b border-border flex items-center justify-between h-[89px]`}>
         {!isCollapsed && (
           <div className="overflow-hidden transition-all duration-300 whitespace-nowrap">
-            <h1 className="text-2xl font-bold text-primary tracking-tight">Homelab</h1>
-            <p className="text-[10px] mt-0.5 text-text-secondary uppercase tracking-widest font-medium">Dashboard</p>
+            <h1
+              className="text-2xl font-bold tracking-tight"
+              style={{ color: "var(--color-primary)" }}
+            >
+              Homelab
+            </h1>
+            <p className="text-[10px] mt-0.5 text-slate-200/80 uppercase tracking-widest font-medium">Dashboard</p>
           </div>
         )}
-        <button 
+        <Button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className={`p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] transition-all ${isCollapsed ? "mx-auto" : ""}`}
-          title={isCollapsed ? t("nav.sidebar.expand") : t("nav.sidebar.collapse")}
+          className={`p-2 ${sidebarButtonBaseClass} ${inactiveNavItemClass} ${isCollapsed ? "mx-auto" : ""}`}
+          aria-label={isCollapsed ? t("nav.sidebar.expand") : t("nav.sidebar.collapse")}
+          isIconOnly
+          variant="ghost"
         >
           {isCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
-        </button>
+        </Button>
       </div>
 
       <nav className="flex-1 p-3 overflow-y-auto overflow-x-hidden scrollbar-thin">
@@ -103,8 +115,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
             title={isCollapsed ? item.label : undefined}
             className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-lg mb-1.5 transition-all duration-200 group ${
               isActive(item.path)
-                ? "bg-primary text-white shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)]"
-                : "text-text hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:translate-x-1"
+                ? activeNavItemClass
+                : inactiveNavItemClass
             }`}
           >
             <item.icon size={20} className={`shrink-0 ${isActive(item.path) ? "" : "text-text-secondary group-hover:text-primary"} transition-colors`} />
@@ -115,30 +127,32 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
         {/* AI SECTION */}
         <div className="mb-1.5 mt-2">
           {isCollapsed ? (
-            <button
+            <Button
               onClick={() => {
                 setIsCollapsed(false);
                 setOpenAI(true);
               }}
-              title={t("nav.ai")}
-              className="w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-200 text-text hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] group"
+              aria-label={t("nav.ai")}
+              className={`w-full flex items-center justify-center px-3 py-2.5 group text-white hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_18%,transparent)] !border-0 !border-transparent !ring-0 !shadow-none ${sidebarButtonBaseClass}`}
+              variant="ghost"
             >
-              <Bot size={20} className="text-text-secondary group-hover:text-primary transition-colors shrink-0" />
-            </button>
+              <Bot size={20} className="text-white group-hover:text-primary transition-colors shrink-0" />
+            </Button>
           ) : (
-            <button
+            <Button
               onClick={() => setOpenAI(!openAI)}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 text-text hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] group"
+              className={`group ${sidebarButtonBaseClass} ${dropdownToggleClass}`}
+              variant="ghost"
             >
               <div className="flex items-center gap-3">
-                <Bot size={20} className="text-text-secondary group-hover:text-primary transition-colors shrink-0" />
-                <span className="font-medium whitespace-nowrap">{t("nav.ai")}</span>
+                <Bot size={20} className="text-white group-hover:text-primary transition-colors shrink-0" />
+                <span className="font-medium whitespace-nowrap text-white">{t("nav.ai")}</span>
               </div>
               <ChevronDown
                 size={16}
-                className={`text-text-secondary group-hover:text-primary transition-transform shrink-0 ${openAI ? "rotate-180" : ""}`}
+                className={`text-white group-hover:text-primary transition-transform shrink-0 ${openAI ? "rotate-180" : ""}`}
               />
-            </button>
+            </Button>
           )}
 
           {openAI && !isCollapsed && (
@@ -149,8 +163,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
                   to={item.path}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ml-4 group ${
                     isActive(item.path)
-                      ? "bg-primary text-white shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)]"
-                      : "text-text-secondary hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:translate-x-1"
+                      ? activeNavItemClass
+                      : inactiveNavItemClass
                   }`}
                 >
                   <item.icon size={16} className={`shrink-0 ${isActive(item.path) ? "" : "opacity-70 group-hover:opacity-100"} transition-opacity`} />
@@ -164,30 +178,32 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
         {/* STORAGE SECTION */}
         <div className="mb-1.5">
           {isCollapsed ? (
-            <button
+            <Button
               onClick={() => {
                 setIsCollapsed(false);
                 setOpenStorage(true);
               }}
-              title={t("nav.storage")}
-              className="w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-200 text-text hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] group"
+              aria-label={t("nav.storage")}
+              className={`w-full flex items-center justify-center px-3 py-2.5 group text-white hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_18%,transparent)] !border-0 !border-transparent !ring-0 !shadow-none ${sidebarButtonBaseClass}`}
+              variant="ghost"
             >
-              <HardDrive size={20} className="text-text-secondary group-hover:text-primary transition-colors shrink-0" />
-            </button>
+              <HardDrive size={20} className="text-white group-hover:text-primary transition-colors shrink-0" />
+            </Button>
           ) : (
-            <button
+            <Button
               onClick={() => setOpenStorage(!openStorage)}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 text-text hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] group"
+              className={`group ${sidebarButtonBaseClass} ${dropdownToggleClass}`}
+              variant="ghost"
             >
               <div className="flex items-center gap-3">
-                <HardDrive size={20} className="text-text-secondary group-hover:text-primary transition-colors shrink-0" />
-                <span className="font-medium whitespace-nowrap">{t("nav.storage")}</span>
+                <HardDrive size={20} className="text-white group-hover:text-primary transition-colors shrink-0" />
+                <span className="font-medium whitespace-nowrap text-white">{t("nav.storage")}</span>
               </div>
               <ChevronDown
                 size={16}
-                className={`text-text-secondary group-hover:text-primary transition-transform shrink-0 ${openStorage ? "rotate-180" : ""}`}
+                className={`text-white group-hover:text-primary transition-transform shrink-0 ${openStorage ? "rotate-180" : ""}`}
               />
-            </button>
+            </Button>
           )}
 
           {openStorage && !isCollapsed && (
@@ -198,8 +214,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
                   to={item.path}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ml-4 group ${
                     isActive(item.path)
-                      ? "bg-primary text-white shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)]"
-                      : "text-text-secondary hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:translate-x-1"
+                      ? activeNavItemClass
+                      : inactiveNavItemClass
                   }`}
                 >
                   <item.icon size={16} className={`shrink-0 ${isActive(item.path) ? "" : "opacity-70 group-hover:opacity-100"} transition-opacity`} />
@@ -213,30 +229,32 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
         {/* DOCUMENTATION SECTION */}
         <div className="mb-1.5">
           {isCollapsed ? (
-            <button
+            <Button
               onClick={() => {
                 setIsCollapsed(false);
                 setOpenDocs(true);
               }}
-              title={t("nav.documentation")}
-              className="w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-200 text-text hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] group"
+              aria-label={t("nav.documentation")}
+              className={`w-full flex items-center justify-center px-3 py-2.5 group text-white hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_18%,transparent)] !border-0 !border-transparent !ring-0 !shadow-none ${sidebarButtonBaseClass}`}
+              variant="ghost"
             >
-              <LayoutDashboard size={20} className="text-text-secondary group-hover:text-primary transition-colors shrink-0" />
-            </button>
+              <LayoutDashboard size={20} className="text-white group-hover:text-primary transition-colors shrink-0" />
+            </Button>
           ) : (
-            <button
+            <Button
               onClick={() => setOpenDocs(!openDocs)}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 text-text hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] group"
+              className={`group ${sidebarButtonBaseClass} ${dropdownToggleClass}`}
+              variant="ghost"
             >
               <div className="flex items-center gap-3">
-                <LayoutDashboard size={20} className="text-text-secondary group-hover:text-primary transition-colors shrink-0" />
-                <span className="font-medium whitespace-nowrap">{t("nav.documentation")}</span>
+                <LayoutDashboard size={20} className="text-white group-hover:text-primary transition-colors shrink-0" />
+                <span className="font-medium whitespace-nowrap text-white">{t("nav.documentation")}</span>
               </div>
               <ChevronDown
                 size={16}
-                className={`text-text-secondary group-hover:text-primary transition-transform shrink-0 ${openDocs ? "rotate-180" : ""}`}
+                className={`text-white group-hover:text-primary transition-transform shrink-0 ${openDocs ? "rotate-180" : ""}`}
               />
-            </button>
+            </Button>
           )}
 
           {openDocs && !isCollapsed && (
@@ -247,8 +265,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
                   to={item.path}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ml-4 group ${
                     isActive(item.path)
-                      ? "bg-primary text-white shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)]"
-                      : "text-text-secondary hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:translate-x-1"
+                      ? activeNavItemClass
+                      : inactiveNavItemClass
                   }`}
                 >
                   <item.icon size={16} className={`shrink-0 ${isActive(item.path) ? "" : "opacity-70 group-hover:opacity-100"} transition-opacity`} />
@@ -268,8 +286,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
             title={isCollapsed ? item.label : undefined}
             className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-lg mb-1.5 transition-all duration-200 group ${
               isActive(item.path)
-                ? "bg-primary text-white shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)]"
-                : "text-text hover:text-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:translate-x-1"
+                ? activeNavItemClass
+                : inactiveNavItemClass
             }`}
           >
             <item.icon size={20} className={`shrink-0 ${isActive(item.path) ? "" : "text-text-secondary group-hover:text-primary"} transition-colors`} />
@@ -280,10 +298,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
 
       {/* USER & SETTINGS */}
       <div className={`p-3 flex ${isCollapsed ? "flex-col" : "items-center"} gap-2 border-t border-border`}>
-        <button
+        <Button
           onClick={() => onOpenModal("account")}
-          title={isCollapsed ? t("nav.account") : undefined}
-          className={`flex-1 flex gap-3 px-2 py-2 rounded-lg transition-all duration-200 hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:translate-y-[-2px] hover:shadow-lg bg-content group ${isCollapsed ? "justify-center h-12" : "items-center h-14"}`}
+          aria-label={t("nav.account")}
+          className={`flex-1 flex gap-3 px-2 py-2 group ${sidebarButtonBaseClass} ${inactiveNavItemClass} !border-0 !border-transparent !ring-0 !shadow-none ${isCollapsed ? "justify-center h-12" : "items-center h-14"}`}
+          variant="ghost"
         >
           <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-primary shadow-[0_0_10px_color-mix(in_srgb,var(--color-primary)_40%,transparent)] group-hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_80%,transparent)] transition-shadow">
             <span className="text-sm font-bold text-white uppercase">{user?.username ? user.username.substring(0, 1) : "U"}</span>
@@ -294,15 +313,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
               <p className="text-xs text-text-secondary truncate">{user?.role === "ADMIN" ? "Administrator" : "User"}</p>
             </div>
           )}
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={() => onOpenModal("settings")}
-          title={isCollapsed ? t("nav.settings") : undefined}
-          className={`rounded-lg flex-shrink-0 flex items-center justify-center transition-all duration-200 hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary hover:rotate-90 bg-content text-text group ${isCollapsed ? "w-full h-12" : "h-14 w-12"}`}
+          aria-label={t("nav.settings")}
+          className={`flex-shrink-0 flex items-center justify-center group ${sidebarButtonBaseClass} ${inactiveNavItemClass} !border-0 !border-transparent !ring-0 !shadow-none ${isCollapsed ? "w-full h-12" : "h-14 w-12"}`}
+          variant="ghost"
         >
           <Settings size={20} className="text-text-secondary group-hover:text-primary transition-colors" />
-        </button>
+        </Button>
       </div>
     </div>
   );

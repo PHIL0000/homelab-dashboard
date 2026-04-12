@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Das React Frontend (wird in NGINX als statische Seite ausgeliefert)
   frontend:

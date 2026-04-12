@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Button, Input, Select, ListBox } from '@heroui/react';
+import { ChevronDown } from 'lucide-react';
 
 type SelectOption = {
 	id: string;
@@ -32,8 +34,6 @@ export default function AddStorage({
 	onClose,
 	onSave
 }: AddStorageProps) {
-	if (!isOpen) return null;
-
 	const [name, setName] = useState('');
 	const [type, setType] = useState('SSD');
 	const [make, setMake] = useState('');
@@ -57,6 +57,8 @@ export default function AddStorage({
 		setHardwareAssetId(initialValues?.hardwareAssetId || '');
 	}, [isOpen, initialValues]);
 
+	if (!isOpen) return null;
+
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		await onSave({
@@ -77,85 +79,109 @@ export default function AddStorage({
 			<div className="w-full max-w-xl rounded-xl border border-border bg-content shadow-2xl">
 				<div className="px-5 py-4 border-b border-border bg-background flex items-center justify-between">
 					<h3 className="text-lg font-semibold text-text">Add Storage</h3>
-					<button type="button" onClick={onClose} className="text-text-secondary hover:text-text">✕</button>
+					<Button type="button" onClick={onClose} className="text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost" isIconOnly aria-label="Close">✕</Button>
 				</div>
 
 				<form onSubmit={handleSubmit} className="p-5 space-y-4">
 					{!!hardwareOptions?.length && (
 						<label className="space-y-1 block">
 							<span className="text-xs text-text-secondary">Hardware</span>
-							<select
-								value={hardwareAssetId}
-								onChange={(e) => setHardwareAssetId(e.target.value)}
-								className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text"
+							<Select
+								selectedKey={hardwareAssetId || 'unassigned'}
+								onChange={(key) => { if (key != null) setHardwareAssetId(String(key) === 'unassigned' ? '' : String(key)); }}
+								className="w-full"
 							>
-								<option value="">Select hardware</option>
-								{(hardwareOptions || []).map((option) => (
-									<option key={option.id} value={option.id}>{option.name}</option>
-								))}
-							</select>
+								<Select.Trigger className="w-full px-3 flex items-center justify-between">
+									<Select.Value />
+									<ChevronDown size={16} className="text-text-secondary" />
+								</Select.Trigger>
+								<Select.Popover className="w-[var(--trigger-width)]">
+									<ListBox>
+										<ListBox.Item id="unassigned" className="pl-2">Select hardware</ListBox.Item>
+										{(hardwareOptions || []).map((option) => (
+											<ListBox.Item key={option.id} id={option.id} className="pl-2">{option.name}</ListBox.Item>
+										))}
+									</ListBox>
+								</Select.Popover>
+							</Select>
 						</label>
 					)}
 
 					<label className="space-y-1 block">
 						<span className="text-xs text-text-secondary">Name *</span>
-						<input value={name} onChange={(e) => setName(e.target.value)} required className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" />
+						<Input value={name} onChange={(e) => setName(e.target.value)} required className="w-full" />
 					</label>
 
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Type</span>
-							<select value={type} onChange={(e) => setType(e.target.value)} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
-								<option value="SSD">SSD</option>
-								<option value="HDD">HDD</option>
-								<option value="NVME">NVME</option>
-								<option value="USB">USB</option>
-								<option value="ARRAY">ARRAY</option>
-								<option value="OTHER">OTHER</option>
-							</select>
+							<Select selectedKey={type} onChange={(key) => { if (key != null) setType(String(key)); }} className="w-full">
+								<Select.Trigger className="w-full px-3 flex items-center justify-between">
+									<Select.Value />
+									<ChevronDown size={16} className="text-text-secondary" />
+								</Select.Trigger>
+								<Select.Popover className="w-[var(--trigger-width)]">
+									<ListBox>
+										<ListBox.Item id="SSD" className="pl-2">SSD</ListBox.Item>
+										<ListBox.Item id="HDD" className="pl-2">HDD</ListBox.Item>
+										<ListBox.Item id="NVME" className="pl-2">NVME</ListBox.Item>
+										<ListBox.Item id="USB" className="pl-2">USB</ListBox.Item>
+										<ListBox.Item id="ARRAY" className="pl-2">ARRAY</ListBox.Item>
+										<ListBox.Item id="OTHER" className="pl-2">OTHER</ListBox.Item>
+									</ListBox>
+								</Select.Popover>
+							</Select>
 						</label>
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Interface</span>
-							<input value={interfaceType} onChange={(e) => setInterfaceType(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" />
+							<Input value={interfaceType} onChange={(e) => setInterfaceType(e.target.value)} className="w-full" />
 						</label>
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Make</span>
-							<input value={make} onChange={(e) => setMake(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" />
+							<Input value={make} onChange={(e) => setMake(e.target.value)} className="w-full" />
 						</label>
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Model</span>
-							<input value={model} onChange={(e) => setModel(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" />
+							<Input value={model} onChange={(e) => setModel(e.target.value)} className="w-full" />
 						</label>
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Serial Number</span>
-							<input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" />
+							<Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} className="w-full" />
 						</label>
 						<div className="grid grid-cols-2 gap-2">
 							<label className="space-y-1">
 								<span className="text-xs text-text-secondary">Usable Space</span>
-								<input
+								<Input
 									type="number"
 									min={0}
 									step="0.01"
-									value={usableSpace}
+									value={usableSpace === '' ? '' : String(usableSpace)}
 									onChange={(e) => setUsableSpace(e.target.value === '' ? '' : Number(e.target.value))}
-									className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text"
+									className="w-full"
 								/>
 							</label>
 							<label className="space-y-1">
 								<span className="text-xs text-text-secondary">Unit</span>
-								<select value={spaceUnit} onChange={(e) => setSpaceUnit(e.target.value as 'GB' | 'TB')} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
-									<option value="GB">GB</option>
-									<option value="TB">TB</option>
-								</select>
+								<Select selectedKey={spaceUnit} onChange={(key) => { if (key != null) setSpaceUnit(String(key) as 'GB' | 'TB'); }} className="w-full">
+									<Select.Trigger className="w-full px-3 flex items-center justify-between">
+										<Select.Value />
+										<ChevronDown size={16} className="text-text-secondary" />
+									</Select.Trigger>
+									<Select.Popover className="w-[var(--trigger-width)]">
+										<ListBox>
+											<ListBox.Item id="GB" className="pl-2">GB</ListBox.Item>
+											<ListBox.Item id="TB" className="pl-2">TB</ListBox.Item>
+										</ListBox>
+									</Select.Popover>
+								</Select>
 							</label>
 						</div>
 					</div>
 
 					<div className="pt-4 border-t border-border flex items-center justify-end gap-2">
 						<div className="flex items-center gap-2">
-							<button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-text-secondary hover:text-text">Cancel</button>
-							<button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white hover:bg-primary/90">Save Storage</button>
+							<Button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Cancel</Button>
+							<Button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white hover:bg-primary/90" variant="primary">Save Storage</Button>
 						</div>
 					</div>
 				</form>

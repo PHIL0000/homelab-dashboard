@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card } from '@heroui/react'
+import { Button, Card, Input } from '@heroui/react'
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -68,49 +68,50 @@ export default function ProfileTab() {
         <div className="space-y-4 mt-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">{t('account.username')}</label>
-            <input 
-              type="text" 
+            <Input
+              type="text"
               value={username} 
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" 
+              className="w-full"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">First Name</label>
-              <input 
-                type="text" 
+              <Input
+                type="text"
                 value={firstName} 
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" 
+                className="w-full"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Last Name</label>
-              <input 
-                type="text" 
+              <Input
+                type="text"
                 value={lastName} 
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" 
+                className="w-full"
               />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">{t('account.email')}</label>
-            <input 
-              type="email" 
+            <Input
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" 
+              className="w-full"
             />
           </div>
-          <button 
+          <Button
             onClick={handleSave}
-            disabled={isSaving}
+            isDisabled={isSaving}
             className="px-4 py-2 bg-primary text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all disabled:opacity-50"
+            variant="primary"
           >
             {isSaving ? 'Saving...' : t('account.saveChanges')}
-          </button>
+          </Button>
         </div>
       </Card>
       
@@ -120,9 +121,9 @@ export default function ProfileTab() {
           <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-xl font-bold text-white shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)]">
             {username.substring(0, 1).toUpperCase()}
           </div>
-          <button className="px-4 py-2 border border-border text-text rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-all">
+          <Button className="px-4 py-2 text-text rounded-lg hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary transition-all !border-0 !border-transparent !ring-0 !shadow-none" variant="outline">
             {t('account.changeImage')}
-          </button>
+          </Button>
         </div>
       </Card>
     </div>

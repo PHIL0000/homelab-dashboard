@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
+import { Button, Input } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Login() {
@@ -7,7 +8,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const { login } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const res = await fetch('http://localhost:3001/api/auth/login', {
@@ -38,30 +39,37 @@ export default function Login() {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text mb-1">Username or Email</label>
-            <input 
-              type="text" 
+            <Input
+              type="text"
               required
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary transition-colors"
+              placeholder="Username or Email"
+              variant="secondary"
+              fullWidth
+              className="w-full"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-text mb-1">Password</label>
-            <input 
-              type="password" 
+            <Input
+              type="password"
               required
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary transition-colors"
+              placeholder="Password"
+              variant="secondary"
+              fullWidth
+              className="w-full"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <button 
+          <Button
             type="submit"
             className="w-full bg-primary text-white font-medium py-2 rounded-lg mt-4 hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all"
+              variant="primary"
           >
             Sign In
-          </button>
+          </Button>
         </form>
       </div>
     </div>

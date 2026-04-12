@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { Card } from '@heroui/react';
+import { Button, Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import AddHardware, { type HardwareFormValues } from './components/AddHardware';
@@ -142,7 +142,7 @@ export default function Hardware() {
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
           <h2 className="page-title">{t('nav.docs.hardware')}</h2>
-          <button onClick={handleAddHardware} className="text-sm text-primary hover:text-primary/80">+ Add hardware</button>
+          <Button onClick={handleAddHardware} className="text-sm px-3 py-2 rounded-lg bg-primary text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all" variant="primary">+ Add hardware</Button>
         </div>
 
         <div className="space-y-6 flex-1 min-h-0 overflow-y-auto pr-1">
@@ -156,7 +156,7 @@ export default function Hardware() {
           <Card key={hw.id} className="rounded-xl p-4 bg-content border border-border flex flex-col gap-2">
             <div className="flex items-start justify-between gap-3">
               <h3 className="text-xl font-bold text-primary">{hw.name} <span className="text-sm text-text-secondary">({hw.type})</span></h3>
-              <button type="button" onClick={() => handleEditHardware(hw)} className="text-xs text-primary hover:text-primary/80">Edit</button>
+              <Button type="button" onClick={() => handleEditHardware(hw)} className="text-xs text-primary hover:text-primary/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
             </div>
             <p className="text-sm text-text-secondary">{hw.ip || '-'} • {hw.os || '-'}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">

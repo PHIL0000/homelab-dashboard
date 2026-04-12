@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
+import { Button, Input } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Setup() {
@@ -10,7 +11,7 @@ export default function Setup() {
   const [error, setError] = useState('');
   const { login } = useAuth();
 
-  const handleSetup = async (e: React.FormEvent) => {
+  const handleSetup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const res = await fetch('http://localhost:3001/api/auth/setup', {
@@ -41,10 +42,12 @@ export default function Setup() {
         <form onSubmit={handleSetup} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text mb-1">Username *</label>
-            <input 
-              type="text" 
+            <Input
+              type="text"
               required
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary transition-colors"
+              placeholder="Username"
+              variant="secondary"
+              fullWidth
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
@@ -52,18 +55,22 @@ export default function Setup() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text mb-1">First Name (optional)</label>
-              <input 
-                type="text" 
-                className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary transition-colors"
+              <Input
+                type="text"
+                placeholder="First Name"
+                variant="secondary"
+                fullWidth
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-text mb-1">Last Name (optional)</label>
-              <input 
-                type="text" 
-                className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary transition-colors"
+              <Input
+                type="text"
+                placeholder="Last Name"
+                variant="secondary"
+                fullWidth
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
               />
@@ -71,29 +78,34 @@ export default function Setup() {
           </div>
           <div>
             <label className="block text-sm font-medium text-text mb-1">Email (optional)</label>
-            <input 
-              type="email" 
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary transition-colors"
+            <Input
+              type="email"
+              placeholder="Email"
+              variant="secondary"
+              fullWidth
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-text mb-1">Password *</label>
-            <input 
-              type="password" 
+            <Input
+              type="password"
               required
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary transition-colors"
+              placeholder="Password"
+              variant="secondary"
+              fullWidth
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <button 
+          <Button
             type="submit"
             className="w-full bg-primary text-white font-medium py-2 rounded-lg mt-4 hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all"
+              variant="primary"
           >
             Create Admin Account
-          </button>
+          </Button>
         </form>
       </div>
     </div>

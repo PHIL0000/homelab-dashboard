@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Card } from '@heroui/react';
+import { Button, Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import AddMarkdown, { type MarkdownFormValues } from './components/AddMarkdown';
@@ -125,13 +125,14 @@ export default function MarkdownDocs() {
     const internalDoc = resolveInternalDoc(href);
     if (internalDoc) {
       return (
-        <button
+        <Button
           type="button"
           onClick={() => setSelectedDocId(internalDoc.id)}
-          className="text-primary hover:text-primary/80 underline underline-offset-2"
+          className="text-primary hover:text-primary/80 underline underline-offset-2 !border-0 !border-transparent !ring-0 !shadow-none"
+          variant="ghost"
         >
           {children}
-        </button>
+        </Button>
       );
     }
 
@@ -261,7 +262,7 @@ export default function MarkdownDocs() {
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
           <h2 className="page-title">Markdown Documents</h2>
-          <button onClick={handleAddDoc} className="text-sm text-primary hover:text-primary/80">+ Add markdown</button>
+          <Button onClick={handleAddDoc} className="text-sm px-3 py-2 rounded-lg bg-primary text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all" variant="primary">+ Add markdown</Button>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 page-content-scroll">
@@ -270,10 +271,11 @@ export default function MarkdownDocs() {
           <div className="divide-y divide-border">
             {topLevelDocs.length === 0 && <p className="p-4 text-text-secondary">No top-level markdown files found.</p>}
             {topLevelDocs.map((doc) => (
-              <button
+              <Button
                 key={doc.id}
                 onClick={() => setSelectedDocId(doc.id)}
-                className={`w-full text-left px-4 py-3 transition-all border-l-4 ${selectedDocId === doc.id ? 'bg-primary/20 border-primary shadow-md' : 'hover:bg-background/60 border-transparent'}`}
+                className={`w-full text-left px-4 py-3 transition-all border-l-4 !ring-0 !shadow-none ${selectedDocId === doc.id ? 'bg-primary/20 border-primary shadow-md' : 'hover:bg-background/60 border-transparent'}`}
+                variant="ghost"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -290,7 +292,7 @@ export default function MarkdownDocs() {
                     </span>
                   )}
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
         </Card>
@@ -303,7 +305,7 @@ export default function MarkdownDocs() {
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="text-xl font-bold text-text break-words">{selectedDoc.title}</h3>
-                  <button type="button" onClick={() => handleEditDoc(selectedDoc)} className="text-xs text-primary hover:text-primary/80">Edit</button>
+                  <Button type="button" onClick={() => handleEditDoc(selectedDoc)} className="text-xs text-primary hover:text-primary/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
                 </div>
                 <div className="flex gap-2 mt-2 flex-wrap">
                   {selectedDoc.hardwareAsset?.name && <span className="text-xs bg-primary/15 text-primary px-2 py-1 rounded-full">HW: {selectedDoc.hardwareAsset.name}</span>}
@@ -324,14 +326,15 @@ export default function MarkdownDocs() {
                   <p className="text-sm font-semibold text-text mb-2">Sub-Level Files</p>
                   <div className="flex flex-wrap gap-2">
                     {selectedDocChildren.map((child) => (
-                      <button
+                      <Button
                         key={child.id}
                         type="button"
                         onClick={() => setSelectedDocId(child.id)}
-                        className="text-xs px-3 py-1.5 rounded-full border border-border bg-background hover:bg-primary/15 hover:text-primary transition-colors"
+                        className="text-xs px-3 py-1.5 rounded-full border border-border bg-background hover:bg-primary/15 hover:text-primary transition-colors !ring-0 !shadow-none"
+                        variant="ghost"
                       >
                         {child.title}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Button, Input } from '@heroui/react';
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -72,20 +73,21 @@ export default function AdvancedTab() {
             </div>
           </div>
           <div className="flex gap-2 w-full max-w-md">
-            <input 
+            <Input
               type="url" 
               placeholder={t('settings.haDomain.placeholder')} 
               value={haDomain}
               onChange={(e) => setHaDomain(e.target.value)}
-              className="flex-1 bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary"
+              className="flex-1"
             />
-            <button 
+            <Button
               onClick={saveHaDomain}
-              disabled={isSaving}
+              isDisabled={isSaving}
               className="px-4 py-2 bg-primary text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all disabled:opacity-50"
+                variant="primary"
             >
               {isSaving ? 'Saving...' : t('settings.save')}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

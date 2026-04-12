@@ -1,4 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { Button, Input, Select, ListBox, TextArea } from '@heroui/react';
+import { ChevronDown } from 'lucide-react';
 import type { HardwareFormValues } from './AddHardware';
 
 type EditHardwareProps = {
@@ -80,34 +82,51 @@ export default function EditHardware({ isOpen, hardware, onClose, onSave, onDele
 			<div className="w-full max-w-3xl rounded-xl border border-border bg-content shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
 				<div className="px-5 py-4 border-b border-border bg-background flex items-center justify-between">
 					<h3 className="text-lg font-semibold text-text">Edit Hardware</h3>
-					<button type="button" onClick={onClose} className="text-text-secondary hover:text-text">✕</button>
+					<Button type="button" onClick={onClose} className="text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost" isIconOnly aria-label="Close">âœ•</Button>
 				</div>
 
 				<form onSubmit={handleSubmit} className="p-5 overflow-auto space-y-4">
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-						<label className="space-y-1"><span className="text-xs text-text-secondary">Name *</span><input value={name} onChange={(e) => setName(e.target.value)} required className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">Hostname</span><input value={hostname} onChange={(e) => setHostname(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">Type</span><select value={type} onChange={(e) => setType(e.target.value)} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">{HARDWARE_TYPE_OPTIONS.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}</select></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">OS</span><input value={os} onChange={(e) => setOs(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">IP</span><input value={ip} onChange={(e) => setIp(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">MAC</span><input value={mac} onChange={(e) => setMac(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">CPU</span><input value={cpu} onChange={(e) => setCpu(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">CPU Cores</span><input type="number" min={1} value={cpuCores} onChange={(e) => setCpuCores(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">RAM (GB)</span><input type="number" min={1} value={ram} onChange={(e) => setRam(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">Make</span><input value={make} onChange={(e) => setMake(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">Model</span><input value={model} onChange={(e) => setModel(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">Serial Number</span><input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">Location</span><input value={location} onChange={(e) => setLocation(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
-						<label className="space-y-1 md:col-span-2"><span className="text-xs text-text-secondary">Icon</span><input value={icon} onChange={(e) => setIcon(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">Name *</span><Input value={name} onChange={(e) => setName(e.target.value)} required className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">Hostname</span><Input value={hostname} onChange={(e) => setHostname(e.target.value)} className="w-full" /></label>
+												<label className="space-y-1">
+							<span className="text-xs text-text-secondary">Type</span>
+							<Select selectedKey={type} onChange={(key) => { if (key != null) setType(String(key)); }} className="w-full">
+								<Select.Trigger className="w-full px-3 flex items-center justify-between">
+									<Select.Value />
+									<ChevronDown size={16} className="text-text-secondary" />
+								</Select.Trigger>
+								<Select.Popover className="w-[var(--trigger-width)]">
+									<ListBox>
+										{HARDWARE_TYPE_OPTIONS.map((option) => (
+											<ListBox.Item key={option.value} id={option.value} className="pl-2">
+												{option.label}
+											</ListBox.Item>
+										))}
+									</ListBox>
+								</Select.Popover>
+							</Select>
+						</label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">OS</span><Input value={os} onChange={(e) => setOs(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">IP</span><Input value={ip} onChange={(e) => setIp(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">MAC</span><Input value={mac} onChange={(e) => setMac(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">CPU</span><Input value={cpu} onChange={(e) => setCpu(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">CPU Cores</span><Input type="number" min={1} value={cpuCores} onChange={(e) => setCpuCores(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">RAM (GB)</span><Input type="number" min={1} value={ram} onChange={(e) => setRam(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">Make</span><Input value={make} onChange={(e) => setMake(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">Model</span><Input value={model} onChange={(e) => setModel(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">Serial Number</span><Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-text-secondary">Location</span><Input value={location} onChange={(e) => setLocation(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1 md:col-span-2"><span className="text-xs text-text-secondary">Icon</span><Input value={icon} onChange={(e) => setIcon(e.target.value)} className="w-full" /></label>
 					</div>
 
-					<label className="space-y-1 block"><span className="text-xs text-text-secondary">Notes</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full min-h-[120px] bg-background border border-border rounded-lg px-3 py-2 text-text" /></label>
+					<label className="space-y-1 block"><span className="text-xs text-text-secondary">Notes</span><TextArea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full min-h-[120px]" /></label>
 
 					<div className="pt-4 border-t border-border flex items-center justify-between gap-2">
-						<div>{onDelete && <button type="button" onClick={onDelete} className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20">Delete</button>}</div>
+						<div>{onDelete && <Button type="button" onClick={onDelete} className="rounded-lg px-3 py-1.5 text-sm" variant="danger">Delete</Button>}</div>
 						<div className="flex items-center gap-2">
-							<button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-text-secondary hover:text-text">Cancel</button>
-							<button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white hover:bg-primary/90">Save Changes</button>
+							<Button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Cancel</Button>
+							<Button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white hover:bg-primary/90" variant="primary">Save Changes</Button>
 						</div>
 					</div>
 				</form>

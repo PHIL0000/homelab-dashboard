@@ -1,5 +1,7 @@
 import ReactMarkdown from 'react-markdown';
 import { useEffect, useState, type FormEvent } from 'react';
+import { Button, Input, TextArea, Select, ListBox } from '@heroui/react';
+import { ChevronDown } from 'lucide-react';
 
 type OptionItem = {
 	id: string;
@@ -36,8 +38,6 @@ export default function AddMarkdown({
 	onClose,
 	onSave
 }: AddMarkdownProps) {
-	if (!isOpen) return null;
-
 	const [title, setTitle] = useState('');
 	const [content, setContent] = useState('');
 	const [hardwareAssetId, setHardwareAssetId] = useState('');
@@ -52,6 +52,8 @@ export default function AddMarkdown({
 		setSoftwareUnitId(initialValues?.softwareUnitId || '');
 		setParentDocId(initialValues?.parentDocId || '');
 	}, [isOpen, initialValues]);
+
+	if (!isOpen) return null;
 
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -69,58 +71,82 @@ export default function AddMarkdown({
 			<div className="w-full max-w-5xl rounded-xl border border-border bg-content shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
 				<div className="px-5 py-4 border-b border-border bg-background flex items-center justify-between">
 					<h3 className="text-lg font-semibold text-text">Add Markdown</h3>
-					<button type="button" onClick={onClose} className="text-text-secondary hover:text-text">✕</button>
+					<Button type="button" onClick={onClose} className="text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost" isIconOnly aria-label="Close">✕</Button>
 				</div>
 
 				<form onSubmit={handleSubmit} className="p-5 overflow-auto space-y-4">
 					<label className="space-y-1 block">
 						<span className="text-xs text-text-secondary">Filename *</span>
-						<input
+						<Input
 							value={title}
 							onChange={(e) => setTitle(e.target.value)}
 							required
 							placeholder="example-doc.md"
-							className="w-full bg-background border border-border rounded-lg px-3 py-2 text-text"
+							className="w-full"
 						/>
 					</label>
 
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Hardware (optional)</span>
-							<select value={hardwareAssetId} onChange={(e) => setHardwareAssetId(e.target.value)} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
-								<option value="">None</option>
-								{hardwareOptions.map((option) => (
-									<option key={option.id} value={option.id}>{option.name || option.title || option.id}</option>
-								))}
-							</select>
+							<Select selectedKey={hardwareAssetId || 'none'} onChange={(key) => { if (key != null) setHardwareAssetId(String(key) === 'none' ? '' : String(key)); }} className="w-full">
+								<Select.Trigger className="w-full px-3 flex items-center justify-between">
+									<Select.Value />
+									<ChevronDown size={16} className="text-text-secondary" />
+								</Select.Trigger>
+								<Select.Popover className="w-[var(--trigger-width)]">
+									<ListBox>
+										<ListBox.Item id="none" className="pl-2">None</ListBox.Item>
+										{hardwareOptions.map((option) => (
+											<ListBox.Item key={option.id} id={option.id} className="pl-2">{option.name || option.title || option.id}</ListBox.Item>
+										))}
+									</ListBox>
+								</Select.Popover>
+							</Select>
 						</label>
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Service (optional)</span>
-							<select value={softwareUnitId} onChange={(e) => setSoftwareUnitId(e.target.value)} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
-								<option value="">None</option>
-								{serviceOptions.map((option) => (
-									<option key={option.id} value={option.id}>{option.name || option.title || option.id}</option>
-								))}
-							</select>
+							<Select selectedKey={softwareUnitId || 'none'} onChange={(key) => { if (key != null) setSoftwareUnitId(String(key) === 'none' ? '' : String(key)); }} className="w-full">
+								<Select.Trigger className="w-full px-3 flex items-center justify-between">
+									<Select.Value />
+									<ChevronDown size={16} className="text-text-secondary" />
+								</Select.Trigger>
+								<Select.Popover className="w-[var(--trigger-width)]">
+									<ListBox>
+										<ListBox.Item id="none" className="pl-2">None</ListBox.Item>
+										{serviceOptions.map((option) => (
+											<ListBox.Item key={option.id} id={option.id} className="pl-2">{option.name || option.title || option.id}</ListBox.Item>
+										))}
+									</ListBox>
+								</Select.Popover>
+							</Select>
 						</label>
 						<label className="space-y-1">
 							<span className="text-xs text-text-secondary">Parent Doc (optional)</span>
-							<select value={parentDocId} onChange={(e) => setParentDocId(e.target.value)} className="h-10 w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-text">
-								<option value="">None</option>
-								{parentDocOptions.map((option) => (
-									<option key={option.id} value={option.id}>{option.title || option.name || option.id}</option>
-								))}
-							</select>
+							<Select selectedKey={parentDocId || 'none'} onChange={(key) => { if (key != null) setParentDocId(String(key) === 'none' ? '' : String(key)); }} className="w-full">
+								<Select.Trigger className="w-full px-3 flex items-center justify-between">
+									<Select.Value />
+									<ChevronDown size={16} className="text-text-secondary" />
+								</Select.Trigger>
+								<Select.Popover className="w-[var(--trigger-width)]">
+									<ListBox>
+										<ListBox.Item id="none" className="pl-2">None</ListBox.Item>
+										{parentDocOptions.map((option) => (
+											<ListBox.Item key={option.id} id={option.id} className="pl-2">{option.title || option.name || option.id}</ListBox.Item>
+										))}
+									</ListBox>
+								</Select.Popover>
+							</Select>
 						</label>
 					</div>
 
 					<div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
 						<label className="space-y-1 block">
 							<span className="text-xs text-text-secondary">Content</span>
-							<textarea
+							<TextArea
 								value={content}
 								onChange={(e) => setContent(e.target.value)}
-								className="w-full min-h-[300px] bg-background border border-border rounded-lg px-3 py-2 text-text font-mono text-sm"
+								className="w-full min-h-[300px]"
 							/>
 						</label>
 
@@ -134,8 +160,8 @@ export default function AddMarkdown({
 
 					<div className="pt-4 border-t border-border flex items-center justify-end gap-2">
 						<div className="flex items-center gap-2">
-							<button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-text-secondary hover:text-text">Cancel</button>
-							<button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white hover:bg-primary/90">Save Markdown</button>
+							<Button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Cancel</Button>
+							<Button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white hover:bg-primary/90" variant="primary">Save Markdown</Button>
 						</div>
 					</div>
 				</form>

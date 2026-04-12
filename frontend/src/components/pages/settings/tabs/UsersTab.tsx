@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
-import { Card } from '@heroui/react';
-import { Camera } from 'lucide-react';
+import { Button, Card, Input, Select, ListBox } from '@heroui/react';
+import { Camera, ChevronDown } from 'lucide-react';
 
 interface UserData {
   id: string;
@@ -173,12 +173,13 @@ export default function UsersTab() {
           <h3 className="text-xl font-bold text-text">{t('settings.users')}</h3>
           <p className="text-text-secondary mt-1">{t('settings.users.desc')}</p>
         </div>
-        <button 
+        <Button
           onClick={() => { setShowAddForm(!showAddForm); setEditingUser(null); }}
           className="px-4 py-2 bg-primary text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all"
+          variant="primary"
         >
           {showAddForm ? 'Cancel' : 'Add User'}
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -194,35 +195,47 @@ export default function UsersTab() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Username *</label>
-                <input required type="text" value={newUsername} onChange={e => setNewUsername(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                <Input required type="text" value={newUsername} onChange={e => setNewUsername(e.target.value)} className="w-full" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Email</label>
-                <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                <Input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} className="w-full" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">First Name</label>
-                <input type="text" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                <Input type="text" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} className="w-full" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Last Name</label>
-                <input type="text" value={newLastName} onChange={e => setNewLastName(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                <Input type="text" value={newLastName} onChange={e => setNewLastName(e.target.value)} className="w-full" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Password *</label>
-                <input required type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                <Input required type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Role *</label>
-                <select value={newRole} onChange={e => setNewRole(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary appearance-none">
-                  <option value="USER">User</option>
-                  <option value="ADMIN">Admin</option>
-                </select>
+                <Select
+                  selectedKey={newRole}
+                  onChange={(key) => { if (key != null) setNewRole(String(key)); }}
+                  className="w-full"
+                >
+                  <Select.Trigger className="w-full px-3 flex items-center justify-between">
+                    <Select.Value />
+                    <ChevronDown size={16} className="text-text-secondary" />
+                  </Select.Trigger>
+                  <Select.Popover className="w-[var(--trigger-width)]">
+                    <ListBox>
+                      <ListBox.Item id="USER" className="pl-2">User</ListBox.Item>
+                      <ListBox.Item id="ADMIN" className="pl-2">Admin</ListBox.Item>
+                    </ListBox>
+                  </Select.Popover>
+                </Select>
               </div>
             </div>
-            <button disabled={isAdding} type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all disabled:opacity-50 mt-4">
+            <Button isDisabled={isAdding} type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all disabled:opacity-50 mt-4" variant="primary">
               {isAdding ? 'Creating...' : 'Create User'}
-            </button>
+            </Button>
           </form>
         </Card>
       )}
@@ -231,25 +244,25 @@ export default function UsersTab() {
         <Card className="p-6 bg-content border border-border mb-6">
           <div className="flex justify-between items-center mb-4">
             <h4 className="text-lg font-bold text-text">Edit User: {editingUser.username}</h4>
-            <button onClick={cancelEditing} className="text-text-secondary hover:text-text">Cancel</button>
+            <Button onClick={cancelEditing} className="text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Cancel</Button>
           </div>
           <form onSubmit={handleUpdateUser} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Username *</label>
-                <input required type="text" value={editUsername} onChange={e => setEditUsername(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                <Input required type="text" value={editUsername} onChange={e => setEditUsername(e.target.value)} className="w-full" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Email</label>
-                <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                <Input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} className="w-full" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">First Name</label>
-                <input type="text" value={editFirstName} onChange={e => setEditFirstName(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                <Input type="text" value={editFirstName} onChange={e => setEditFirstName(e.target.value)} className="w-full" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Last Name</label>
-                <input type="text" value={editLastName} onChange={e => setEditLastName(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                <Input type="text" value={editLastName} onChange={e => setEditLastName(e.target.value)} className="w-full" />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-text-secondary mb-1">Avatar Image URL</label>
@@ -261,13 +274,13 @@ export default function UsersTab() {
                       <Camera className="w-5 h-5 text-text-secondary" />
                     )}
                   </div>
-                  <input type="url" placeholder="https://example.com/avatar.png" value={editAvatarUrl} onChange={e => setEditAvatarUrl(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary" />
+                  <Input type="url" placeholder="https://example.com/avatar.png" value={editAvatarUrl} onChange={e => setEditAvatarUrl(e.target.value)} className="w-full" />
                 </div>
               </div>
             </div>
-            <button disabled={isUpdating} type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all disabled:opacity-50 mt-4">
+            <Button isDisabled={isUpdating} type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all disabled:opacity-50 mt-4" variant="primary">
               {isUpdating ? 'Saving...' : 'Save Changes'}
-            </button>
+            </Button>
           </form>
         </Card>
       )}
@@ -313,19 +326,21 @@ export default function UsersTab() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button 
+                        <Button
                           onClick={() => startEditing(u)}
-                          className="text-primary hover:text-white hover:bg-primary/20 px-3 py-1 rounded transition-colors text-sm"
+                          className="text-primary hover:text-white hover:bg-primary/20 px-3 py-1 rounded transition-colors text-sm !border-0 !border-transparent !ring-0 !shadow-none"
+                          variant="ghost"
                         >
                           Edit
-                        </button>
+                        </Button>
                         {currentUser?.id !== u.id.toString() && (
-                          <button 
+                          <Button
                             onClick={() => handleDeleteUser(u.id)}
-                            className="text-red-400 hover:text-red-500 hover:bg-red-500/10 px-3 py-1 rounded transition-colors text-sm"
+                            className="text-red-400 hover:text-red-500 hover:bg-red-500/10 px-3 py-1 rounded transition-colors text-sm !border-0 !border-transparent !ring-0 !shadow-none"
+                            variant="ghost"
                           >
                             Delete
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </td>

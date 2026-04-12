@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Card } from '@heroui/react';
+import { Button, Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 import AddStorage, { type StorageFormValues } from './components/AddStorage';
 import EditStorage from './components/EditStorage';
@@ -122,7 +122,7 @@ export default function StorageItems() {
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
           <h2 className="page-title">Storage</h2>
-          <button onClick={handleAddStorage} className="text-sm text-primary hover:text-primary/80">+ Add storage</button>
+          <Button onClick={handleAddStorage} className="text-sm px-3 py-2 rounded-lg bg-primary text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all" variant="primary">+ Add storage</Button>
         </div>
         <div className="page-content-scroll">
   <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
@@ -153,7 +153,7 @@ export default function StorageItems() {
                 <td className="px-4 py-3 text-text-secondary">{item.hardwareAsset?.name || 'Unassigned'}</td>
                 <td className="px-4 py-3 text-text-secondary">{item.softwareUnit?.name || '-'}</td>
                 <td className="px-4 py-3 text-right">
-                  <button type="button" onClick={() => handleEditStorage(item)} className="text-xs text-primary hover:text-primary/80">Edit</button>
+                  <Button type="button" onClick={() => handleEditStorage(item)} className="text-xs text-primary hover:text-primary/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
                 </td>
               </tr>
             ))}
