@@ -33,23 +33,37 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 p-4">
+    <div className="app-theme-background flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="space-y-4 text-center">
           <div className="flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-pink-600 shadow-2xl shadow-purple-500/50">
+            <div
+              className="flex h-16 w-16 items-center justify-center rounded-2xl shadow-2xl"
+              style={{
+                backgroundImage:
+                  'linear-gradient(145deg, var(--color-primary), var(--color-secondary), var(--color-accent))',
+                boxShadow: '0 0 30px color-mix(in srgb, var(--color-glow) 55%, transparent)',
+              }}
+            >
               <span className="text-3xl font-bold text-white">⚡</span>
             </div>
           </div>
           <div>
-            <h1 className="text-4xl font-bold text-white">Homelab</h1>
-            <p className="mt-2 text-slate-400">Secure Dashboard Access</p>
+            <h1 className="text-4xl font-bold text-[var(--color-text)]">Homelab</h1>
+            <p className="mt-2 text-[var(--color-textSecondary)]">Secure Dashboard Access</p>
           </div>
         </div>
 
         {/* Card */}
-        <Card className="border border-purple-500/20 bg-slate-900/50 backdrop-blur-md shadow-2xl p-8">
+        <Card
+          className="backdrop-blur-md shadow-2xl p-8"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--color-primary) 35%, transparent)',
+            backgroundColor: 'color-mix(in srgb, var(--color-content) 88%, transparent)',
+            boxShadow: '0 24px 60px color-mix(in srgb, var(--color-glow) 28%, transparent)',
+          }}
+        >
           {/* Error Alert */}
           {error && (
             <div className="mb-6 rounded-lg border border-red-500/50 bg-red-500/10 p-4">
@@ -60,7 +74,7 @@ export default function Login() {
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Username or Email</label>
+              <label className="block text-sm font-medium text-[var(--color-textSecondary)] mb-2">Username or Email</label>
               <Input
                 type="text"
                 placeholder="you@example.com"
@@ -72,7 +86,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+              <label className="block text-sm font-medium text-[var(--color-textSecondary)] mb-2">Password</label>
               <Input
                 type="password"
                 placeholder="••••••••"
@@ -88,13 +102,17 @@ export default function Login() {
               size="lg"
               type="submit"
               isDisabled={loading}
-              className="mt-8 bg-gradient-to-r from-purple-600 to-pink-600 font-semibold text-white text-base shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 transition-all"
+              className="mt-8 font-semibold text-white text-base shadow-lg transition-all"
+              style={{
+                backgroundImage: 'linear-gradient(90deg, var(--color-primary), var(--color-accent))',
+                boxShadow: '0 0 24px color-mix(in srgb, var(--color-glow) 52%, transparent)',
+              }}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 
-          <div className="mt-6 border-t border-slate-700/50 pt-6 text-center text-xs text-slate-500">
+          <div className="mt-6 border-t pt-6 text-center text-xs text-[var(--color-textSecondary)]" style={{ borderColor: 'color-mix(in srgb, var(--color-border) 72%, transparent)' }}>
             🔐 Protected by your homelab security
           </div>
         </Card>

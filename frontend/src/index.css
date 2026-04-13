@@ -18,6 +18,10 @@
   --color-text: #f8fafc;
   --color-textSecondary: #94a3b8;
   --color-border: #4a3578;
+  --color-gradientStart: #312e81;
+  --color-gradientMid: #581c87;
+  --color-gradientEnd: #0f172a;
+  --color-glow: #8b5cf6;
 }
 
 * {
@@ -29,6 +33,8 @@ body {
   margin: 0;
   padding: 0;
   transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+  isolation: isolate;
 }
 
 html, body, #root {
@@ -39,6 +45,113 @@ html, body, #root {
 body {
   background-color: var(--color-background, #0f172a);
   color: var(--color-text, #e2e8f0);
+  background-image:
+    radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--color-glow) 34%, transparent) 0%, transparent 44%),
+    radial-gradient(circle at 82% 8%, color-mix(in srgb, var(--color-secondary) 30%, transparent) 0%, transparent 40%),
+    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--color-primary) 18%, transparent) 0%, transparent 55%),
+    linear-gradient(145deg, var(--color-gradientStart), var(--color-gradientMid) 45%, var(--color-gradientEnd));
+  background-attachment: fixed;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 35%),
+    linear-gradient(300deg, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 45%);
+}
+
+.app-theme-background {
+  background-image:
+    radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--color-glow) 42%, transparent) 0%, transparent 42%),
+    radial-gradient(circle at 85% 0%, color-mix(in srgb, var(--color-secondary) 36%, transparent) 0%, transparent 38%),
+    radial-gradient(circle at 60% 120%, color-mix(in srgb, var(--color-accent) 20%, transparent) 0%, transparent 50%),
+    linear-gradient(140deg, var(--color-gradientStart), var(--color-gradientMid) 46%, var(--color-gradientEnd));
+}
+
+.sidebar-theme-gradient {
+  background-image:
+    radial-gradient(circle at 5% 8%, color-mix(in srgb, var(--color-glow) 36%, transparent) 0%, transparent 38%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-sidebar) 82%, var(--color-gradientStart)) 0%,
+      color-mix(in srgb, var(--color-sidebar) 80%, var(--color-gradientMid)) 45%,
+      color-mix(in srgb, var(--color-sidebar) 86%, var(--color-gradientEnd)) 100%);
+}
+
+.sidebar-theme-surface {
+  background-color: color-mix(in srgb, var(--color-sidebar) 78%, var(--color-content));
+}
+
+.sidebar-theme-hover:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.bg-background {
+  background-color: var(--color-background) !important;
+}
+
+.bg-content {
+  background-color: var(--color-content) !important;
+}
+
+.text-text {
+  color: var(--color-text) !important;
+}
+
+.text-text-secondary,
+.text-\[var\(--color-textSecondary\)\] {
+  color: var(--color-textSecondary) !important;
+}
+
+/* Global mapping for existing utility-heavy pages */
+[class*="bg-slate-900/50"],
+[class*="bg-slate-900/30"],
+[class*="bg-slate-900"] {
+  background-color: color-mix(in srgb, var(--color-content) 88%, transparent) !important;
+}
+
+[class*="bg-slate-800/30"],
+[class*="bg-slate-800"] {
+  background-color: color-mix(in srgb, var(--color-sidebar) 84%, var(--color-content)) !important;
+}
+
+[class*="border-slate-700/50"],
+[class*="border-slate-700"] {
+  border-color: color-mix(in srgb, var(--color-border) 78%, transparent) !important;
+}
+
+[class*="text-slate-100"],
+[class*="text-slate-200"] {
+  color: var(--color-text) !important;
+}
+
+[class*="text-slate-400"],
+[class*="text-slate-500"] {
+  color: var(--color-textSecondary) !important;
+}
+
+[class*="text-purple-300"],
+[class*="text-purple-400"] {
+  color: var(--color-primary) !important;
+}
+
+[class*="bg-purple-600/30"] {
+  background-color: color-mix(in srgb, var(--color-primary) 28%, transparent) !important;
+}
+
+[class*="border-purple-500"] {
+  border-color: var(--color-primary) !important;
+}
+
+[class*="from-purple-600"][class*="to-pink-600"] {
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-primary) 88%, #000),
+    color-mix(in srgb, var(--color-accent) 90%, #000)
+  ) !important;
 }
 
 .page-shell {

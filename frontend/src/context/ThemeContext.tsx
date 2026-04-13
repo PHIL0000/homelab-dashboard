@@ -1,6 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-export type Theme = "midnight" | "oled" | "cyberpunk" | "github" | "japan" | "forest";
+export type Theme =
+  | "midnight"
+  | "oled"
+  | "cyberpunk"
+  | "github"
+  | "japan"
+  | "forest"
+  | "aurora"
+  | "sunset"
+  | "ocean"
+  | "nebula";
 
 interface ThemeConfig {
   name: Theme;
@@ -15,6 +25,10 @@ interface ThemeConfig {
     text: string;
     textSecondary: string;
     border: string;
+    gradientStart: string;
+    gradientMid: string;
+    gradientEnd: string;
+    glow: string;
   };
 }
 
@@ -31,7 +45,11 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#0a0616",
       text: "#f8fafc",
       textSecondary: "#94a3b8",
-  border: "#4a3578",
+      border: "#4a3578",
+      gradientStart: "#312e81",
+      gradientMid: "#581c87",
+      gradientEnd: "#0f172a",
+      glow: "#8b5cf6",
     },
   },
   oled: {
@@ -46,7 +64,11 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#050505", /* Fast unsichtbar */
       text: "#fafafa",
       textSecondary: "#a1a1aa",
-  border: "#3b3b45",
+      border: "#3b3b45",
+      gradientStart: "#09090b",
+      gradientMid: "#18181b",
+      gradientEnd: "#000000",
+      glow: "#7e22ce",
     },
   },
   cyberpunk: {
@@ -61,7 +83,11 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#090819",
       text: "#e0def4",
       textSecondary: "#908caa",
-  border: "#4a4290",
+      border: "#4a4290",
+      gradientStart: "#1a1040",
+      gradientMid: "#3b0764",
+      gradientEnd: "#0b1021",
+      glow: "#00f0ff",
     },
   },
   github: {
@@ -76,7 +102,11 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#010409",
       text: "#c9d1d9",
       textSecondary: "#8b949e",
-  border: "#5b646f",
+      border: "#5b646f",
+      gradientStart: "#0d1117",
+      gradientMid: "#161b22",
+      gradientEnd: "#0b1d35",
+      glow: "#58a6ff",
     },
   },
   japan: {
@@ -91,7 +121,11 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#140909",
       text: "#fef2f2",
       textSecondary: "#fecdd3",
-  border: "#6f3434",
+      border: "#6f3434",
+      gradientStart: "#3f0c19",
+      gradientMid: "#7f1d1d",
+      gradientEnd: "#1a0f0f",
+      glow: "#fb7185",
     },
   },
   forest: {
@@ -106,7 +140,87 @@ const themes: Record<Theme, ThemeConfig> = {
       sidebar: "#030b06",
       text: "#f0fdf4",
       textSecondary: "#86efac",
-  border: "#255c3b",
+      border: "#255c3b",
+      gradientStart: "#052e16",
+      gradientMid: "#14532d",
+      gradientEnd: "#022c22",
+      glow: "#4ade80",
+    },
+  },
+  aurora: {
+    name: "aurora",
+    label: "Aurora",
+    colors: {
+      primary: "#22d3ee",
+      secondary: "#a78bfa",
+      accent: "#34d399",
+      background: "#020617",
+      content: "#0b1225",
+      sidebar: "#060d1a",
+      text: "#e2e8f0",
+      textSecondary: "#94a3b8",
+      border: "#2b3f67",
+      gradientStart: "#0f172a",
+      gradientMid: "#164e63",
+      gradientEnd: "#1e1b4b",
+      glow: "#22d3ee",
+    },
+  },
+  sunset: {
+    name: "sunset",
+    label: "Sunset",
+    colors: {
+      primary: "#fb7185",
+      secondary: "#f59e0b",
+      accent: "#f97316",
+      background: "#140a12",
+      content: "#1f1020",
+      sidebar: "#160c16",
+      text: "#ffe4e6",
+      textSecondary: "#fdba74",
+      border: "#7c2d12",
+      gradientStart: "#3f1d2e",
+      gradientMid: "#7c2d12",
+      gradientEnd: "#431407",
+      glow: "#fb7185",
+    },
+  },
+  ocean: {
+    name: "ocean",
+    label: "Ocean",
+    colors: {
+      primary: "#38bdf8",
+      secondary: "#14b8a6",
+      accent: "#7dd3fc",
+      background: "#041420",
+      content: "#0a2233",
+      sidebar: "#071a2a",
+      text: "#e0f2fe",
+      textSecondary: "#7dd3fc",
+      border: "#155e75",
+      gradientStart: "#082f49",
+      gradientMid: "#0e7490",
+      gradientEnd: "#0f172a",
+      glow: "#38bdf8",
+    },
+  },
+  nebula: {
+    name: "nebula",
+    label: "Nebula",
+    colors: {
+      primary: "#c084fc",
+      secondary: "#60a5fa",
+      accent: "#f472b6",
+      background: "#0b0820",
+      content: "#181133",
+      sidebar: "#120d2a",
+      text: "#f1f5f9",
+      textSecondary: "#c4b5fd",
+      border: "#4c1d95",
+      gradientStart: "#312e81",
+      gradientMid: "#4c1d95",
+      gradientEnd: "#1e1b4b",
+      glow: "#c084fc",
     },
   },
 };
@@ -138,16 +252,18 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [theme]);
 
   const applyTheme = (selectedTheme: Theme) => {
-    const config = themes[selectedTheme] || themes["midnight"]; // Sicherstellen, dass config nicht undefined ist
+    const config = themes[selectedTheme] || themes["midnight"];
     const html = document.documentElement;
+    const body = document.body;
 
-    // Setze CSS-Variablen für inline styles
+    html.setAttribute("data-theme", selectedTheme);
+    body.setAttribute("data-theme", selectedTheme);
+
     Object.entries(config.colors).forEach(([key, value]) => {
       html.style.setProperty(`--color-${key}`, value);
     });
 
-    // Inline styles für kritische Farben
-    const bodyStyle = document.body.style;
+    const bodyStyle = body.style;
     bodyStyle.backgroundColor = config.colors.background;
     bodyStyle.color = config.colors.text;
   };

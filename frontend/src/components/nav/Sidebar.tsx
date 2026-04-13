@@ -47,8 +47,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
 
   const getNavItemClass = (active: boolean) => {
     return active 
-      ? "bg-purple-600/30 text-purple-300 border-l-2 border-purple-500"
-      : "text-slate-400 hover:text-white hover:bg-slate-700/30";
+      ? "text-[var(--color-primary)] border-l-2 border-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_24%,transparent)]"
+      : "text-[var(--color-textSecondary)] hover:text-[var(--color-text)] hover:bg-[color-mix(in_srgb,var(--color-primary)_18%,transparent)]";
   };
 
   const topItems = [
@@ -82,21 +82,21 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   ];
 
   return (
-    <div 
-      className={`${isCollapsed ? "w-20" : "w-64"} h-screen rounded-none border-r border-slate-700/50 flex flex-col bg-slate-900/50 transition-all duration-300 ease-in-out relative z-20 shrink-0`}
+    <div
+      className={`${isCollapsed ? "w-20" : "w-64"} sidebar-theme-gradient h-screen rounded-none border-r border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] flex flex-col transition-all duration-300 ease-in-out relative z-20 shrink-0`}
     >
-      <div className={`p-4 border-b border-slate-700/50 flex items-center justify-between h-[80px]`}>
+      <div className={`sidebar-theme-surface p-4 border-b border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] flex items-center justify-between h-[80px]`}>
         {!isCollapsed && (
           <div className="overflow-hidden transition-all duration-300 whitespace-nowrap">
-            <h1 className="text-2xl font-bold tracking-tight text-purple-400">
+            <h1 className="text-2xl font-bold tracking-tight text-[var(--color-primary)]">
               Homelab
             </h1>
-            <p className="text-[10px] mt-0.5 text-slate-400 uppercase tracking-widest font-medium">Dashboard</p>
+            <p className="text-[10px] mt-0.5 text-[var(--color-textSecondary)] uppercase tracking-widest font-medium">Dashboard</p>
           </div>
         )}
         <Button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 rounded-lg hover:bg-slate-700/30"
+          className="p-2 rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
           aria-label={isCollapsed ? t("nav.sidebar.expand") : t("nav.sidebar.collapse")}
           isIconOnly
           variant="ghost"
@@ -130,14 +130,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
               aria-label={t("nav.ai")}
               isIconOnly
               variant="ghost"
-              className="w-full rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/30"
+              className="w-full rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
             >
               <Bot size={20} />
             </Button>
           ) : (
             <Button
               onClick={() => setOpenAI(!openAI)}
-              className="w-full justify-between rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/30"
+              className="w-full justify-between rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
               variant="ghost"
             >
               <div className="flex items-center gap-3">
@@ -149,7 +149,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
           )}
 
           {openAI && !isCollapsed && (
-            <div className="ml-4 mt-2 space-y-1 border-l border-slate-600/50 pl-3">
+            <div className="ml-4 mt-2 space-y-1 border-l border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] pl-3">
               {aiItems.map((item) => (
                 <Link
                   key={item.path}
@@ -175,14 +175,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
               aria-label={t("nav.storage")}
               isIconOnly
               variant="ghost"
-              className="w-full rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/30"
+              className="w-full rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
             >
               <HardDrive size={20} />
             </Button>
           ) : (
             <Button
               onClick={() => setOpenStorage(!openStorage)}
-              className="w-full justify-between rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/30"
+              className="w-full justify-between rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
               variant="ghost"
             >
               <div className="flex items-center gap-3">
@@ -194,7 +194,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
           )}
 
           {openStorage && !isCollapsed && (
-            <div className="ml-4 mt-2 space-y-1 border-l border-slate-600/50 pl-3">
+            <div className="ml-4 mt-2 space-y-1 border-l border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] pl-3">
               {storageItems.map((item) => (
                 <Link
                   key={item.path}
@@ -220,14 +220,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
               aria-label={t("nav.documentation")}
               isIconOnly
               variant="ghost"
-              className="w-full rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/30"
+              className="w-full rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
             >
               <LayoutDashboard size={20} />
             </Button>
           ) : (
             <Button
               onClick={() => setOpenDocs(!openDocs)}
-              className="w-full justify-between rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/30"
+              className="w-full justify-between rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
               variant="ghost"
             >
               <div className="flex items-center gap-3">
@@ -239,7 +239,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
           )}
 
           {openDocs && !isCollapsed && (
-            <div className="ml-4 mt-2 space-y-1 border-l border-slate-600/50 pl-3">
+            <div className="ml-4 mt-2 space-y-1 border-l border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] pl-3">
               {documentationItems.map((item) => (
                 <Link
                   key={item.path}
@@ -270,26 +270,26 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
       </nav>
 
       {/* USER & SETTINGS FOOTER */}
-      <div className={`p-3 flex ${isCollapsed ? "flex-col" : "items-center"} gap-2 border-t border-slate-700/50`}>
+  <div className={`sidebar-theme-surface p-3 flex ${isCollapsed ? "flex-col" : "items-center"} gap-2 border-t border-[color-mix(in_srgb,var(--color-border)_72%,transparent)]`}>
         <Button
           onClick={() => onOpenModal("account")}
           isIconOnly={isCollapsed}
           variant="ghost"
-          className={`${isCollapsed ? "w-full h-10 justify-center" : "flex-1 justify-start"} rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/30`}
+          className={`${isCollapsed ? "w-full h-10 justify-center" : "flex-1 justify-start"} rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover`}
           aria-label={t("nav.account")}
         >
           {isCollapsed ? (
-            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-600 text-white font-bold text-xs">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs" style={{ backgroundColor: 'var(--color-primary)' }}>
               {user?.username ? user.username.substring(0, 1).toUpperCase() : "U"}
             </div>
           ) : (
             <>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-600 text-white font-bold text-xs flex-shrink-0">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0" style={{ backgroundColor: 'var(--color-primary)' }}>
                 {user?.username ? user.username.substring(0, 1).toUpperCase() : "U"}
               </div>
               <div className="flex-1 min-w-0 text-left pl-2">
-                <p className="text-sm font-medium text-slate-200 truncate">{user?.username || "User"}</p>
-                <p className="text-xs text-slate-400 truncate">{user?.role === "ADMIN" ? "Administrator" : "User"}</p>
+                <p className="text-sm font-medium text-[var(--color-text)] truncate">{user?.username || "User"}</p>
+                <p className="text-xs text-[var(--color-textSecondary)] truncate">{user?.role === "ADMIN" ? "Administrator" : "User"}</p>
               </div>
             </>
           )}
@@ -299,7 +299,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
           onClick={() => onOpenModal("settings")}
           isIconOnly
           variant="ghost"
-          className={`${isCollapsed ? "w-full" : "w-10"} h-10 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/30`}
+          className={`${isCollapsed ? "w-full" : "w-10"} h-10 rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover`}
           aria-label={t("nav.settings")}
         >
           <Settings size={20} />
