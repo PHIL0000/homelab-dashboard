@@ -68,15 +68,15 @@ export default function AddMarkdown({
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-			<div className="w-full max-w-5xl rounded-xl border border-border bg-content shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-				<div className="px-5 py-4 border-b border-border bg-background flex items-center justify-between">
-					<h3 className="text-lg font-semibold text-text">Add Markdown</h3>
-					<Button type="button" onClick={onClose} className="text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost" isIconOnly aria-label="Close">✕</Button>
+			<div className="w-full max-w-5xl rounded-xl border border-slate-700/50 bg-slate-900/50 shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+				<div className="px-5 py-4 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between">
+					<h3 className="text-lg font-semibold text-slate-100">Add Markdown</h3>
+					<Button type="button" onClick={onClose} className="text-slate-400 hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost" isIconOnly aria-label="Close">✕</Button>
 				</div>
 
 				<form onSubmit={handleSubmit} className="p-5 overflow-auto space-y-4">
 					<label className="space-y-1 block">
-						<span className="text-xs text-text-secondary">Filename *</span>
+						<span className="text-xs text-slate-400">Filename *</span>
 						<Input
 							value={title}
 							onChange={(e) => setTitle(e.target.value)}
@@ -88,11 +88,11 @@ export default function AddMarkdown({
 
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
 						<label className="space-y-1">
-							<span className="text-xs text-text-secondary">Hardware (optional)</span>
+							<span className="text-xs text-slate-400">Hardware (optional)</span>
 							<Select selectedKey={hardwareAssetId || 'none'} onChange={(key) => { if (key != null) setHardwareAssetId(String(key) === 'none' ? '' : String(key)); }} className="w-full">
 								<Select.Trigger className="w-full px-3 flex items-center justify-between">
 									<Select.Value />
-									<ChevronDown size={16} className="text-text-secondary" />
+									<ChevronDown size={16} className="text-slate-400" />
 								</Select.Trigger>
 								<Select.Popover className="w-[var(--trigger-width)]">
 									<ListBox>
@@ -105,11 +105,11 @@ export default function AddMarkdown({
 							</Select>
 						</label>
 						<label className="space-y-1">
-							<span className="text-xs text-text-secondary">Service (optional)</span>
+							<span className="text-xs text-slate-400">Service (optional)</span>
 							<Select selectedKey={softwareUnitId || 'none'} onChange={(key) => { if (key != null) setSoftwareUnitId(String(key) === 'none' ? '' : String(key)); }} className="w-full">
 								<Select.Trigger className="w-full px-3 flex items-center justify-between">
 									<Select.Value />
-									<ChevronDown size={16} className="text-text-secondary" />
+									<ChevronDown size={16} className="text-slate-400" />
 								</Select.Trigger>
 								<Select.Popover className="w-[var(--trigger-width)]">
 									<ListBox>
@@ -122,11 +122,11 @@ export default function AddMarkdown({
 							</Select>
 						</label>
 						<label className="space-y-1">
-							<span className="text-xs text-text-secondary">Parent Doc (optional)</span>
+							<span className="text-xs text-slate-400">Parent Doc (optional)</span>
 							<Select selectedKey={parentDocId || 'none'} onChange={(key) => { if (key != null) setParentDocId(String(key) === 'none' ? '' : String(key)); }} className="w-full">
 								<Select.Trigger className="w-full px-3 flex items-center justify-between">
 									<Select.Value />
-									<ChevronDown size={16} className="text-text-secondary" />
+									<ChevronDown size={16} className="text-slate-400" />
 								</Select.Trigger>
 								<Select.Popover className="w-[var(--trigger-width)]">
 									<ListBox>
@@ -142,7 +142,7 @@ export default function AddMarkdown({
 
 					<div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
 						<label className="space-y-1 block">
-							<span className="text-xs text-text-secondary">Content</span>
+							<span className="text-xs text-slate-400">Content</span>
 							<TextArea
 								value={content}
 								onChange={(e) => setContent(e.target.value)}
@@ -151,17 +151,17 @@ export default function AddMarkdown({
 						</label>
 
 						<div className="space-y-1">
-							<span className="text-xs text-text-secondary">Preview</span>
-							<div className="w-full min-h-[300px] max-h-[50vh] overflow-auto bg-background border border-border rounded-lg px-3 py-2 text-text">
+							<span className="text-xs text-slate-400">Preview</span>
+							<div className="w-full min-h-[300px] max-h-[50vh] overflow-auto bg-slate-800 border border-slate-700/50 rounded-lg px-3 py-2 text-slate-100">
 								<ReactMarkdown components={markdownComponents}>{content || '*No content*'}</ReactMarkdown>
 							</div>
 						</div>
 					</div>
 
-					<div className="pt-4 border-t border-border flex items-center justify-end gap-2">
+					<div className="pt-4 border-t border-slate-700/50 flex items-center justify-end gap-2">
 						<div className="flex items-center gap-2">
-							<Button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Cancel</Button>
-							<Button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white hover:bg-primary/90" variant="primary">Save Markdown</Button>
+							<Button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-slate-400 hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Cancel</Button>
+							<Button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-purple-600 text-white hover:bg-purple-600/90" variant="primary">Save Markdown</Button>
 						</div>
 					</div>
 				</form>

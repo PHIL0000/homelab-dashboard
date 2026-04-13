@@ -1,15 +1,17 @@
 import { useState, type FormEvent } from 'react';
-import { Button, Input } from '@heroui/react';
+import { Button, Input, Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Login() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await fetch('http://localhost:3001/api/auth/login', {
         method: 'POST',
@@ -25,52 +27,77 @@ export default function Login() {
       }
     } catch (e) {
       setError('Login failed. Please check connection.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-md p-8 bg-content border border-border rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold mb-6 text-text text-center">Login</h1>
-        <p className="text-text-secondary text-center mb-8">Access your homelab dashboard.</p>
-        
-        {error && <div className="bg-red-500/10 text-red-500 p-3 rounded-lg mb-6 text-sm">{error}</div>}
-        
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-text mb-1">Username or Email</label>
-            <Input
-              type="text"
-              required
-              placeholder="Username or Email"
-              variant="secondary"
-              fullWidth
-              className="w-full"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-            />
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 p-4">
+      <div className="w-full max-w-md space-y-6">
+        {/* Header */}
+        <div className="space-y-4 text-center">
+          <div className="flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-pink-600 shadow-2xl shadow-purple-500/50">
+              <span className="text-3xl font-bold text-white">⚡</span>
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text mb-1">Password</label>
-            <Input
-              type="password"
-              required
-              placeholder="Password"
-              variant="secondary"
-              fullWidth
-              className="w-full"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <h1 className="text-4xl font-bold text-white">Homelab</h1>
+            <p className="mt-2 text-slate-400">Secure Dashboard Access</p>
           </div>
-          <Button
-            type="submit"
-            className="w-full bg-primary text-white font-medium py-2 rounded-lg mt-4 hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all"
-              variant="primary"
-          >
-            Sign In
-          </Button>
-        </form>
+        </div>
+
+        {/* Card */}
+        <Card className="border border-purple-500/20 bg-slate-900/50 backdrop-blur-md shadow-2xl p-8">
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 rounded-lg border border-red-500/50 bg-red-500/10 p-4">
+              <p className="text-sm font-medium text-red-400">⚠️ {error}</p>
+            </div>
+          )}
+          
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Username or Email</label>
+              <Input
+                type="text"
+                placeholder="you@example.com"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+              <Input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+
+            <Button
+              fullWidth
+              size="lg"
+              type="submit"
+              isDisabled={loading}
+              className="mt-8 bg-gradient-to-r from-purple-600 to-pink-600 font-semibold text-white text-base shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 transition-all"
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+
+          <div className="mt-6 border-t border-slate-700/50 pt-6 text-center text-xs text-slate-500">
+            🔐 Protected by your homelab security
+          </div>
+        </Card>
       </div>
     </div>
   );

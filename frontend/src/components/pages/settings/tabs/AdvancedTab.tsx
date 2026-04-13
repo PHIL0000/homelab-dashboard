@@ -55,8 +55,8 @@ export default function AdvancedTab() {
 
   return (
     <div className="grid grid-cols-1 gap-6 max-w-3xl">
-      <div className="p-6 rounded-lg border border-border bg-content">
-        <h2 className="text-xl font-semibold mb-4 text-text">{t('settings.integration')}</h2>
+      <div className="p-6 rounded-lg border border-slate-700/50 bg-slate-900/50">
+        <h2 className="text-xl font-semibold mb-4 text-slate-100">{t('settings.integration')}</h2>
         
         {message && (
           <div className={`p-3 rounded-lg mb-4 ${message.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
@@ -68,8 +68,8 @@ export default function AdvancedTab() {
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h3 className="text-lg font-medium text-text">{t('settings.haDomain')}</h3>
-              <p className="text-sm text-text-secondary">{t('settings.haDomain.desc')}</p>
+              <h3 className="text-lg font-medium text-slate-100">{t('settings.haDomain')}</h3>
+              <p className="text-sm text-slate-400">{t('settings.haDomain.desc')}</p>
             </div>
           </div>
           <div className="flex gap-2 w-full max-w-md">
@@ -83,7 +83,7 @@ export default function AdvancedTab() {
             <Button
               onClick={saveHaDomain}
               isDisabled={isSaving}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all disabled:opacity-50"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all disabled:opacity-50"
                 variant="primary"
             >
               {isSaving ? 'Saving...' : t('settings.save')}
@@ -92,10 +92,10 @@ export default function AdvancedTab() {
         </div>
       </div>
 
-      <div className="p-6 rounded-lg border border-border bg-content">
-        <h2 className="text-xl font-semibold mb-4 text-text">{t('settings.advanced')}</h2>
+      <div className="p-6 rounded-lg border border-slate-700/50 bg-slate-900/50">
+        <h2 className="text-xl font-semibold mb-4 text-slate-100">{t('settings.advanced')}</h2>
         <div className="space-y-4">
-          <p className="text-text-secondary text-sm italic">{t('settings.empty')}</p>
+          <p className="text-slate-400 text-sm italic">{t('settings.empty')}</p>
         </div>
       </div>
     </div>

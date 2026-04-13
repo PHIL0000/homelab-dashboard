@@ -60,20 +60,20 @@ export default function EditStorage({ isOpen, storage, hardwareOptions, onClose,
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-			<div className="w-full max-w-xl rounded-xl border border-border bg-content shadow-2xl">
-				<div className="px-5 py-4 border-b border-border bg-background flex items-center justify-between">
-					<h3 className="text-lg font-semibold text-text">Edit Storage</h3>
-					<Button type="button" onClick={onClose} className="text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost" isIconOnly aria-label="Close">✕</Button>
+			<div className="w-full max-w-xl rounded-xl border border-slate-700/50 bg-slate-900/50 shadow-2xl">
+				<div className="px-5 py-4 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between">
+					<h3 className="text-lg font-semibold text-slate-100">Edit Storage</h3>
+					<Button type="button" onClick={onClose} className="text-slate-400 hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost" isIconOnly aria-label="Close">✕</Button>
 				</div>
 
 				<form onSubmit={handleSubmit} className="p-5 space-y-4">
 					{!!hardwareOptions?.length && (
 						<label className="space-y-1 block">
-							<span className="text-xs text-text-secondary">Hardware</span>
+							<span className="text-xs text-slate-400">Hardware</span>
 							<Select selectedKey={hardwareAssetId || 'none'} onChange={(key) => { if (key != null) setHardwareAssetId(String(key) === 'none' ? '' : String(key)); }} className="w-full">
 								<Select.Trigger className="w-full px-3 flex items-center justify-between">
 									<Select.Value />
-									<ChevronDown size={16} className="text-text-secondary" />
+									<ChevronDown size={16} className="text-slate-400" />
 								</Select.Trigger>
 								<Select.Popover className="w-[var(--trigger-width)]">
 									<ListBox>
@@ -85,14 +85,14 @@ export default function EditStorage({ isOpen, storage, hardwareOptions, onClose,
 						</label>
 					)}
 
-					<label className="space-y-1 block"><span className="text-xs text-text-secondary">Name *</span><Input value={name} onChange={(e) => setName(e.target.value)} required className="w-full" /></label>
+					<label className="space-y-1 block"><span className="text-xs text-slate-400">Name *</span><Input value={name} onChange={(e) => setName(e.target.value)} required className="w-full" /></label>
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 												<label className="space-y-1">
-							<span className="text-xs text-text-secondary">Type</span>
+							<span className="text-xs text-slate-400">Type</span>
 							<Select selectedKey={type} onChange={(key) => { if (key != null) setType(String(key)); }} className="w-full">
 								<Select.Trigger className="w-full px-3 flex items-center justify-between">
 									<Select.Value />
-									<ChevronDown size={16} className="text-text-secondary" />
+									<ChevronDown size={16} className="text-slate-400" />
 								</Select.Trigger>
 								<Select.Popover className="w-[var(--trigger-width)]">
 									<ListBox>
@@ -106,18 +106,18 @@ export default function EditStorage({ isOpen, storage, hardwareOptions, onClose,
 								</Select.Popover>
 							</Select>
 						</label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">Interface</span><Input value={interfaceType} onChange={(e) => setInterfaceType(e.target.value)} className="w-full" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">Make</span><Input value={make} onChange={(e) => setMake(e.target.value)} className="w-full" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">Model</span><Input value={model} onChange={(e) => setModel(e.target.value)} className="w-full" /></label>
-						<label className="space-y-1"><span className="text-xs text-text-secondary">Serial Number</span><Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-slate-400">Interface</span><Input value={interfaceType} onChange={(e) => setInterfaceType(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-slate-400">Make</span><Input value={make} onChange={(e) => setMake(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-slate-400">Model</span><Input value={model} onChange={(e) => setModel(e.target.value)} className="w-full" /></label>
+						<label className="space-y-1"><span className="text-xs text-slate-400">Serial Number</span><Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} className="w-full" /></label>
 						<div className="grid grid-cols-2 gap-2">
-							<label className="space-y-1"><span className="text-xs text-text-secondary">Usable Space</span><Input type="number" min={0} step="0.01" value={usableSpace === '' ? '' : String(usableSpace)} onChange={(e) => setUsableSpace(e.target.value === '' ? '' : Number(e.target.value))} className="w-full" /></label>
+							<label className="space-y-1"><span className="text-xs text-slate-400">Usable Space</span><Input type="number" min={0} step="0.01" value={usableSpace === '' ? '' : String(usableSpace)} onChange={(e) => setUsableSpace(e.target.value === '' ? '' : Number(e.target.value))} className="w-full" /></label>
 														<label className="space-y-1">
-								<span className="text-xs text-text-secondary">Unit</span>
+								<span className="text-xs text-slate-400">Unit</span>
 								<Select selectedKey={spaceUnit} onChange={(key) => { if (key != null && (String(key) === 'GB' || String(key) === 'TB')) setSpaceUnit(String(key) as 'GB' | 'TB'); }} className="w-full">
 									<Select.Trigger className="w-full px-3 flex items-center justify-between">
 										<Select.Value />
-										<ChevronDown size={16} className="text-text-secondary" />
+										<ChevronDown size={16} className="text-slate-400" />
 									</Select.Trigger>
 									<Select.Popover className="w-[var(--trigger-width)]">
 										<ListBox>
@@ -130,9 +130,9 @@ export default function EditStorage({ isOpen, storage, hardwareOptions, onClose,
 						</div>
 					</div>
 
-					<div className="pt-4 border-t border-border flex items-center justify-between gap-2">
+					<div className="pt-4 border-t border-slate-700/50 flex items-center justify-between gap-2">
 						<div>{onDelete && <Button type="button" onClick={onDelete} className="rounded-lg px-3 py-1.5 text-sm" variant="danger">Delete</Button>}</div>
-						<div className="flex items-center gap-2"><Button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Cancel</Button><Button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white hover:bg-primary/90" variant="primary">Save Changes</Button></div>
+						<div className="flex items-center gap-2"><Button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-slate-400 hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Cancel</Button><Button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-purple-600 text-white hover:bg-purple-600/90" variant="primary">Save Changes</Button></div>
 					</div>
 				</form>
 			</div>

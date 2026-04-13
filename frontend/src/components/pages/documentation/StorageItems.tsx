@@ -122,38 +122,38 @@ export default function StorageItems() {
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
           <h2 className="page-title">Storage</h2>
-          <Button onClick={handleAddStorage} className="text-sm px-3 py-2 rounded-lg bg-primary text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all" variant="primary">+ Add storage</Button>
+          <Button onClick={handleAddStorage} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all" variant="primary">+ Add storage</Button>
         </div>
         <div className="page-content-scroll">
-  <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
+  <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-background border-b border-border">
-              <th className="px-4 py-3 text-sm font-medium text-text-secondary">Name</th>
-              <th className="px-4 py-3 text-sm font-medium text-text-secondary">Type</th>
-              <th className="px-4 py-3 text-sm font-medium text-text-secondary">Make / Model</th>
-              <th className="px-4 py-3 text-sm font-medium text-text-secondary">Serial</th>
-              <th className="px-4 py-3 text-sm font-medium text-text-secondary">Size</th>
-              <th className="px-4 py-3 text-sm font-medium text-text-secondary">Hardware Node</th>
-              <th className="px-4 py-3 text-sm font-medium text-text-secondary">Service</th>
-              <th className="px-4 py-3 text-sm font-medium text-text-secondary text-right">Actions</th>
+            <tr className="bg-slate-800 border-b border-slate-700/50">
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">Name</th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">Type</th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">Make / Model</th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">Serial</th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">Size</th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">Hardware Node</th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">Service</th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {storageItems.length === 0 && (
-              <tr><td colSpan={8} className="p-4 text-center text-text-secondary">No storage items found.</td></tr>
+              <tr><td colSpan={8} className="p-4 text-center text-slate-400">No storage items found.</td></tr>
             )}
             {storageItems.map(item => (
-              <tr key={item.id} className="hover:bg-background/50 transition-colors">
-                <td className="px-4 py-3 font-medium text-text">{item.name}</td>
-                <td className="px-4 py-3 text-text-secondary">{item.storageType}</td>
-                <td className="px-4 py-3 text-text-secondary">{[item.make, item.model].filter(Boolean).join(' ') || '-'}</td>
-                <td className="px-4 py-3 text-text-secondary">{item.serialNumber || '-'}</td>
-                <td className="px-4 py-3 text-text-secondary">{displaySpace(item.usableSpaceGB)}</td>
-                <td className="px-4 py-3 text-text-secondary">{item.hardwareAsset?.name || 'Unassigned'}</td>
-                <td className="px-4 py-3 text-text-secondary">{item.softwareUnit?.name || '-'}</td>
+              <tr key={item.id} className="hover:bg-slate-800/50 transition-colors">
+                <td className="px-4 py-3 font-medium text-slate-100">{item.name}</td>
+                <td className="px-4 py-3 text-slate-400">{item.storageType}</td>
+                <td className="px-4 py-3 text-slate-400">{[item.make, item.model].filter(Boolean).join(' ') || '-'}</td>
+                <td className="px-4 py-3 text-slate-400">{item.serialNumber || '-'}</td>
+                <td className="px-4 py-3 text-slate-400">{displaySpace(item.usableSpaceGB)}</td>
+                <td className="px-4 py-3 text-slate-400">{item.hardwareAsset?.name || 'Unassigned'}</td>
+                <td className="px-4 py-3 text-slate-400">{item.softwareUnit?.name || '-'}</td>
                 <td className="px-4 py-3 text-right">
-                  <Button type="button" onClick={() => handleEditStorage(item)} className="text-xs text-primary hover:text-primary/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
+                  <Button type="button" onClick={() => handleEditStorage(item)} className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
                 </td>
               </tr>
             ))}

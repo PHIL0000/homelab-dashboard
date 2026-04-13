@@ -142,35 +142,35 @@ export default function Hardware() {
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
           <h2 className="page-title">{t('nav.docs.hardware')}</h2>
-          <Button onClick={handleAddHardware} className="text-sm px-3 py-2 rounded-lg bg-primary text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all" variant="primary">+ Add hardware</Button>
+          <Button onClick={handleAddHardware} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all" variant="primary">+ Add hardware</Button>
         </div>
 
         <div className="space-y-6 flex-1 min-h-0 overflow-y-auto pr-1">
         {hardware.length === 0 && (
-          <Card className="rounded-xl p-4 bg-content border border-border text-text-secondary">
+          <Card className="rounded-xl p-4 bg-slate-900/50 border border-slate-700/50 text-slate-400">
             No hardware entries available.
           </Card>
         )}
 
         {hardware.map(hw => (
-          <Card key={hw.id} className="rounded-xl p-4 bg-content border border-border flex flex-col gap-2">
+          <Card key={hw.id} className="rounded-xl p-4 bg-slate-900/50 border border-slate-700/50 flex flex-col gap-2">
             <div className="flex items-start justify-between gap-3">
-              <h3 className="text-xl font-bold text-primary">{hw.name} <span className="text-sm text-text-secondary">({hw.type})</span></h3>
-              <Button type="button" onClick={() => handleEditHardware(hw)} className="text-xs text-primary hover:text-primary/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
+              <h3 className="text-xl font-bold text-purple-400">{hw.name} <span className="text-sm text-slate-400">({hw.type})</span></h3>
+              <Button type="button" onClick={() => handleEditHardware(hw)} className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
             </div>
-            <p className="text-sm text-text-secondary">{hw.ip || '-'} • {hw.os || '-'}</p>
+            <p className="text-sm text-slate-400">{hw.ip || '-'} • {hw.os || '-'}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-              <div className="p-3 border border-border rounded-lg bg-background">
-                <p className="text-xs text-text-secondary">RAM</p>
-                <p className="font-semibold text-text">{hw.ram ? `${hw.ram} GB` : '-'}</p>
+              <div className="p-3 border border-slate-700/50 rounded-lg bg-slate-800">
+                <p className="text-xs text-slate-400">RAM</p>
+                <p className="font-semibold text-slate-100">{hw.ram ? `${hw.ram} GB` : '-'}</p>
               </div>
-              <div className="p-3 border border-border rounded-lg bg-background">
-                <p className="text-xs text-text-secondary">Services (deployed)</p>
-                <p className="font-semibold text-text">{deploymentCountByHardware.get(hw.id) || 0}</p>
+              <div className="p-3 border border-slate-700/50 rounded-lg bg-slate-800">
+                <p className="text-xs text-slate-400">Services (deployed)</p>
+                <p className="font-semibold text-slate-100">{deploymentCountByHardware.get(hw.id) || 0}</p>
               </div>
-              <div className="p-3 border border-border rounded-lg bg-background">
-                <p className="text-xs text-text-secondary">Storage Items</p>
-                <p className="font-semibold text-text">{storageCountByHardware.get(hw.id) || 0}</p>
+              <div className="p-3 border border-slate-700/50 rounded-lg bg-slate-800">
+                <p className="text-xs text-slate-400">Storage Items</p>
+                <p className="font-semibold text-slate-100">{storageCountByHardware.get(hw.id) || 0}</p>
               </div>
             </div>
           </Card>

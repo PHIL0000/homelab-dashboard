@@ -203,33 +203,33 @@ export default function Services() {
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
           <h2 className="page-title">Software/Services</h2>
-          <Button onClick={handleAddService} className="text-sm px-3 py-2 rounded-lg bg-primary text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all" variant="primary">+ Add service</Button>
+          <Button onClick={handleAddService} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all" variant="primary">+ Add service</Button>
         </div>
         <div className="page-content-scroll">
-          <Card className="rounded-xl border border-border bg-content p-0 overflow-hidden">
+          <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-background border-b border-border">
-                  <th className="px-4 py-3 text-sm font-medium text-text-secondary">Name</th>
-                  <th className="px-4 py-3 text-sm font-medium text-text-secondary">Type</th>
-                  <th className="px-4 py-3 text-sm font-medium text-text-secondary">Port</th>
-                  <th className="px-4 py-3 text-sm font-medium text-text-secondary">URL</th>
-                  <th className="px-4 py-3 text-sm font-medium text-text-secondary">Deployments</th>
-                  <th className="px-4 py-3 text-sm font-medium text-text-secondary text-right">Actions</th>
+                <tr className="bg-slate-800 border-b border-slate-700/50">
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400">Name</th>
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400">Type</th>
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400">Port</th>
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400">URL</th>
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400">Deployments</th>
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {services.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-text-secondary">No services available.</td>
+                    <td colSpan={6} className="px-4 py-6 text-center text-slate-400">No services available.</td>
                   </tr>
                 )}
                 {services.map(sw => (
-                  <tr key={sw.id} className="hover:bg-background/50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-text">{sw.name}</td>
-                    <td className="px-4 py-3 text-text-secondary text-sm">{sw.type}</td>
-                    <td className="px-4 py-3 text-text-secondary font-mono text-sm">{sw.port || '-'}</td>
-                    <td className="px-4 py-3 text-primary text-sm">
+                  <tr key={sw.id} className="hover:bg-slate-800/50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-slate-100">{sw.name}</td>
+                    <td className="px-4 py-3 text-slate-400 text-sm">{sw.type}</td>
+                    <td className="px-4 py-3 text-slate-400 font-mono text-sm">{sw.port || '-'}</td>
+                    <td className="px-4 py-3 text-purple-400 text-sm">
                       {sw.url
                         ? (
                           <a
@@ -243,9 +243,9 @@ export default function Services() {
                         )
                         : '-'}
                     </td>
-                    <td className="px-4 py-3 text-text-secondary text-sm">{deploymentCountByService.get(String(sw.id)) || 0}</td>
+                    <td className="px-4 py-3 text-slate-400 text-sm">{deploymentCountByService.get(String(sw.id)) || 0}</td>
                     <td className="px-4 py-3 text-right">
-                      <Button type="button" onClick={() => handleEditService(sw)} className="text-xs text-primary hover:text-primary/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
+                      <Button type="button" onClick={() => handleEditService(sw)} className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
                     </td>
                   </tr>
                 ))}

@@ -16,14 +16,14 @@ const markdownComponents = {
   h1: ({ children }: any) => <h1 className="text-lg font-bold text-text mt-3 mb-2">{children}</h1>,
   h2: ({ children }: any) => <h2 className="text-base font-bold text-text mt-3 mb-2">{children}</h2>,
   h3: ({ children }: any) => <h3 className="text-sm font-semibold text-text mt-2 mb-1">{children}</h3>,
-  p: ({ children }: any) => <p className="text-sm text-text-secondary leading-relaxed mb-2">{children}</p>,
-  ul: ({ children }: any) => <ul className="list-disc list-inside pl-2 space-y-1 text-sm text-text-secondary">{children}</ul>,
-  ol: ({ children }: any) => <ol className="list-decimal list-inside pl-2 space-y-1 text-sm text-text-secondary">{children}</ol>,
+  p: ({ children }: any) => <p className="text-sm text-slate-400 leading-relaxed mb-2">{children}</p>,
+  ul: ({ children }: any) => <ul className="list-disc list-inside pl-2 space-y-1 text-sm text-slate-400">{children}</ul>,
+  ol: ({ children }: any) => <ol className="list-decimal list-inside pl-2 space-y-1 text-sm text-slate-400">{children}</ol>,
   li: ({ children }: any) => <li>{children}</li>,
-  strong: ({ children }: any) => <strong className="font-semibold text-text">{children}</strong>,
-  em: ({ children }: any) => <em className="italic text-text">{children}</em>,
-  code: ({ children }: any) => <code className="px-1.5 py-0.5 rounded bg-background border border-border text-xs text-primary">{children}</code>,
-  blockquote: ({ children }: any) => <blockquote className="border-l-2 border-primary pl-3 text-sm text-text-secondary italic my-2">{children}</blockquote>
+  strong: ({ children }: any) => <strong className="font-semibold text-slate-100">{children}</strong>,
+  em: ({ children }: any) => <em className="italic text-slate-100">{children}</em>,
+  code: ({ children }: any) => <code className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700/50 text-xs text-purple-400">{children}</code>,
+  blockquote: ({ children }: any) => <blockquote className="border-l-2 border-primary pl-3 text-sm text-slate-400 italic my-2">{children}</blockquote>
 };
 
 const ensureMarkdownFilename = (value: string) => {

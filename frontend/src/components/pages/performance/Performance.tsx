@@ -13,12 +13,12 @@ export default function Performance() {
       <div className="page-content-scroll">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6">
-          <h2 className="text-xl font-semibold text-text">CPU</h2>
-          <p className="text-text-secondary mt-2">Performance content will appear here</p>
+          <h2 className="text-xl font-semibold text-slate-100">CPU</h2>
+          <p className="text-slate-400 mt-2">Performance content will appear here</p>
         </Card>
         <Card className="p-6">
-          <h2 className="text-xl font-semibold text-text">Memory</h2>
-          <p className="text-text-secondary mt-2">Performance content will appear here</p>
+          <h2 className="text-xl font-semibold text-slate-100">Memory</h2>
+          <p className="text-slate-400 mt-2">Performance content will appear here</p>
         </Card>
       </div>
       </div>

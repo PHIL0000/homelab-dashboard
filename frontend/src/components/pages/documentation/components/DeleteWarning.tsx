@@ -40,12 +40,12 @@ export default function DeleteWarning({
 
 	return (
 		<div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-			<div className="w-full max-w-md rounded-xl border border-border bg-content p-5 shadow-2xl">
-				<h3 className="text-lg font-semibold text-text">{title}</h3>
-				{description && <p className="mt-1 text-sm text-text-secondary">{description}</p>}
+			<div className="w-full max-w-md rounded-xl border border-slate-700/50 bg-slate-900/50 p-5 shadow-2xl">
+				<h3 className="text-lg font-semibold text-slate-100">{title}</h3>
+				{description && <p className="mt-1 text-sm text-slate-400">{description}</p>}
 
 				{impacts.length > 0 && (
-					<ul className="mt-4 space-y-1.5 text-sm text-text-secondary">
+					<ul className="mt-4 space-y-1.5 text-sm text-slate-400">
 						{impacts.map((impact) => (
 							<li key={impact.label}>• {impact.count} {impact.label}</li>
 						))}
@@ -54,7 +54,7 @@ export default function DeleteWarning({
 
 				{previewSections.map((section) => (
 					section.items.length > 0 ? (
-						<p key={section.label} className="mt-3 text-xs text-text-secondary/90">
+						<p key={section.label} className="mt-3 text-xs text-slate-400/90">
 							{section.label}: {section.items.join(', ')}{section.hasMore ? ' …' : ''}
 						</p>
 					) : null
@@ -62,11 +62,11 @@ export default function DeleteWarning({
 
 				{warningText && <p className="mt-2 text-xs text-amber-300">{warningText}</p>}
 
-				<div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
+				<div className="mt-5 flex items-center justify-end gap-2 border-t border-slate-700/50 pt-4">
 					<Button
 						type="button"
 						onClick={onCancel}
-						className="px-3 py-1.5 text-sm text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
+						className="px-3 py-1.5 text-sm text-slate-400 hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
 						variant="ghost"
 					>
 						{cancelLabel}

@@ -71,16 +71,16 @@ export default function Settings() {
   };
 
   const tabButtonClass = (tabId: SettingsTabId) =>
-    `w-full justify-start px-4 py-2 rounded-lg transition-colors !border-0 !border-transparent !ring-0 !shadow-none ${
+    `w-full justify-start px-4 py-2 rounded-lg transition-all ${
       activeTab === tabId
-        ? "bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-primary font-medium"
-        : "text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-primary"
+        ? "bg-purple-600/30 text-purple-300 font-medium border-l-2 border-purple-500"
+        : "text-slate-400 hover:text-slate-100 hover:bg-slate-700/30"
     }`;
 
   return (
-    <div className="flex h-[80vh] overflow-hidden rounded-3xl bg-content/40">
-      <div className="w-64 border-r border-border bg-background/60 p-4 shrink-0 overflow-y-auto hidden md:block">
-        <h2 className="text-xl font-bold mb-6 text-text px-2">{t("settings.title")}</h2>
+    <div className="flex h-[80vh] overflow-hidden rounded-3xl bg-slate-900/30">
+      <div className="w-64 border-r border-slate-700/50 bg-slate-900/50 p-4 shrink-0 overflow-y-auto hidden md:block">
+        <h2 className="text-xl font-bold mb-6 text-slate-100 px-2">{t("settings.title")}</h2>
         <nav className="space-y-1">
           <Button onClick={() => setActiveTab("general")} className={tabButtonClass("general")} variant="ghost">
             {t("settings.general")}
@@ -106,9 +106,9 @@ export default function Settings() {
       </div>
 
       <div className="flex-1 p-4 md:p-6 overflow-y-auto">
-        <div className="mb-5 pb-3 border-b border-border">
-          <h1 className="text-2xl font-bold mb-1 text-primary">{tabTitles[activeTab]}</h1>
-          <p className="text-sm text-text-secondary">{tabDescriptions[activeTab]}</p>
+        <div className="mb-5 pb-3 border-b border-slate-700/50">
+          <h1 className="text-2xl font-bold mb-1 text-purple-400">{tabTitles[activeTab]}</h1>
+          <p className="text-sm text-slate-400">{tabDescriptions[activeTab]}</p>
         </div>
 
         <SettingsTabBoundary tab={activeTab}>

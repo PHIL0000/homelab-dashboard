@@ -19,8 +19,8 @@ export default function AppearanceTab() {
 
   return (
     <div className="grid grid-cols-1 gap-6 max-w-3xl">
-      <div className="p-6 rounded-lg border border-border bg-content">
-        <h2 className="text-xl font-semibold mb-4 text-text">{t('settings.theme')}</h2>
+      <div className="p-6 rounded-lg border border-slate-700/50 bg-slate-900/50">
+        <h2 className="text-xl font-semibold mb-4 text-slate-100">{t('settings.theme')}</h2>
         
         <Select
           className="w-full"
@@ -33,7 +33,7 @@ export default function AppearanceTab() {
         >
           <Select.Trigger className="w-full px-3 flex items-center justify-between">
             <Select.Value />
-            <ChevronDown size={16} className="text-text-secondary" />
+            <ChevronDown size={16} className="text-slate-400" />
           </Select.Trigger>
           <Select.Popover className="w-[var(--trigger-width)]">
             <ListBox>

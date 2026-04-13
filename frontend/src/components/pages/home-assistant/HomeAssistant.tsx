@@ -48,34 +48,34 @@ export default function HomeAssistant() {
             Home Assistant
           </h1>
           {isValidUrl && (
-            <ExternalLink className="text-text-secondary group-hover:text-primary transition-all opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 duration-200" size={24} />
+            <ExternalLink className="text-slate-400 group-hover:text-purple-400 transition-all opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 duration-200" size={24} />
           )}
         </a>
       </div>
 
       <div className="page-content-scroll">
-      <div className="h-full w-full rounded-xl overflow-hidden border border-border bg-content/40 relative min-h-0">
+      <div className="h-full w-full rounded-xl overflow-hidden border border-slate-700/50 bg-slate-900/50/40 relative min-h-0">
         
         {/* Loading bar / Background that adapts to theme */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background text-text-secondary z-0">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-800 text-slate-400 z-0">
           {(!isValidUrl || iframeError) ? (
             <div className="flex flex-col items-center gap-4 p-8 text-center max-w-md z-10 relative">
               <AlertTriangle size={48} className="text-red-500 opacity-80" />
-              <h3 className="text-xl font-semibold text-text">Connection Failed</h3>
-              <p className="text-sm text-text-secondary">
+              <h3 className="text-xl font-semibold text-slate-100">Connection Failed</h3>
+              <p className="text-sm text-slate-400">
                 {isValidUrl 
                   ? "The dashboard could not be loaded. This might be due to Home Assistant blocking embedding via X-Frame-Options, or an invalid URL configuration." 
                   : "No valid Home Assistant URL has been configured. Please specify a valid domain in the settings."}
               </p>
               
               <div className="mt-4 w-full flex flex-col gap-3">
-                <div className="p-4 border border-border bg-content rounded-lg text-sm font-mono break-all text-text">
+                <div className="p-4 border border-slate-700/50 bg-slate-900/50 rounded-lg text-sm font-mono break-all text-slate-100">
                   {HOME_ASSISTANT_URL || "No URL set"}
                 </div>
                 
                 <Link 
                   to="/settings" 
-                  className="flex items-center justify-center gap-2 px-4 py-2 mt-2 bg-primary text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-primary)_50%,transparent)] transition-all"
+                  className="flex items-center justify-center gap-2 px-4 py-2 mt-2 bg-purple-600 text-white rounded-lg hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all"
                 >
                   <Settings size={18} />
                   <span>Go to settings</span>
