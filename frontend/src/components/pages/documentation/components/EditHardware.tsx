@@ -78,11 +78,11 @@ export default function EditHardware({ isOpen, hardware, onClose, onSave, onDele
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+		<div className="doc-theme-form fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 			<div className="w-full max-w-3xl rounded-xl border border-slate-700/50 bg-slate-900/50 shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
 				<div className="px-5 py-4 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between">
 					<h3 className="text-lg font-semibold text-slate-100">Edit Hardware</h3>
-					<Button type="button" onClick={onClose} className="text-slate-400 hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost" isIconOnly aria-label="Close">âœ•</Button>
+					<Button type="button" onClick={onClose} className="text-slate-400 hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost" isIconOnly aria-label="Close">✕</Button>
 				</div>
 
 				<form onSubmit={handleSubmit} className="p-5 overflow-auto space-y-4">

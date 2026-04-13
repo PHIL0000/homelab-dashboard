@@ -75,7 +75,7 @@ export default function AddStorage({
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+		<div className="doc-theme-form fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 			<div className="w-full max-w-xl rounded-xl border border-slate-700/50 bg-slate-900/50 shadow-2xl">
 				<div className="px-5 py-4 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between">
 					<h3 className="text-lg font-semibold text-slate-100">Add Storage</h3>

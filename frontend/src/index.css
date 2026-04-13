@@ -214,3 +214,117 @@ html.light {
   border-radius: 1rem;
 }
 
+/* Documentation UI elements: theme-aware inputs, buttons, dropdowns */
+.documentation-area .theme-btn-primary,
+.documentation-area button[class*="bg-purple-600"],
+.doc-theme-form button[class*="bg-purple-600"] {
+  background-image: linear-gradient(
+    95deg,
+    color-mix(in srgb, var(--color-primary) 88%, #000),
+    color-mix(in srgb, var(--color-accent) 90%, #000)
+  ) !important;
+  color: #fff !important;
+  border-color: color-mix(in srgb, var(--color-primary) 38%, transparent) !important;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color-glow) 42%, transparent);
+}
+
+.documentation-area .theme-btn-primary:hover,
+.documentation-area button[class*="bg-purple-600"]:hover,
+.doc-theme-form button[class*="bg-purple-600"]:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--color-glow) 56%, transparent);
+}
+
+.documentation-area button[class*="text-purple"],
+.doc-theme-form button[class*="text-purple"] {
+  color: var(--color-primary) !important;
+}
+
+.doc-theme-form {
+  --doc-surface: color-mix(in srgb, var(--color-content) 92%, transparent);
+  --doc-surface-2: color-mix(in srgb, var(--color-sidebar) 88%, var(--color-content));
+  --doc-border: color-mix(in srgb, var(--color-border) 74%, transparent);
+}
+
+.doc-theme-form [class*="bg-slate-900/50"],
+.doc-theme-form [class*="bg-slate-900"] {
+  background-color: var(--doc-surface) !important;
+}
+
+.doc-theme-form [class*="bg-slate-800"] {
+  background-color: var(--doc-surface-2) !important;
+}
+
+.doc-theme-form [class*="border-slate-700"] {
+  border-color: var(--doc-border) !important;
+}
+
+.doc-theme-form [class*="text-slate-100"],
+.doc-theme-form [class*="text-text"] {
+  color: var(--color-text) !important;
+}
+
+.doc-theme-form [class*="text-slate-400"],
+.doc-theme-form [class*="text-text-secondary"] {
+  color: var(--color-textSecondary) !important;
+}
+
+.doc-theme-form input,
+.doc-theme-form textarea,
+.doc-theme-form select {
+  background-color: color-mix(in srgb, var(--color-sidebar) 76%, var(--color-content)) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--doc-border) !important;
+}
+
+/* Legacy HeroUI Select trigger in doc forms */
+.doc-theme-form [class*="px-3"][class*="justify-between"][class*="w-full"] {
+  background-color: color-mix(in srgb, var(--color-sidebar) 76%, var(--color-content)) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--doc-border) !important;
+  border-radius: 0.75rem !important;
+}
+
+.doc-theme-form [class*="px-3"][class*="justify-between"][class*="w-full"]:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 48%, transparent) !important;
+}
+
+.doc-theme-form [class*="px-3"][class*="justify-between"][class*="w-full"]:focus-within {
+  border-color: color-mix(in srgb, var(--color-primary) 66%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 24%, transparent) !important;
+}
+
+.doc-theme-form input:focus,
+.doc-theme-form textarea:focus,
+.doc-theme-form select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-primary) 66%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 24%, transparent) !important;
+}
+
+/* Dropdown popovers are portal-based -> style globally */
+[class*="w-[var(--trigger-width)]"],
+[class*="Select.Popover"],
+[role="listbox"] {
+  background-color: var(--doc-surface-2, color-mix(in srgb, var(--color-sidebar) 88%, var(--color-content))) !important;
+  border-color: var(--doc-border, color-mix(in srgb, var(--color-border) 74%, transparent)) !important;
+}
+
+[class*="w-[var(--trigger-width)]"] [class*="pl-2"],
+[role="listbox"] [class*="pl-2"] {
+  color: var(--color-text) !important;
+  border-radius: 0.5rem;
+}
+
+[class*="w-[var(--trigger-width)]"] [class*="pl-2"]:hover,
+[role="listbox"] [class*="pl-2"]:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 16%, transparent) !important;
+  color: var(--color-text) !important;
+}
+
+[class*="w-[var(--trigger-width)]"] [aria-selected="true"],
+[role="listbox"] [aria-selected="true"] {
+  background-color: color-mix(in srgb, var(--color-primary) 24%, transparent) !important;
+  color: var(--color-primary) !important;
+}
+
