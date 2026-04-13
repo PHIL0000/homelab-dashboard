@@ -107,7 +107,7 @@ export default function ProfileTab() {
           <Button
             onClick={handleSave}
             isDisabled={isSaving}
-            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50"
+            className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all disabled:opacity-50"
           >
             {isSaving ? 'Saving...' : t('account.saveChanges')}
           </Button>
@@ -117,7 +117,7 @@ export default function ProfileTab() {
       <Card className="p-6 bg-slate-900/50 border border-slate-700/50">
         <h2 className="text-xl font-semibold mb-2 text-slate-100">{t('account.profileImage')}</h2>
         <div className="flex items-center gap-4 mt-4">
-          <div className="w-16 h-16 rounded-full bg-purple-600 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-purple-500/50">
+          <div className="w-16 h-16 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-xl font-bold text-white shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)]">
             {username.substring(0, 1).toUpperCase()}
           </div>
           <Button className="px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/30 transition-all" variant="ghost">

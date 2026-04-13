@@ -21,7 +21,7 @@ export default function GeneralTab() {
             <input
               type="text"
               defaultValue="Homelab Dashboard"
-              className="w-full bg-slate-800 border border-slate-700/50 rounded-lg px-4 py-2 text-slate-100 focus:outline-none focus:border-purple-500"
+              className="w-full bg-slate-800 border border-slate-700/50 rounded-lg px-4 py-2 text-slate-100 focus:outline-none focus:border-[var(--color-primary)]"
             />
           </div>
           <div>
@@ -29,7 +29,7 @@ export default function GeneralTab() {
             <select
               value={language}
               onChange={handleLanguageChange}
-              className="w-full bg-slate-800 border border-slate-700/50 rounded-lg px-4 py-2 text-slate-100 focus:outline-none focus:border-purple-500"
+              className="w-full bg-slate-800 border border-slate-700/50 rounded-lg px-4 py-2 text-slate-100 focus:outline-none focus:border-[var(--color-primary)]"
             >
               <option value="en">English</option>
               <option value="de">Deutsch</option>
@@ -44,7 +44,7 @@ export default function GeneralTab() {
             <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.timezone')}</label>
             <select
               defaultValue="Europe/Berlin"
-              className="w-full bg-slate-800 border border-slate-700/50 rounded-lg px-4 py-2 text-slate-100 focus:outline-none focus:border-purple-500"
+              className="w-full bg-slate-800 border border-slate-700/50 rounded-lg px-4 py-2 text-slate-100 focus:outline-none focus:border-[var(--color-primary)]"
             >
               <option value="Europe/Berlin">Europe/Berlin</option>
               <option value="UTC">UTC</option>

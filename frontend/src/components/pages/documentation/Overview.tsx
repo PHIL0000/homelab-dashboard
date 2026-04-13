@@ -22,7 +22,7 @@ const markdownComponents = {
   li: ({ children }: any) => <li>{children}</li>,
   strong: ({ children }: any) => <strong className="font-semibold text-slate-100">{children}</strong>,
   em: ({ children }: any) => <em className="italic text-slate-100">{children}</em>,
-  code: ({ children }: any) => <code className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700/50 text-xs text-purple-400">{children}</code>,
+  code: ({ children }: any) => <code className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700/50 text-xs text-text">{children}</code>,
   blockquote: ({ children }: any) => <blockquote className="border-l-2 border-primary pl-3 text-sm text-slate-400 italic my-2">{children}</blockquote>
 };
 

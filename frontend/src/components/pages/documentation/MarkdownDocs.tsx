@@ -274,15 +274,17 @@ export default function MarkdownDocs() {
               <Button
                 key={doc.id}
                 onClick={() => setSelectedDocId(doc.id)}
-                className={`w-full text-left px-4 py-3 transition-all border-l-4 !ring-0 !shadow-none ${selectedDocId === doc.id ? 'bg-purple-600/20 border-primary shadow-md' : 'hover:bg-slate-800/60 border-transparent'}`}
+                className={`w-full text-left px-4 py-3 transition-all border-l-4 !ring-0 !shadow-none ${selectedDocId === doc.id
+                  ? 'bg-[color-mix(in_srgb,var(--color-primary)_24%,var(--color-content))] border-primary shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-primary)_46%,transparent)]'
+                  : 'hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] border-transparent'}`}
                 variant="ghost"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className={`font-medium truncate ${selectedDocId === doc.id ? 'text-purple-400' : 'text-text'}`}>{doc.title}</p>
+                    <p className={`font-medium truncate ${selectedDocId === doc.id ? 'text-text' : 'text-text'}`}>{doc.title}</p>
                     <div className="flex gap-2 mt-1 flex-wrap">
-                      {doc.hardwareAsset?.name && <span className="text-xs bg-purple-600/15 text-purple-400 px-2 py-0.5 rounded-full">HW: {doc.hardwareAsset.name}</span>}
-                      {doc.softwareUnit?.name && <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded-full">Service: {doc.softwareUnit.name}</span>}
+                      {doc.hardwareAsset?.name && <span className={`text-xs px-2 py-0.5 rounded-full ${selectedDocId === doc.id ? 'bg-[color-mix(in_srgb,var(--color-primary)_22%,transparent)] text-text' : 'bg-purple-600/15 text-purple-400'}`}>HW: {doc.hardwareAsset.name}</span>}
+                      {doc.softwareUnit?.name && <span className={`text-xs px-2 py-0.5 rounded-full ${selectedDocId === doc.id ? 'bg-[color-mix(in_srgb,var(--color-primary)_18%,transparent)] text-text' : 'bg-blue-500/15 text-blue-300'}`}>Service: {doc.softwareUnit.name}</span>}
                       {!doc.hardwareAssetId && !doc.softwareUnitId && <span className="text-xs bg-slate-800 border border-slate-700/50 text-slate-400 px-2 py-0.5 rounded-full">Unassigned</span>}
                     </div>
                   </div>
@@ -330,7 +332,9 @@ export default function MarkdownDocs() {
                         key={child.id}
                         type="button"
                         onClick={() => setSelectedDocId(child.id)}
-                        className="text-xs px-3 py-1.5 rounded-full border border-slate-700/50 bg-slate-800 hover:bg-purple-600/15 hover:text-purple-400 transition-colors !ring-0 !shadow-none"
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors !ring-0 !shadow-none ${selectedDocId === child.id
+                          ? 'border-primary bg-[color-mix(in_srgb,var(--color-primary)_24%,var(--color-content))] text-text'
+                          : 'border-slate-700/50 bg-slate-800 hover:bg-[color-mix(in_srgb,var(--color-primary)_14%,transparent)] hover:text-text'}`}
                         variant="ghost"
                       >
                         {child.title}

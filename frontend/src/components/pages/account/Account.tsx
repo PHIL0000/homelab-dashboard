@@ -32,21 +32,21 @@ export default function Account() {
         <nav className="space-y-1">
           <Button
             onClick={() => setActiveTab('profile')}
-            className={`w-full justify-start px-4 py-2 rounded-lg transition-all ${activeTab === 'profile' ? 'bg-purple-600/30 text-purple-300 font-medium border-l-2 border-purple-500' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'}`}
+            className={`w-full justify-start px-4 py-2 rounded-lg transition-all ${activeTab === 'profile' ? 'bg-[color-mix(in_srgb,var(--color-primary)_24%,transparent)] text-text font-medium border-l-2 border-primary' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'}`}
             variant="ghost"
           >
             {t('account.profile')}
           </Button>
           <Button
             onClick={() => setActiveTab('security')}
-            className={`w-full justify-start px-4 py-2 rounded-lg transition-all ${activeTab === 'security' ? 'bg-purple-600/30 text-purple-300 font-medium border-l-2 border-purple-500' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'}`}
+            className={`w-full justify-start px-4 py-2 rounded-lg transition-all ${activeTab === 'security' ? 'bg-[color-mix(in_srgb,var(--color-primary)_24%,transparent)] text-text font-medium border-l-2 border-primary' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'}`}
             variant="ghost"
           >
             {t('account.security')}
           </Button>
           <Button
             onClick={() => setActiveTab('connections')}
-            className={`w-full justify-start px-4 py-2 rounded-lg transition-all ${activeTab === 'connections' ? 'bg-purple-600/30 text-purple-300 font-medium border-l-2 border-purple-500' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'}`}
+            className={`w-full justify-start px-4 py-2 rounded-lg transition-all ${activeTab === 'connections' ? 'bg-[color-mix(in_srgb,var(--color-primary)_24%,transparent)] text-text font-medium border-l-2 border-primary' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'}`}
             variant="ghost"
           >
             {t('account.connections')}
@@ -63,7 +63,7 @@ export default function Account() {
 
       <div className="flex-1 p-4 md:p-6 overflow-y-auto">
         <div className="mb-5 pb-3 border-b border-slate-700/50">
-          <h1 className="text-2xl font-bold text-purple-400 mb-1">{tabTitles[activeTab]}</h1>
+          <h1 className="text-2xl font-bold text-text mb-1">{tabTitles[activeTab]}</h1>
           <p className="text-sm text-slate-400">{tabDescriptions[activeTab]}</p>
         </div>
 

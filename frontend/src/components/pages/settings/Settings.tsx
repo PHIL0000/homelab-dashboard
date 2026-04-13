@@ -73,7 +73,7 @@ export default function Settings() {
   const tabButtonClass = (tabId: SettingsTabId) =>
     `w-full justify-start px-4 py-2 rounded-lg transition-all ${
       activeTab === tabId
-        ? "bg-purple-600/30 text-purple-300 font-medium border-l-2 border-purple-500"
+        ? "bg-[color-mix(in_srgb,var(--color-primary)_24%,transparent)] text-text font-medium border-l-2 border-primary"
         : "text-slate-400 hover:text-slate-100 hover:bg-slate-700/30"
     }`;
 
@@ -107,7 +107,7 @@ export default function Settings() {
 
       <div className="flex-1 p-4 md:p-6 overflow-y-auto">
         <div className="mb-5 pb-3 border-b border-slate-700/50">
-          <h1 className="text-2xl font-bold mb-1 text-purple-400">{tabTitles[activeTab]}</h1>
+          <h1 className="text-2xl font-bold mb-1 text-text">{tabTitles[activeTab]}</h1>
           <p className="text-sm text-slate-400">{tabDescriptions[activeTab]}</p>
         </div>
 

@@ -175,7 +175,7 @@ export default function UsersTab() {
         </div>
         <Button
           onClick={() => { setShowAddForm(!showAddForm); setEditingUser(null); }}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all"
+          className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all"
           variant="primary"
         >
           {showAddForm ? 'Cancel' : 'Add User'}
@@ -233,7 +233,7 @@ export default function UsersTab() {
                 </Select>
               </div>
             </div>
-            <Button isDisabled={isAdding} type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all disabled:opacity-50 mt-4" variant="primary">
+            <Button isDisabled={isAdding} type="submit" className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all disabled:opacity-50 mt-4" variant="primary">
               {isAdding ? 'Creating...' : 'Create User'}
             </Button>
           </form>
@@ -278,7 +278,7 @@ export default function UsersTab() {
                 </div>
               </div>
             </div>
-            <Button isDisabled={isUpdating} type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all disabled:opacity-50 mt-4" variant="primary">
+            <Button isDisabled={isUpdating} type="submit" className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all disabled:opacity-50 mt-4" variant="primary">
               {isUpdating ? 'Saving...' : 'Save Changes'}
             </Button>
           </form>
@@ -305,7 +305,7 @@ export default function UsersTab() {
                   <tr key={u.id} className="hover:bg-slate-800/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-purple-600/20 text-purple-400 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-text flex items-center justify-center overflow-hidden flex-shrink-0">
                           {u.avatarUrl ? (
                             <img src={u.avatarUrl} alt={u.username} className="w-full h-full object-cover" />
                           ) : (
@@ -320,7 +320,7 @@ export default function UsersTab() {
                     </td>
                     <td className="px-6 py-4 text-slate-400">{u.email || '-'}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full ${u.role === 'ADMIN' ? 'bg-purple-600/20 text-purple-400' : 'bg-green-500/20 text-green-400'}`}>
+                      <span className={`px-2 py-1 text-xs rounded-full ${u.role === 'ADMIN' ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-text' : 'bg-green-500/20 text-green-400'}`}>
                         {u.role}
                       </span>
                     </td>
@@ -328,7 +328,7 @@ export default function UsersTab() {
                       <div className="flex justify-end gap-2">
                         <Button
                           onClick={() => startEditing(u)}
-                          className="text-purple-400 hover:text-white hover:bg-purple-600/20 px-3 py-1 rounded transition-colors text-sm !border-0 !border-transparent !ring-0 !shadow-none"
+                          className="text-text-secondary hover:text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] px-3 py-1 rounded transition-colors text-sm !border-0 !border-transparent !ring-0 !shadow-none"
                           variant="ghost"
                         >
                           Edit

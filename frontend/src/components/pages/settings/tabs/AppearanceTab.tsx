@@ -47,7 +47,7 @@ export default function AppearanceTab() {
             return (
               <Card
                 key={tIter}
-                className={`border transition-all ${isActive ? 'border-purple-500 ring-1 ring-purple-500/40' : 'border-slate-700/50'} p-3`}
+                className={`border transition-all ${isActive ? 'border-primary ring-1 ring-[color-mix(in_srgb,var(--color-primary)_42%,transparent)]' : 'border-slate-700/50'} p-3`}
               >
                 <button
                   type="button"
@@ -63,7 +63,7 @@ export default function AppearanceTab() {
                   />
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-sm font-medium text-slate-200">{themeLabels[tIter] ?? tIter}</span>
-                    {isActive && <span className="text-xs text-purple-300">Aktiv</span>}
+                    {isActive && <span className="text-xs text-text">Aktiv</span>}
                   </div>
                 </button>
               </Card>

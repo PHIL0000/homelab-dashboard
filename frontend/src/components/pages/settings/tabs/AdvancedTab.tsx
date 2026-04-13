@@ -83,7 +83,7 @@ export default function AdvancedTab() {
             <Button
               onClick={saveHaDomain}
               isDisabled={isSaving}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all disabled:opacity-50"
                 variant="primary"
             >
               {isSaving ? 'Saving...' : t('settings.save')}

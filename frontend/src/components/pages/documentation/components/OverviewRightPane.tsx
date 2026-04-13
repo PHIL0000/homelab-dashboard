@@ -40,7 +40,7 @@ export default function OverviewRightPane({
 
     return (
       <div key={doc.id} className={`${depth > 0 ? 'ml-5 border-l border-slate-700/50' : ''}`}>
-        <div className="px-4 py-2.5 flex items-start justify-between gap-3 hover:bg-slate-800/50 transition-colors">
+  <div className="px-4 py-2.5 flex items-start justify-between gap-3 hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] transition-colors">
           <Button
             type="button"
             onClick={() => onOpenDocPreview(doc)}
@@ -50,14 +50,14 @@ export default function OverviewRightPane({
             <p className="font-medium text-text truncate">{doc.title}</p>
             <div className="flex flex-wrap gap-2 mt-1">
               {doc.softwareUnit?.name && <span className="text-[11px] bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded-full">Service</span>}
-              {doc.hardwareAsset?.name && <span className="text-[11px] bg-purple-600/15 text-purple-400 px-2 py-0.5 rounded-full">Hardware</span>}
+              {doc.hardwareAsset?.name && <span className="text-[11px] bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-text px-2 py-0.5 rounded-full">Hardware</span>}
               {childCount > 0 && <span className="text-[11px] bg-slate-800 border border-slate-700/50 text-slate-400 px-2 py-0.5 rounded-full">{childCount} child</span>}
             </div>
           </Button>
           <Button
             type="button"
             onClick={() => onEditDoc(doc)}
-            className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none"
+            className="text-xs text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
             variant="ghost"
           >
             Edit
@@ -89,7 +89,7 @@ export default function OverviewRightPane({
                 <Button
                   type="button"
                   onClick={() => onEditHardware(selectedHardware)}
-                  className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none"
+                  className="text-xs text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
                   variant="ghost"
                 >
                   Edit
@@ -113,7 +113,7 @@ export default function OverviewRightPane({
             <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between gap-3">
                 <h4 className="font-semibold text-slate-100">Services on this hardware</h4>
-                <Button onClick={onAddDeployment} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all" variant="primary">+ Add service</Button>
+                <Button onClick={onAddDeployment} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add service</Button>
               </div>
               <div className="divide-y divide-border">
                 {selectedDeployments.length === 0 && <p className="p-4 text-sm text-slate-400">No services assigned.</p>}
@@ -126,7 +126,7 @@ export default function OverviewRightPane({
                     <Button
                       type="button"
                       onClick={() => onEditDeployment(dep)}
-                      className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none"
+                      className="text-xs text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
                       variant="ghost"
                     >
                       Edit
@@ -139,7 +139,7 @@ export default function OverviewRightPane({
             <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between gap-3">
                 <h4 className="font-semibold text-slate-100">Disks / Storage</h4>
-                <Button onClick={onAddStorage} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all" variant="primary">+ Add storage</Button>
+                <Button onClick={onAddStorage} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add storage</Button>
               </div>
               <div className="divide-y divide-border">
                 {selectedStorage.length === 0 && <p className="p-4 text-sm text-slate-400">No storage assigned.</p>}
@@ -157,7 +157,7 @@ export default function OverviewRightPane({
                     <Button
                       type="button"
                       onClick={() => onEditStorage(item)}
-                      className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none"
+                      className="text-xs text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
                       variant="ghost"
                     >
                       Edit
@@ -170,7 +170,7 @@ export default function OverviewRightPane({
             <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between gap-3">
                 <h4 className="font-semibold text-slate-100">Linked markdown documents (hardware + services)</h4>
-                <Button onClick={onAddDoc} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all" variant="primary">+ Add markdown</Button>
+                <Button onClick={onAddDoc} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add markdown</Button>
               </div>
               <div className="divide-y divide-border">
                 {visibleDocs.length === 0 && <p className="p-4 text-sm text-slate-400">No documents linked to this hardware or its services.</p>}
