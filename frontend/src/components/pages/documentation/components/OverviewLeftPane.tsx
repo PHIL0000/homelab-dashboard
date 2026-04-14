@@ -1,4 +1,5 @@
-import { Button, Card, Input } from '@heroui/react';
+import { Button, Card, Input, Select, ListBox } from '@heroui/react';
+import { ChevronDown } from 'lucide-react';
 
 type OverviewLeftPaneProps = {
   hardware: any[];
@@ -32,23 +33,33 @@ export default function OverviewLeftPane({
           <span className="text-sm font-semibold text-slate-400">Hardware Nodes</span>
           <Button onClick={onAddHardware} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add hardware</Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-2">
-          <Input
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by name, host, IP"
-            className="w-full"
-          />
-          <select
-            value={typeFilter}
-            onChange={(e) => onTypeFilterChange(e.target.value)}
-            className="w-full rounded-lg border border-slate-700/50 bg-slate-900 px-3 py-2 text-sm text-slate-200"
-          >
-            <option value="ALL">All types</option>
-            {hardwareTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
+        <div className="doc-theme-form grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-2">
+          <label className="space-y-1 block">
+            <span className="text-xs text-slate-400">Search</span>
+            <Input
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search by name, host, IP"
+              className="w-full"
+            />
+          </label>
+          <label className="space-y-1 block">
+            <span className="text-xs text-slate-400">Type</span>
+            <Select selectedKey={typeFilter} onChange={(key) => { if (key != null) onTypeFilterChange(String(key)); }} className="w-full">
+              <Select.Trigger className="w-full px-3 flex items-center justify-between">
+                <Select.Value />
+                <ChevronDown size={16} className="text-slate-400" />
+              </Select.Trigger>
+              <Select.Popover className="w-[var(--trigger-width)]">
+                <ListBox>
+                  <ListBox.Item id="ALL" className="pl-2">All types</ListBox.Item>
+                  {hardwareTypes.map((type) => (
+                    <ListBox.Item key={type} id={type} className="pl-2">{type}</ListBox.Item>
+                  ))}
+                </ListBox>
+              </Select.Popover>
+            </Select>
+          </label>
         </div>
       </div>
       <div className="divide-y divide-border overflow-y-auto min-h-0">

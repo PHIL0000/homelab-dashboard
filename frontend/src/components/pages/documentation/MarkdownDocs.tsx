@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Button, Card, Input } from '@heroui/react';
+import { Button, Card, Input, Select, ListBox } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 import ReactMarkdown from 'react-markdown';
+import { ChevronDown } from 'lucide-react';
 import AddMarkdown, { type MarkdownFormValues } from './components/AddMarkdown';
 import EditMarkdown from './components/EditMarkdown';
 
@@ -289,23 +290,43 @@ export default function MarkdownDocs() {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 page-content-scroll">
   <Card className="xl:col-span-4 rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden h-fit">
           <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 text-sm font-semibold text-slate-400">Top-Level Markdown Files</div>
-          <div className="p-3 border-b border-slate-700/50 bg-slate-900/70 space-y-2">
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search title, hardware, service"
-              className="w-full"
-            />
-            <select
-              value={relationFilter}
-              onChange={(e) => setRelationFilter(e.target.value as 'ALL' | 'HARDWARE' | 'SERVICE' | 'UNASSIGNED')}
-              className="w-full rounded-lg border border-slate-700/50 bg-slate-900 px-3 py-2 text-sm text-slate-200"
-            >
-              <option value="ALL">All relations</option>
-              <option value="HARDWARE">Hardware-linked</option>
-              <option value="SERVICE">Service-linked</option>
-              <option value="UNASSIGNED">Unassigned</option>
-            </select>
+          <div className="doc-theme-form p-3 border-b border-slate-700/50 bg-slate-900/70 space-y-2">
+            <label className="space-y-1 block">
+              <span className="text-xs text-slate-400">Search</span>
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search title, hardware, service"
+                className="w-full"
+              />
+            </label>
+            <label className="space-y-1 block">
+              <span className="text-xs text-slate-400">Relation</span>
+              <Select
+                selectedKey={relationFilter}
+                onChange={(key) => {
+                  if (key == null) return;
+                  const next = String(key);
+                  if (next === 'ALL' || next === 'HARDWARE' || next === 'SERVICE' || next === 'UNASSIGNED') {
+                    setRelationFilter(next);
+                  }
+                }}
+                className="w-full"
+              >
+                <Select.Trigger className="w-full px-3 flex items-center justify-between">
+                  <Select.Value />
+                  <ChevronDown size={16} className="text-slate-400" />
+                </Select.Trigger>
+                <Select.Popover className="w-[var(--trigger-width)]">
+                  <ListBox>
+                    <ListBox.Item id="ALL" className="pl-2">All relations</ListBox.Item>
+                    <ListBox.Item id="HARDWARE" className="pl-2">Hardware-linked</ListBox.Item>
+                    <ListBox.Item id="SERVICE" className="pl-2">Service-linked</ListBox.Item>
+                    <ListBox.Item id="UNASSIGNED" className="pl-2">Unassigned</ListBox.Item>
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+            </label>
           </div>
           <div className="divide-y divide-border">
             {filteredTopLevelDocs.length === 0 && <p className="p-4 text-slate-400">No top-level markdown files found.</p>}

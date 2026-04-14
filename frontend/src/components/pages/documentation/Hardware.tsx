@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect } from 'react';
-import { Button, Card, Input } from '@heroui/react';
+import { Button, Card, Input, Select, ListBox } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { ChevronDown } from 'lucide-react';
 import AddHardware, { type HardwareFormValues } from './components/AddHardware';
 import EditHardware from './components/EditHardware';
 
@@ -174,33 +175,51 @@ export default function Hardware() {
         </div>
 
         <div className="space-y-6 flex-1 min-h-0 overflow-y-auto pr-1">
-        <Card className="rounded-xl p-4 bg-slate-900/50 border border-slate-700/50">
+        <Card className="doc-theme-form rounded-xl p-4 bg-slate-900/50 border border-slate-700/50">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search name, host, IP, OS"
-            />
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full rounded-lg border border-slate-700/50 bg-slate-900 px-3 py-2 text-sm text-slate-200"
-            >
-              <option value="ALL">All types</option>
-              {hardwareTypes.map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full rounded-lg border border-slate-700/50 bg-slate-900 px-3 py-2 text-sm text-slate-200"
-            >
-              <option value="ALL">All status</option>
-              {hardwareStatuses.map((status) => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
+            <label className="space-y-1 block">
+              <span className="text-xs text-slate-400">Search</span>
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search name, host, IP, OS"
+                className="w-full"
+              />
+            </label>
+            <label className="space-y-1 block">
+              <span className="text-xs text-slate-400">Type</span>
+              <Select selectedKey={typeFilter} onChange={(key) => { if (key != null) setTypeFilter(String(key)); }} className="w-full">
+                <Select.Trigger className="w-full px-3 flex items-center justify-between">
+                  <Select.Value />
+                  <ChevronDown size={16} className="text-slate-400" />
+                </Select.Trigger>
+                <Select.Popover className="w-[var(--trigger-width)]">
+                  <ListBox>
+                    <ListBox.Item id="ALL" className="pl-2">All types</ListBox.Item>
+                    {hardwareTypes.map((type) => (
+                      <ListBox.Item key={type} id={type} className="pl-2">{type}</ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+            </label>
+            <label className="space-y-1 block">
+              <span className="text-xs text-slate-400">Status</span>
+              <Select selectedKey={statusFilter} onChange={(key) => { if (key != null) setStatusFilter(String(key)); }} className="w-full">
+                <Select.Trigger className="w-full px-3 flex items-center justify-between">
+                  <Select.Value />
+                  <ChevronDown size={16} className="text-slate-400" />
+                </Select.Trigger>
+                <Select.Popover className="w-[var(--trigger-width)]">
+                  <ListBox>
+                    <ListBox.Item id="ALL" className="pl-2">All status</ListBox.Item>
+                    {hardwareStatuses.map((status) => (
+                      <ListBox.Item key={status} id={status} className="pl-2">{status}</ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+            </label>
           </div>
         </Card>
 
