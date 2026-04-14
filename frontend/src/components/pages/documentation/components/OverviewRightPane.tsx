@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { Button, Card } from '@heroui/react';
 import { getStorageInterfaceLabel, getStorageTypeLabel } from './AddStorage';
 
@@ -36,8 +37,41 @@ export default function OverviewRightPane({
   onEditDoc,
   onOpenDocPreview
 }: OverviewRightPaneProps) {
+  const [serviceSortDirection, setServiceSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [storageSortDirection, setStorageSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [markdownSortDirection, setMarkdownSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const sortedDeployments = useMemo(() => {
+    return [...selectedDeployments].sort((a, b) => {
+      const nameA = String(a?.softwareUnit?.name || '').toLowerCase();
+      const nameB = String(b?.softwareUnit?.name || '').toLowerCase();
+      const result = nameA.localeCompare(nameB);
+      return serviceSortDirection === 'asc' ? result : -result;
+    });
+  }, [selectedDeployments, serviceSortDirection]);
+
+  const sortedStorage = useMemo(() => {
+    return [...selectedStorage].sort((a, b) => {
+      const nameA = String(a?.name || '').toLowerCase();
+      const nameB = String(b?.name || '').toLowerCase();
+      const result = nameA.localeCompare(nameB);
+      return storageSortDirection === 'asc' ? result : -result;
+    });
+  }, [selectedStorage, storageSortDirection]);
+
+  const sortedRootVisibleDocs = useMemo(() => {
+    return [...rootVisibleDocs].sort((a, b) => {
+      const titleA = String(a?.title || '').toLowerCase();
+      const titleB = String(b?.title || '').toLowerCase();
+      const result = titleA.localeCompare(titleB);
+      return markdownSortDirection === 'asc' ? result : -result;
+    });
+  }, [rootVisibleDocs, markdownSortDirection]);
+
   const renderDocNode = (doc: any, depth = 0): React.ReactNode => {
-    const childCount = getDocChildren(doc.id).length;
+    const children = getDocChildren(doc.id);
+    const childCount = children.length;
+    const orderedChildren = markdownSortDirection === 'asc' ? children : [...children].reverse();
 
     return (
       <div key={doc.id} className={`${depth > 0 ? 'ml-5 border-l border-slate-700/50' : ''}`}>
@@ -65,7 +99,7 @@ export default function OverviewRightPane({
           </Button>
         </div>
 
-        {getDocChildren(doc.id).map(child => renderDocNode(child, depth + 1))}
+        {orderedChildren.map(child => renderDocNode(child, depth + 1))}
       </div>
     );
   };
@@ -114,11 +148,21 @@ export default function OverviewRightPane({
             <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between gap-3">
                 <h4 className="font-semibold text-slate-100">Services on this hardware</h4>
-                <Button onClick={onAddDeployment} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add service</Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    onClick={() => setServiceSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+                    className="text-xs px-2.5 py-1.5"
+                    variant="ghost"
+                  >
+                    {serviceSortDirection === 'asc' ? 'A-Z' : 'Z-A'}
+                  </Button>
+                  <Button onClick={onAddDeployment} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add service</Button>
+                </div>
               </div>
               <div className="divide-y divide-border">
-                {selectedDeployments.length === 0 && <p className="p-4 text-sm text-slate-400">No services assigned.</p>}
-                {selectedDeployments.map(dep => (
+                {sortedDeployments.length === 0 && <p className="p-4 text-sm text-slate-400">No services assigned.</p>}
+                {sortedDeployments.map(dep => (
                   <div key={dep.id} className="px-4 py-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium text-slate-100">{dep.softwareUnit?.name || 'Unknown service'}</p>
@@ -140,11 +184,21 @@ export default function OverviewRightPane({
             <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between gap-3">
                 <h4 className="font-semibold text-slate-100">Disks / Storage</h4>
-                <Button onClick={onAddStorage} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add storage</Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    onClick={() => setStorageSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+                    className="text-xs px-2.5 py-1.5"
+                    variant="ghost"
+                  >
+                    {storageSortDirection === 'asc' ? 'A-Z' : 'Z-A'}
+                  </Button>
+                  <Button onClick={onAddStorage} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add storage</Button>
+                </div>
               </div>
               <div className="divide-y divide-border">
-                {selectedStorage.length === 0 && <p className="p-4 text-sm text-slate-400">No storage assigned.</p>}
-                {selectedStorage.map(item => (
+                {sortedStorage.length === 0 && <p className="p-4 text-sm text-slate-400">No storage assigned.</p>}
+                {sortedStorage.map(item => (
                   <div key={item.id} className="px-4 py-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium text-slate-100">{item.name}</p>
@@ -171,11 +225,21 @@ export default function OverviewRightPane({
             <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between gap-3">
                 <h4 className="font-semibold text-slate-100">Linked markdown documents (hardware + services)</h4>
-                <Button onClick={onAddDoc} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add markdown</Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    onClick={() => setMarkdownSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+                    className="text-xs px-2.5 py-1.5"
+                    variant="ghost"
+                  >
+                    {markdownSortDirection === 'asc' ? 'A-Z' : 'Z-A'}
+                  </Button>
+                  <Button onClick={onAddDoc} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add markdown</Button>
+                </div>
               </div>
               <div className="divide-y divide-border">
                 {visibleDocs.length === 0 && <p className="p-4 text-sm text-slate-400">No documents linked to this hardware or its services.</p>}
-                {rootVisibleDocs.map(doc => renderDocNode(doc))}
+                {sortedRootVisibleDocs.map(doc => renderDocNode(doc))}
               </div>
             </Card>
           </>
