@@ -7,6 +7,13 @@ import EditService from './components/EditService';
 const API_BASE = 'http://localhost:3001/api/infrastructure';
 const DEFAULT_SOFTWARE_TYPE = 'DOCKER_CONTAINER';
 
+type ServiceSortKey = 'name' | 'type' | 'port' | 'url' | 'deployments';
+
+function sortIndicator(active: boolean, direction: 'asc' | 'desc') {
+  if (!active) return '↕';
+  return direction === 'asc' ? '↑' : '↓';
+}
+
 export default function Services() {
   const { token } = useAuth();
   const [services, setServices] = useState<any[]>([]);
@@ -21,6 +28,8 @@ export default function Services() {
   const [newServicePort, setNewServicePort] = useState('');
   const [newServiceUrl, setNewServiceUrl] = useState('');
   const [newServiceImage, setNewServiceImage] = useState('');
+  const [sortKey, setSortKey] = useState<ServiceSortKey>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const authHeaders = useMemo(() => ({
     'Content-Type': 'application/json',
@@ -198,6 +207,40 @@ export default function Services() {
     return counts;
   }, [deployments]);
 
+  const sortedServices = useMemo(() => {
+    const sorted = [...services].sort((a, b) => {
+      const aDeploymentCount = deploymentCountByService.get(String(a.id)) || 0;
+      const bDeploymentCount = deploymentCountByService.get(String(b.id)) || 0;
+
+      let result = 0;
+      if (sortKey === 'port') {
+        const aPort = Number(a.port || 0);
+        const bPort = Number(b.port || 0);
+        result = aPort - bPort;
+      } else if (sortKey === 'deployments') {
+        result = aDeploymentCount - bDeploymentCount;
+      } else {
+        const aValue = String(a[sortKey] || '').toLowerCase();
+        const bValue = String(b[sortKey] || '').toLowerCase();
+        result = aValue.localeCompare(bValue);
+      }
+
+      return sortDirection === 'asc' ? result : -result;
+    });
+
+    return sorted;
+  }, [services, deploymentCountByService, sortKey, sortDirection]);
+
+  const handleSort = (key: ServiceSortKey) => {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortKey(key);
+    setSortDirection('asc');
+  };
+
   return (
     <div className="documentation-area page-shell relative">
       <div className="h-full flex flex-col min-h-0">
@@ -210,21 +253,41 @@ export default function Services() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-800 border-b border-slate-700/50">
-                  <th className="px-4 py-3 text-sm font-medium text-slate-400">Name</th>
-                  <th className="px-4 py-3 text-sm font-medium text-slate-400">Type</th>
-                  <th className="px-4 py-3 text-sm font-medium text-slate-400">Port</th>
-                  <th className="px-4 py-3 text-sm font-medium text-slate-400">URL</th>
-                  <th className="px-4 py-3 text-sm font-medium text-slate-400">Deployments</th>
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                    <button type="button" onClick={() => handleSort('name')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                      Name <span>{sortIndicator(sortKey === 'name', sortDirection)}</span>
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                    <button type="button" onClick={() => handleSort('type')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                      Type <span>{sortIndicator(sortKey === 'type', sortDirection)}</span>
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                    <button type="button" onClick={() => handleSort('port')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                      Port <span>{sortIndicator(sortKey === 'port', sortDirection)}</span>
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                    <button type="button" onClick={() => handleSort('url')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                      URL <span>{sortIndicator(sortKey === 'url', sortDirection)}</span>
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                    <button type="button" onClick={() => handleSort('deployments')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                      Deployments <span>{sortIndicator(sortKey === 'deployments', sortDirection)}</span>
+                    </button>
+                  </th>
                   <th className="px-4 py-3 text-sm font-medium text-slate-400 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {services.length === 0 && (
+                {sortedServices.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-4 py-6 text-center text-slate-400">No services available.</td>
                   </tr>
                 )}
-                {services.map(sw => (
+                {sortedServices.map(sw => (
                   <tr key={sw.id} className="hover:bg-slate-800/50 transition-colors">
                     <td className="px-4 py-3 font-medium text-slate-100">{sw.name}</td>
                     <td className="px-4 py-3 text-slate-400 text-sm">{sw.type}</td>

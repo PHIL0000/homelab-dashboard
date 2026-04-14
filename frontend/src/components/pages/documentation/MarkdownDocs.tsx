@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Button, Card } from '@heroui/react';
+import { Button, Card, Input } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import AddMarkdown, { type MarkdownFormValues } from './components/AddMarkdown';
@@ -43,6 +43,8 @@ export default function MarkdownDocs() {
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [docEditId, setDocEditId] = useState<string | null>(null);
   const [editingDoc, setEditingDoc] = useState<DocItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [relationFilter, setRelationFilter] = useState<'ALL' | 'HARDWARE' | 'SERVICE' | 'UNASSIGNED'>('ALL');
 
   const authHeaders = useMemo(() => ({
     'Content-Type': 'application/json',
@@ -58,6 +60,25 @@ export default function MarkdownDocs() {
       .filter((doc) => !doc.parentDocId)
       .sort((a, b) => a.title.localeCompare(b.title));
   }, [docs]);
+
+  const filteredTopLevelDocs = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return topLevelDocs.filter((doc) => {
+      const matchesSearch =
+        query.length === 0 ||
+        String(doc.title || '').toLowerCase().includes(query) ||
+        String(doc.hardwareAsset?.name || '').toLowerCase().includes(query) ||
+        String(doc.softwareUnit?.name || '').toLowerCase().includes(query);
+
+      const matchesRelation =
+        relationFilter === 'ALL' ||
+        (relationFilter === 'HARDWARE' && Boolean(doc.hardwareAssetId)) ||
+        (relationFilter === 'SERVICE' && Boolean(doc.softwareUnitId)) ||
+        (relationFilter === 'UNASSIGNED' && !doc.hardwareAssetId && !doc.softwareUnitId);
+
+      return matchesSearch && matchesRelation;
+    });
+  }, [topLevelDocs, searchTerm, relationFilter]);
 
   const selectedDoc = useMemo(() => docs.find((doc) => doc.id === selectedDocId) || null, [docs, selectedDocId]);
 
@@ -268,9 +289,27 @@ export default function MarkdownDocs() {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 page-content-scroll">
   <Card className="xl:col-span-4 rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden h-fit">
           <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 text-sm font-semibold text-slate-400">Top-Level Markdown Files</div>
+          <div className="p-3 border-b border-slate-700/50 bg-slate-900/70 space-y-2">
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search title, hardware, service"
+              className="w-full"
+            />
+            <select
+              value={relationFilter}
+              onChange={(e) => setRelationFilter(e.target.value as 'ALL' | 'HARDWARE' | 'SERVICE' | 'UNASSIGNED')}
+              className="w-full rounded-lg border border-slate-700/50 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+            >
+              <option value="ALL">All relations</option>
+              <option value="HARDWARE">Hardware-linked</option>
+              <option value="SERVICE">Service-linked</option>
+              <option value="UNASSIGNED">Unassigned</option>
+            </select>
+          </div>
           <div className="divide-y divide-border">
-            {topLevelDocs.length === 0 && <p className="p-4 text-slate-400">No top-level markdown files found.</p>}
-            {topLevelDocs.map((doc) => (
+            {filteredTopLevelDocs.length === 0 && <p className="p-4 text-slate-400">No top-level markdown files found.</p>}
+            {filteredTopLevelDocs.map((doc) => (
               <Button
                 key={doc.id}
                 onClick={() => setSelectedDocId(doc.id)}

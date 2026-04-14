@@ -7,6 +7,13 @@ import EditStorage from './components/EditStorage';
 const API_BASE = 'http://localhost:3001/api/infrastructure';
 const DEFAULT_STORAGE_TYPE = 'SSD';
 
+type StorageSortKey = 'name' | 'type' | 'makeModel' | 'serial' | 'size' | 'hardwareNode' | 'service';
+
+function sortIndicator(active: boolean, direction: 'asc' | 'desc') {
+  if (!active) return '↕';
+  return direction === 'asc' ? '↑' : '↓';
+}
+
 export default function StorageItems() {
   const { token } = useAuth();
   const [storageItems, setStorageItems] = useState<any[]>([]);
@@ -14,6 +21,8 @@ export default function StorageItems() {
   const [isStorageModalOpen, setIsStorageModalOpen] = useState(false);
   const [storageEditId, setStorageEditId] = useState<string | null>(null);
   const [editingStorage, setEditingStorage] = useState<any | null>(null);
+  const [sortKey, setSortKey] = useState<StorageSortKey>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const authHeaders = useMemo(() => ({
     'Content-Type': 'application/json',
@@ -43,6 +52,72 @@ export default function StorageItems() {
     if (gb >= 1000 && gb % 1000 === 0) return `${gb / 1000} TB`;
     if (gb >= 1000) return `${(gb / 1000).toFixed(2)} TB`;
     return `${gb} GB`;
+  };
+
+  const sortedStorageItems = useMemo(() => {
+    const sorted = [...storageItems].sort((a, b) => {
+      let result = 0;
+
+      if (sortKey === 'size') {
+        const aSize = Number(a.usableSpaceGB || 0);
+        const bSize = Number(b.usableSpaceGB || 0);
+        result = aSize - bSize;
+      } else {
+        const aValue = (() => {
+          switch (sortKey) {
+            case 'name':
+              return String(a.name || '').toLowerCase();
+            case 'type':
+              return getStorageTypeLabel(String(a.storageType || 'OTHER')).toLowerCase();
+            case 'makeModel':
+              return String([a.make, a.model].filter(Boolean).join(' ') || '').toLowerCase();
+            case 'serial':
+              return String(a.serialNumber || '').toLowerCase();
+            case 'hardwareNode':
+              return String(a.hardwareAsset?.name || '').toLowerCase();
+            case 'service':
+              return String(a.softwareUnit?.name || '').toLowerCase();
+            default:
+              return '';
+          }
+        })();
+
+        const bValue = (() => {
+          switch (sortKey) {
+            case 'name':
+              return String(b.name || '').toLowerCase();
+            case 'type':
+              return getStorageTypeLabel(String(b.storageType || 'OTHER')).toLowerCase();
+            case 'makeModel':
+              return String([b.make, b.model].filter(Boolean).join(' ') || '').toLowerCase();
+            case 'serial':
+              return String(b.serialNumber || '').toLowerCase();
+            case 'hardwareNode':
+              return String(b.hardwareAsset?.name || '').toLowerCase();
+            case 'service':
+              return String(b.softwareUnit?.name || '').toLowerCase();
+            default:
+              return '';
+          }
+        })();
+
+        result = aValue.localeCompare(bValue);
+      }
+
+      return sortDirection === 'asc' ? result : -result;
+    });
+
+    return sorted;
+  }, [storageItems, sortKey, sortDirection]);
+
+  const handleSort = (key: StorageSortKey) => {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortKey(key);
+    setSortDirection('asc');
   };
 
   const handleAddStorage = () => {
@@ -129,21 +204,49 @@ export default function StorageItems() {
         <table className="w-full text-left">
           <thead>
             <tr className="bg-slate-800 border-b border-slate-700/50">
-              <th className="px-4 py-3 text-sm font-medium text-slate-400">Name</th>
-              <th className="px-4 py-3 text-sm font-medium text-slate-400">Type</th>
-              <th className="px-4 py-3 text-sm font-medium text-slate-400">Make / Model</th>
-              <th className="px-4 py-3 text-sm font-medium text-slate-400">Serial</th>
-              <th className="px-4 py-3 text-sm font-medium text-slate-400">Size</th>
-              <th className="px-4 py-3 text-sm font-medium text-slate-400">Hardware Node</th>
-              <th className="px-4 py-3 text-sm font-medium text-slate-400">Service</th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                <button type="button" onClick={() => handleSort('name')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                  Name <span>{sortIndicator(sortKey === 'name', sortDirection)}</span>
+                </button>
+              </th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                <button type="button" onClick={() => handleSort('type')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                  Type <span>{sortIndicator(sortKey === 'type', sortDirection)}</span>
+                </button>
+              </th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                <button type="button" onClick={() => handleSort('makeModel')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                  Make / Model <span>{sortIndicator(sortKey === 'makeModel', sortDirection)}</span>
+                </button>
+              </th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                <button type="button" onClick={() => handleSort('serial')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                  Serial <span>{sortIndicator(sortKey === 'serial', sortDirection)}</span>
+                </button>
+              </th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                <button type="button" onClick={() => handleSort('size')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                  Size <span>{sortIndicator(sortKey === 'size', sortDirection)}</span>
+                </button>
+              </th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                <button type="button" onClick={() => handleSort('hardwareNode')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                  Hardware Node <span>{sortIndicator(sortKey === 'hardwareNode', sortDirection)}</span>
+                </button>
+              </th>
+              <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                <button type="button" onClick={() => handleSort('service')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                  Service <span>{sortIndicator(sortKey === 'service', sortDirection)}</span>
+                </button>
+              </th>
               <th className="px-4 py-3 text-sm font-medium text-slate-400 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {storageItems.length === 0 && (
+            {sortedStorageItems.length === 0 && (
               <tr><td colSpan={8} className="p-4 text-center text-slate-400">No storage items found.</td></tr>
             )}
-            {storageItems.map(item => (
+            {sortedStorageItems.map(item => (
               <tr key={item.id} className="hover:bg-slate-800/50 transition-colors">
                 <td className="px-4 py-3 font-medium text-slate-100">{item.name}</td>
                 <td className="px-4 py-3 text-slate-400">{getStorageTypeLabel(item.storageType)}</td>

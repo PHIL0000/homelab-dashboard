@@ -64,6 +64,9 @@ export default function DocsOverview() {
   const [newServiceUrl, setNewServiceUrl] = useState('');
   const [newDeploymentInternalIp, setNewDeploymentInternalIp] = useState('');
 
+  const [overviewSearchTerm, setOverviewSearchTerm] = useState('');
+  const [overviewTypeFilter, setOverviewTypeFilter] = useState('ALL');
+
   const [previewDoc, setPreviewDoc] = useState<any | null>(null);
   const [pendingHardwareDelete, setPendingHardwareDelete] = useState<{
     id: string;
@@ -140,6 +143,25 @@ export default function DocsOverview() {
   }, [token]);
 
   const selectedHardware = hardware.find(hw => isSelectedHardware(hw.id));
+
+  const overviewHardwareTypes = useMemo(
+    () => Array.from(new Set(hardware.map((hw) => String(hw.type || 'OTHER')))).sort(),
+    [hardware]
+  );
+
+  const filteredOverviewHardware = useMemo(() => {
+    const query = overviewSearchTerm.trim().toLowerCase();
+    return hardware.filter((hw) => {
+      const matchesSearch =
+        query.length === 0 ||
+        String(hw.name || '').toLowerCase().includes(query) ||
+        String(hw.hostname || '').toLowerCase().includes(query) ||
+        String(hw.ip || '').toLowerCase().includes(query);
+      const matchesType = overviewTypeFilter === 'ALL' || String(hw.type || 'OTHER') === overviewTypeFilter;
+      return matchesSearch && matchesType;
+    });
+  }, [hardware, overviewSearchTerm, overviewTypeFilter]);
+
   const selectedDeployments = deployments.filter(dep => String(dep.hardwareAssetId) === normalizedSelectedHardwareId);
   const selectedStorage = storageItems.filter(item => String(item.hardwareAssetId) === normalizedSelectedHardwareId);
   const selectedDocs = docs.filter(doc => String(doc.hardwareAssetId) === normalizedSelectedHardwareId);
@@ -688,10 +710,15 @@ export default function DocsOverview() {
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0">
           <OverviewLeftPane
-            hardware={hardware}
+            hardware={filteredOverviewHardware}
+            hardwareTypes={overviewHardwareTypes}
             selectedHardwareId={normalizedSelectedHardwareId}
             onSelectHardware={setSelectedHardwareId}
             onAddHardware={handleAddHardware}
+            searchTerm={overviewSearchTerm}
+            onSearchChange={setOverviewSearchTerm}
+            typeFilter={overviewTypeFilter}
+            onTypeFilterChange={setOverviewTypeFilter}
           />
 
           <OverviewRightPane
