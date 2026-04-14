@@ -22,6 +22,7 @@ services:
     environment:
       # Wir überschreiben die DB-URL, damit sie auf den Postgres-Container zeigt (Hostname: postgres)
       - DATABASE_URL=postgresql://homelab:homelab_dev_password@postgres:5432/homelab?schema=public
+      - JWT_SECRET=homelab_dev_change_this_secret
     depends_on:
       - postgres
     restart: unless-stopped

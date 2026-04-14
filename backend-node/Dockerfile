@@ -15,5 +15,5 @@ RUN npm run build
 
 EXPOSE 3001
 
-# Beim Starten des Containers ausstehende Prisma-Migrationen anwenden und dann den Node-Server starten
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
+# Beim Starten: erst versuchen Migrationen anzuwenden, bei bestehendem Schema ohne Migrationshistorie auf db push zurückfallen, dann Server starten
+CMD ["sh", "-c", "npx prisma migrate deploy || npx prisma db push && npm run start"]
