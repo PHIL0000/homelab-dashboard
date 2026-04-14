@@ -49,7 +49,7 @@ const collectDocSubtreeIds = async (tx: Prisma.TransactionClient, rootDocIds: st
   while (frontier.length > 0) {
     const childDocs = await tx.doc.findMany({
       where: {
-        parentId: {
+        parentDocId: {
           in: frontier
         }
       },
