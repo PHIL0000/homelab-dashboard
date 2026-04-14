@@ -15,5 +15,5 @@ RUN npm run build
 
 EXPOSE 3001
 
-# Beim Starten des Containers auch sicherstellen, dass die DB die neuesten Tabellen hat und dann den Node-Server starten
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && npm run start"]
+# Beim Starten des Containers ausstehende Prisma-Migrationen anwenden und dann den Node-Server starten
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
