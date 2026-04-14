@@ -7,7 +7,35 @@ import EditService from './components/EditService';
 const API_BASE = 'http://localhost:3001/api/infrastructure';
 const DEFAULT_SOFTWARE_TYPE = 'DOCKER_CONTAINER';
 
-type ServiceSortKey = 'name' | 'type' | 'port' | 'url' | 'deployments';
+type ServiceSortKey = 'name' | 'type' | 'port' | 'ipPort' | 'url' | 'storage';
+
+const SOFTWARE_TYPE_LABELS: Record<string, string> = {
+  DOCKER_CONTAINER: 'Docker Container',
+  VM: 'VM',
+  POD: 'Pod',
+  BARE_METAL_SERVICE: 'Bare Metal',
+  OTHER: 'Other'
+};
+
+const getSoftwareTypeLabel = (type: unknown) => {
+  const normalized = String(type || 'OTHER').toUpperCase();
+  return SOFTWARE_TYPE_LABELS[normalized] || 'Other';
+};
+
+const toNavigableUrl = (value: unknown) => {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `http://${raw}`;
+};
+
+const getServiceStorageNames = (service: any): string[] => {
+  if (!Array.isArray(service?.storageAssignments)) return [];
+  return service.storageAssignments
+    .map((assignment: any) => String(assignment.storage?.name || assignment.storageId || ''))
+    .filter(Boolean)
+    .sort((a: string, b: string) => a.localeCompare(b));
+};
 
 function sortIndicator(active: boolean, direction: 'asc' | 'desc') {
   if (!active) return '↕';
@@ -213,31 +241,82 @@ export default function Services() {
     await fetchServices();
   };
 
-  const deploymentCountByService = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const dep of deployments) {
-      const key = dep.softwareUnitId ? String(dep.softwareUnitId) : '';
-      if (!key) continue;
-      counts.set(key, (counts.get(key) || 0) + 1);
+  const deploymentEndpointsByService = useMemo(() => {
+    const endpoints = new Map<string, Array<{ label: string; href: string }>>();
+
+    const portByService = new Map<string, string>();
+    for (const service of services) {
+      const serviceId = String(service.id || '');
+      if (!serviceId) continue;
+      const portNumber = Number(service.port);
+      const portLabel = Number.isFinite(portNumber) && portNumber > 0 ? String(portNumber) : '';
+      portByService.set(serviceId, portLabel);
     }
-    return counts;
-  }, [deployments]);
+
+    for (const dep of deployments) {
+      const serviceId = dep.softwareUnitId ? String(dep.softwareUnitId) : '';
+      const ip = String(dep.internalIp || '').trim();
+      if (!serviceId || !ip) continue;
+
+      const port = portByService.get(serviceId) || '';
+      const label = port ? `${ip}:${port}` : ip;
+      const href = port ? `http://${ip}:${port}` : `http://${ip}`;
+
+      const list = endpoints.get(serviceId) || [];
+      if (!list.some((entry) => entry.label === label)) {
+        list.push({ label, href });
+      }
+      endpoints.set(serviceId, list);
+    }
+
+    for (const [serviceId, list] of endpoints.entries()) {
+      list.sort((a, b) => a.label.localeCompare(b.label));
+      endpoints.set(serviceId, list);
+    }
+
+    return endpoints;
+  }, [deployments, services]);
 
   const sortedServices = useMemo(() => {
     const sorted = [...services].sort((a, b) => {
-      const aDeploymentCount = deploymentCountByService.get(String(a.id)) || 0;
-      const bDeploymentCount = deploymentCountByService.get(String(b.id)) || 0;
-
       let result = 0;
       if (sortKey === 'port') {
         const aPort = Number(a.port || 0);
         const bPort = Number(b.port || 0);
         result = aPort - bPort;
-      } else if (sortKey === 'deployments') {
-        result = aDeploymentCount - bDeploymentCount;
       } else {
-        const aValue = String(a[sortKey] || '').toLowerCase();
-        const bValue = String(b[sortKey] || '').toLowerCase();
+        const aValue = (() => {
+          switch (sortKey) {
+            case 'type':
+              return getSoftwareTypeLabel(a.type).toLowerCase();
+            case 'ipPort':
+              return (deploymentEndpointsByService.get(String(a.id)) || [])
+                .map((entry) => entry.label)
+                .join(', ')
+                .toLowerCase();
+            case 'storage':
+              return getServiceStorageNames(a).join(', ').toLowerCase();
+            default:
+              return String(a[sortKey] || '').toLowerCase();
+          }
+        })();
+
+        const bValue = (() => {
+          switch (sortKey) {
+            case 'type':
+              return getSoftwareTypeLabel(b.type).toLowerCase();
+            case 'ipPort':
+              return (deploymentEndpointsByService.get(String(b.id)) || [])
+                .map((entry) => entry.label)
+                .join(', ')
+                .toLowerCase();
+            case 'storage':
+              return getServiceStorageNames(b).join(', ').toLowerCase();
+            default:
+              return String(b[sortKey] || '').toLowerCase();
+          }
+        })();
+
         result = aValue.localeCompare(bValue);
       }
 
@@ -245,7 +324,7 @@ export default function Services() {
     });
 
     return sorted;
-  }, [services, deploymentCountByService, sortKey, sortDirection]);
+  }, [services, deploymentEndpointsByService, sortKey, sortDirection]);
 
   const handleSort = (key: ServiceSortKey) => {
     if (sortKey === key) {
@@ -285,13 +364,18 @@ export default function Services() {
                     </button>
                   </th>
                   <th className="px-4 py-3 text-sm font-medium text-slate-400">
+                    <button type="button" onClick={() => handleSort('ipPort')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                      IP+Port <span>{sortIndicator(sortKey === 'ipPort', sortDirection)}</span>
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-sm font-medium text-slate-400">
                     <button type="button" onClick={() => handleSort('url')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
                       URL <span>{sortIndicator(sortKey === 'url', sortDirection)}</span>
                     </button>
                   </th>
                   <th className="px-4 py-3 text-sm font-medium text-slate-400">
-                    <button type="button" onClick={() => handleSort('deployments')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
-                      Deployments <span>{sortIndicator(sortKey === 'deployments', sortDirection)}</span>
+                    <button type="button" onClick={() => handleSort('storage')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
+                      Disks <span>{sortIndicator(sortKey === 'storage', sortDirection)}</span>
                     </button>
                   </th>
                   <th className="px-4 py-3 text-sm font-medium text-slate-400 text-right">Actions</th>
@@ -300,19 +384,41 @@ export default function Services() {
               <tbody className="divide-y divide-border">
                 {sortedServices.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-slate-400">No services available.</td>
+                    <td colSpan={7} className="px-4 py-6 text-center text-slate-400">No services available.</td>
                   </tr>
                 )}
                 {sortedServices.map(sw => (
                   <tr key={sw.id} className="hover:bg-slate-800/50 transition-colors">
                     <td className="px-4 py-3 font-medium text-slate-100">{sw.name}</td>
-                    <td className="px-4 py-3 text-slate-400 text-sm">{sw.type}</td>
+                    <td className="px-4 py-3 text-slate-400 text-sm">{getSoftwareTypeLabel(sw.type)}</td>
                     <td className="px-4 py-3 text-slate-400 font-mono text-sm">{sw.port || '-'}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {(() => {
+                        const endpoints = deploymentEndpointsByService.get(String(sw.id)) || [];
+                        if (endpoints.length === 0) return <span className="text-slate-400">-</span>;
+
+                        return (
+                          <div className="flex flex-wrap gap-1.5">
+                            {endpoints.map((endpoint) => (
+                              <a
+                                key={`${sw.id}-${endpoint.href}`}
+                                href={endpoint.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/12 px-2 py-0.5 text-[11px] text-blue-300 hover:bg-blue-500/20"
+                              >
+                                {endpoint.label}
+                              </a>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td className="px-4 py-3 text-purple-400 text-sm">
                       {sw.url
                         ? (
                           <a
-                            href={String(sw.url).startsWith('http://') || String(sw.url).startsWith('https://') ? sw.url : `https://${sw.url}`}
+                            href={toNavigableUrl(sw.url) || undefined}
                             target="_blank"
                             rel="noreferrer"
                             className="hover:underline"
@@ -322,7 +428,25 @@ export default function Services() {
                         )
                         : '-'}
                     </td>
-                    <td className="px-4 py-3 text-slate-400 text-sm">{deploymentCountByService.get(String(sw.id)) || 0}</td>
+                    <td className="px-4 py-3 text-sm text-slate-400">
+                      {(() => {
+                        const storageNames = getServiceStorageNames(sw);
+                        if (storageNames.length === 0) return '-';
+
+                        return (
+                          <div className="flex flex-wrap gap-1.5">
+                            {storageNames.map((name) => (
+                              <span
+                                key={`${sw.id}-${name}`}
+                                className="inline-flex items-center rounded-full border border-slate-700/60 bg-slate-800/70 px-2 py-0.5 text-[11px] text-slate-100"
+                              >
+                                {name}
+                              </span>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td className="px-4 py-3 text-right">
                       <Button type="button" onClick={() => handleEditService(sw)} className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
                     </td>
