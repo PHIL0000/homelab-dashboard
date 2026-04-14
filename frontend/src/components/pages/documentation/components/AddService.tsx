@@ -158,6 +158,14 @@ export default function AddService({
 						</label>
 					</div>
 
+					{showInternalIp && (
+						<label className="space-y-1 block">
+							<span className="text-xs text-slate-400">Internal IP</span>
+							<Input value={internalIp || ''} onChange={(e) => onInternalIpChange?.(e.target.value)} className="w-full" />
+							<p className="text-[11px] text-slate-400">IP address where this service is reachable. Usually the hardware IP, but it can be different.</p>
+						</label>
+					)}
+
 					<label className="space-y-1 block">
 						<span className="text-xs text-slate-400">URL</span>
 						<Input value={url} onChange={(e) => onUrlChange(e.target.value)} className="w-full" />
@@ -228,13 +236,6 @@ export default function AddService({
 							</div>
 							<p className="text-[11px] text-slate-400">Add one by one via dropdown. Remove via x on tag hover.</p>
 						</div>
-					)}
-
-					{showInternalIp && (
-						<label className="space-y-1 block">
-							<span className="text-xs text-slate-400">Internal IP</span>
-							<Input value={internalIp || ''} onChange={(e) => onInternalIpChange?.(e.target.value)} className="w-full" />
-						</label>
 					)}
 
 					<div className="pt-4 border-t border-slate-700/50 flex items-center justify-between gap-2">
