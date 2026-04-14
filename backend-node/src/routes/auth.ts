@@ -5,8 +5,13 @@ import jwt from 'jsonwebtoken';
 
 const router = Router();
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-dev-only-change-me';
+const jwtSecret = process.env.JWT_SECRET;
 
+if (!jwtSecret) {
+  throw new Error('JWT_SECRET environment variable must be set');
+}
+
+const JWT_SECRET = jwtSecret;
 // Check if initial setup is needed (i.e. no users exist)
 router.get('/setup-status', async (req, res) => {
   try {
