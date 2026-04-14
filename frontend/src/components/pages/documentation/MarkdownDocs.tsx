@@ -330,32 +330,39 @@ export default function MarkdownDocs() {
           </div>
           <div className="divide-y divide-border">
             {filteredTopLevelDocs.length === 0 && <p className="p-4 text-slate-400">No top-level markdown files found.</p>}
-            {filteredTopLevelDocs.map((doc) => (
-              <Button
-                key={doc.id}
-                onClick={() => setSelectedDocId(doc.id)}
-                className={`w-full text-left px-4 py-3 transition-all border-l-4 !ring-0 !shadow-none ${selectedDocId === doc.id
-                  ? 'bg-[color-mix(in_srgb,var(--color-primary)_24%,var(--color-content))] border-primary shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-primary)_46%,transparent)]'
-                  : 'hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] border-transparent'}`}
-                variant="ghost"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className={`font-medium truncate ${selectedDocId === doc.id ? 'text-text' : 'text-text'}`}>{doc.title}</p>
-                    <div className="flex gap-2 mt-1 flex-wrap">
-                      {doc.hardwareAsset?.name && <span className={`text-xs px-2 py-0.5 rounded-full ${selectedDocId === doc.id ? 'bg-[color-mix(in_srgb,var(--color-primary)_22%,transparent)] text-text' : 'bg-purple-600/15 text-purple-400'}`}>HW: {doc.hardwareAsset.name}</span>}
-                      {doc.softwareUnit?.name && <span className={`text-xs px-2 py-0.5 rounded-full ${selectedDocId === doc.id ? 'bg-[color-mix(in_srgb,var(--color-primary)_18%,transparent)] text-text' : 'bg-blue-500/15 text-blue-300'}`}>Service: {doc.softwareUnit.name}</span>}
-                      {!doc.hardwareAssetId && !doc.softwareUnitId && <span className="text-xs bg-slate-800 border border-slate-700/50 text-slate-400 px-2 py-0.5 rounded-full">Unassigned</span>}
-                    </div>
+            {filteredTopLevelDocs.map((doc) => {
+              const childCount = doc.children?.length || 0;
+              const docTags = [
+                doc.softwareUnit?.name ? `Service: ${doc.softwareUnit.name}` : null,
+                doc.hardwareAsset?.name ? `Hardware: ${doc.hardwareAsset.name}` : null,
+                childCount > 0 ? `${childCount} ${childCount === 1 ? 'child' : 'children'}` : null,
+                !doc.hardwareAssetId && !doc.softwareUnitId ? 'Unassigned' : null
+              ].filter(Boolean) as string[];
+
+              return (
+                <Button
+                  key={doc.id}
+                  onClick={() => setSelectedDocId(doc.id)}
+                  className={`w-full !h-auto !min-h-0 text-left px-4 py-2.5 transition-all !border-0 !ring-0 !shadow-none ${selectedDocId === doc.id
+                    ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,var(--color-content))] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-primary)_46%,transparent)]'
+                    : 'hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]'}`}
+                  variant="ghost"
+                >
+                  <div className="min-w-0 w-full">
+                    <p className="font-medium text-text truncate">{doc.title}</p>
+                    {docTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {docTags.map((tag) => (
+                          <span key={`${doc.id}-${tag}`} className="text-[11px] border border-slate-700/60 bg-slate-800/70 text-slate-300 px-2 py-0.5 rounded-full">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {doc.children && doc.children.length > 0 && (
-                    <span className="text-xs bg-slate-800 border border-slate-700/50 text-slate-400 px-2 py-0.5 rounded-full shrink-0">
-                      {doc.children.length}
-                    </span>
-                  )}
-                </div>
-              </Button>
-            ))}
+                </Button>
+              );
+            })}
           </div>
         </Card>
 
