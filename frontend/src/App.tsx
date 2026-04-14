@@ -1,6 +1,6 @@
 // App.tsx
-import React, { useState } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
 import Sidebar from "./components/nav/Sidebar";
 //import DashboardPage from "./components/pages/dashboard/Dashboard";
@@ -26,14 +26,21 @@ import { useAuth } from "./context/AuthContext";
 const App: React.FC = () => {
   const [activeModal, setActiveModal] = useState<"settings" | "account" | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const { isLoading, user } = useAuth();
+
+  const isAuthRoute = location.pathname === "/login" || location.pathname === "/setup";
+
+  // Redirect unauthenticated users to login
+  useEffect(() => {
+    if (!isLoading && !user && !isAuthRoute) {
+      navigate('/login');
+    }
+  }, [isLoading, user, isAuthRoute, navigate]);
 
   if (isLoading) {
     return <div className="flex h-screen items-center justify-center bg-background text-text">Loading...</div>;
   }
-
-  // Check if we are on an auth screen
-  const isAuthRoute = location.pathname === "/login" || location.pathname === "/setup";
 
   if (isAuthRoute) {
     return (
@@ -44,9 +51,18 @@ const App: React.FC = () => {
     );
   }
 
-  // If not authenticated and not explicitly on an auth route, don't render dashboard
-  if (!user && !isAuthRoute) {
-    return null; // The AuthContext useEffect will eventually navigate to login/setup
+  if (!user) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background text-text">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-text-secondary">Redirecting…</span>
+        </div>
+      </div>
+    );
   }
 
   return (
