@@ -15,12 +15,13 @@ type EditStorageProps = {
 	isOpen: boolean;
 	storage: any | null;
 	hardwareOptions?: Array<{ id: string; name: string }>;
+	serviceOptions?: Array<{ id: string; name: string }>;
 	onClose: () => void;
 	onSave: (values: StorageFormValues) => void | Promise<void>;
 	onDelete?: () => void;
 };
 
-export default function EditStorage({ isOpen, storage, hardwareOptions, onClose, onSave, onDelete }: EditStorageProps) {
+export default function EditStorage({ isOpen, storage, hardwareOptions, serviceOptions, onClose, onSave, onDelete }: EditStorageProps) {
 	const [name, setName] = useState('');
 	const [type, setType] = useState<StorageTypeOption>('SSD');
 	const [make, setMake] = useState('');
@@ -30,6 +31,8 @@ export default function EditStorage({ isOpen, storage, hardwareOptions, onClose,
 	const [usableSpace, setUsableSpace] = useState<number | ''>('');
 	const [spaceUnit, setSpaceUnit] = useState<'GB' | 'TB'>('GB');
 	const [hardwareAssetId, setHardwareAssetId] = useState('');
+	const [softwareUnitIds, setSoftwareUnitIds] = useState<string[]>([]);
+	const [servicePickerKey, setServicePickerKey] = useState('picker-none');
 
 	useEffect(() => {
 		if (!isOpen || !storage) return;
@@ -72,6 +75,13 @@ export default function EditStorage({ isOpen, storage, hardwareOptions, onClose,
 		setSerialNumber(storage.serialNumber || '');
 		setInterfaceType(mappedInterface);
 		setHardwareAssetId(storage.hardwareAssetId ? String(storage.hardwareAssetId) : '');
+		const assignmentIds = Array.isArray(storage.serviceAssignments)
+			? storage.serviceAssignments
+				.map((assignment: any) => String(assignment.softwareUnitId || assignment.softwareUnit?.id || ''))
+				.filter(Boolean)
+			: [];
+		setSoftwareUnitIds(assignmentIds);
+		setServicePickerKey('picker-none');
 		if (storage.usableSpaceGB && storage.usableSpaceGB >= 1000 && storage.usableSpaceGB % 1000 === 0) {
 			setUsableSpace(storage.usableSpaceGB / 1000);
 			setSpaceUnit('TB');
@@ -94,8 +104,20 @@ export default function EditStorage({ isOpen, storage, hardwareOptions, onClose,
 			interfaceType,
 			usableSpace,
 			spaceUnit,
-			hardwareAssetId
+			hardwareAssetId,
+			softwareUnitIds
 		});
+	};
+
+	const addServiceId = (serviceId: string) => {
+		setSoftwareUnitIds((prev) =>
+			prev.includes(serviceId) ? prev : [...prev, serviceId]
+		);
+		setServicePickerKey('picker-none');
+	};
+
+	const removeServiceId = (serviceId: string) => {
+		setSoftwareUnitIds((prev) => prev.filter((id) => id !== serviceId));
 	};
 
 	return (
@@ -123,6 +145,68 @@ export default function EditStorage({ isOpen, storage, hardwareOptions, onClose,
 								</Select.Popover>
 							</Select>
 						</label>
+					)}
+
+					{!!serviceOptions?.length && (
+						<div className="space-y-1 block">
+							<span className="text-xs text-slate-400">Services (optional, 0..N)</span>
+							<Select
+								selectedKey={servicePickerKey}
+								onChange={(key) => {
+									if (key == null) return;
+									const value = String(key);
+									if (value === 'picker-none') return;
+									addServiceId(value);
+								}}
+								className="w-full"
+							>
+								<Select.Trigger className="w-full px-3 flex items-center justify-between">
+									<Select.Value />
+									<ChevronDown size={16} className="text-slate-400" />
+								</Select.Trigger>
+								<Select.Popover className="w-[var(--trigger-width)]">
+									<ListBox>
+										<ListBox.Item id="picker-none" className="pl-2">Select service to add</ListBox.Item>
+										{serviceOptions.map((option) => (
+											<ListBox.Item key={option.id} id={option.id} className="pl-2">{option.name}</ListBox.Item>
+										))}
+									</ListBox>
+								</Select.Popover>
+							</Select>
+							<div className="w-full rounded-lg border border-slate-700/50 bg-slate-900/60 p-2 min-h-11">
+								{softwareUnitIds.length === 0 ? (
+									<p className="text-xs text-slate-400">No services selected.</p>
+								) : (
+									<div className="flex flex-wrap gap-2">
+										{softwareUnitIds.map((serviceId) => {
+											const label = serviceOptions.find((option) => option.id === serviceId)?.name || serviceId;
+											return (
+												<span key={serviceId} className="group inline-flex items-center gap-1 rounded-full border border-slate-700/60 bg-slate-800/70 px-2.5 py-1 text-xs text-slate-100">
+													{label}
+													<button
+														type="button"
+														onMouseDown={(event) => {
+															event.preventDefault();
+															event.stopPropagation();
+														}}
+														onClick={(event) => {
+															event.preventDefault();
+															event.stopPropagation();
+															removeServiceId(serviceId);
+														}}
+														className="ml-1 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+														aria-label={`Remove ${label}`}
+													>
+														×
+													</button>
+												</span>
+											);
+										})}
+									</div>
+								)}
+							</div>
+							<p className="text-[11px] text-slate-400">Add one by one via dropdown. Remove via x on tag hover.</p>
+						</div>
 					)}
 
 					<label className="space-y-1 block"><span className="text-xs text-slate-400">Name *</span><Input value={name} onChange={(e) => setName(e.target.value)} required className="w-full" /></label>

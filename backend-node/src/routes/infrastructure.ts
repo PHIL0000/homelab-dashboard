@@ -30,6 +30,17 @@ const isAllowedStorageInterface = (value: unknown): value is (typeof ALLOWED_STO
   return typeof value === 'string' && ALLOWED_STORAGE_INTERFACES.includes(value as (typeof ALLOWED_STORAGE_INTERFACES)[number]);
 };
 
+const normalizeIdArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return Array.from(
+    new Set(
+      value
+        .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
+        .filter(Boolean)
+    )
+  );
+};
+
 const ensureMarkdownExtension = (title: unknown) => {
   const normalized = typeof title === 'string' ? title.trim() : '';
   if (!normalized) return 'untitled.md';
@@ -156,20 +167,82 @@ router.delete('/hardware/:id', authenticate, async (req, res) => {
 
 // SW GET
 router.get('/services', authenticate, async (req, res) => {
-  const sw = await prisma.softwareUnit.findMany({ include: { deployments: { include: { hardwareAsset: true } } } });
+  const sw = await prisma.softwareUnit.findMany({
+    include: {
+      deployments: { include: { hardwareAsset: true } },
+      storageAssignments: {
+        include: { storage: true }
+      }
+    }
+  } as any);
   res.json(sw);
 });
 
 // SW POST
 router.post('/services', authenticate, async (req, res) => {
-  const sw = await prisma.softwareUnit.create({ data: req.body });
-  res.json(sw);
+  const { storageIds, ...serviceData } = req.body;
+  const normalizedStorageIds = normalizeIdArray(storageIds);
+
+  const created = await prisma.$transaction(async (tx) => {
+    const sw = await tx.softwareUnit.create({ data: serviceData });
+
+    if (normalizedStorageIds.length > 0) {
+      await (tx as any).storageServiceAssignment.createMany({
+        data: normalizedStorageIds.map((storageId) => ({
+          storageId,
+          softwareUnitId: sw.id
+        })),
+        skipDuplicates: true
+      });
+    }
+
+    return tx.softwareUnit.findUnique({
+      where: { id: sw.id },
+      include: {
+        deployments: { include: { hardwareAsset: true } },
+        storageAssignments: {
+          include: { storage: true }
+        }
+      }
+    } as any);
+  });
+
+  res.json(created);
 });
 
 // SW PUT
 router.put('/services/:id', authenticate, async (req, res) => {
-  const sw = await prisma.softwareUnit.update({ where: { id: req.params.id }, data: req.body });
-  res.json(sw);
+  const { storageIds, ...serviceData } = req.body;
+  const normalizedStorageIds = Array.isArray(storageIds) ? normalizeIdArray(storageIds) : null;
+
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.softwareUnit.update({ where: { id: req.params.id }, data: serviceData });
+
+    if (normalizedStorageIds) {
+      await (tx as any).storageServiceAssignment.deleteMany({ where: { softwareUnitId: req.params.id } });
+      if (normalizedStorageIds.length > 0) {
+        await (tx as any).storageServiceAssignment.createMany({
+          data: normalizedStorageIds.map((storageId) => ({
+            storageId,
+            softwareUnitId: req.params.id
+          })),
+          skipDuplicates: true
+        });
+      }
+    }
+
+    return tx.softwareUnit.findUnique({
+      where: { id: req.params.id },
+      include: {
+        deployments: { include: { hardwareAsset: true } },
+        storageAssignments: {
+          include: { storage: true }
+        }
+      }
+    } as any);
+  });
+
+  res.json(updated);
 });
 
 // SW DELETE
@@ -189,7 +262,6 @@ router.delete('/services/:id', authenticate, async (req, res) => {
         await tx.doc.deleteMany({ where: { id: { in: docsToDelete } } });
       }
 
-      await tx.storage.deleteMany({ where: { softwareUnitId: serviceId } });
       await tx.deployment.deleteMany({ where: { softwareUnitId: serviceId } });
       await tx.softwareUnit.delete({ where: { id: serviceId } });
     });
@@ -230,13 +302,21 @@ router.delete('/deployments/:id', authenticate, async (req, res) => {
 
 // STORAGE GET
 router.get('/storage', authenticate, async (req, res) => {
-  const storage = await prisma.storage.findMany({ include: { hardwareAsset: true, softwareUnit: true } });
+  const storage = await prisma.storage.findMany({
+    include: {
+      hardwareAsset: true,
+      serviceAssignments: {
+        include: { softwareUnit: true }
+      }
+    }
+  } as any);
   res.json(storage);
 });
 
 // STORAGE POST
 router.post('/storage', authenticate, async (req, res) => {
-  const { hardwareAssetId, softwareUnitId, storageType, interface: interfaceValue, ...rest } = req.body;
+  const { hardwareAssetId, serviceIds, storageType, interface: interfaceValue, ...rest } = req.body;
+  const normalizedServiceIds = normalizeIdArray(serviceIds);
 
   if (storageType != null && storageType !== '' && !isAllowedStorageType(storageType)) {
     return res.status(400).json({
@@ -250,21 +330,44 @@ router.post('/storage', authenticate, async (req, res) => {
     });
   }
 
-  const storage = await prisma.storage.create({
-    data: {
-      ...rest,
-      storageType: storageType || null,
-      interface: interfaceValue || null,
-      hardwareAssetId: hardwareAssetId || null,
-      softwareUnitId: softwareUnitId || null
+  const storage = await prisma.$transaction(async (tx) => {
+    const created = await tx.storage.create({
+      data: {
+        ...rest,
+        storageType: storageType || null,
+        interface: interfaceValue || null,
+        hardwareAssetId: hardwareAssetId || null
+      }
+    });
+
+    if (normalizedServiceIds.length > 0) {
+      await (tx as any).storageServiceAssignment.createMany({
+        data: normalizedServiceIds.map((softwareUnitId) => ({
+          storageId: created.id,
+          softwareUnitId
+        })),
+        skipDuplicates: true
+      });
     }
+
+    return tx.storage.findUnique({
+      where: { id: created.id },
+      include: {
+        hardwareAsset: true,
+        serviceAssignments: {
+          include: { softwareUnit: true }
+        }
+      }
+    } as any);
   });
+
   res.json(storage);
 });
 
 // STORAGE PUT
 router.put('/storage/:id', authenticate, async (req, res) => {
-  const { hardwareAssetId, softwareUnitId, storageType, interface: interfaceValue, ...rest } = req.body;
+  const { hardwareAssetId, serviceIds, storageType, interface: interfaceValue, ...rest } = req.body;
+  const normalizedServiceIds = Array.isArray(serviceIds) ? normalizeIdArray(serviceIds) : null;
 
   if (storageType != null && storageType !== '' && !isAllowedStorageType(storageType)) {
     return res.status(400).json({
@@ -278,16 +381,41 @@ router.put('/storage/:id', authenticate, async (req, res) => {
     });
   }
 
-  const storage = await prisma.storage.update({
-    where: { id: req.params.id },
-    data: {
-      ...rest,
-      storageType: storageType || null,
-      interface: interfaceValue || null,
-      hardwareAssetId: hardwareAssetId || null,
-      softwareUnitId: softwareUnitId || null
+  const storage = await prisma.$transaction(async (tx) => {
+    await tx.storage.update({
+      where: { id: req.params.id },
+      data: {
+        ...rest,
+        storageType: storageType || null,
+        interface: interfaceValue || null,
+        hardwareAssetId: hardwareAssetId || null
+      }
+    });
+
+    if (normalizedServiceIds) {
+      await (tx as any).storageServiceAssignment.deleteMany({ where: { storageId: req.params.id } });
+      if (normalizedServiceIds.length > 0) {
+        await (tx as any).storageServiceAssignment.createMany({
+          data: normalizedServiceIds.map((softwareUnitId) => ({
+            storageId: req.params.id,
+            softwareUnitId
+          })),
+          skipDuplicates: true
+        });
+      }
     }
+
+    return tx.storage.findUnique({
+      where: { id: req.params.id },
+      include: {
+        hardwareAsset: true,
+        serviceAssignments: {
+          include: { softwareUnit: true }
+        }
+      }
+    } as any);
   });
+
   res.json(storage);
 });
 

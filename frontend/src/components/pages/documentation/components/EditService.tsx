@@ -9,6 +9,7 @@ type EditServiceValues = {
 	port: string;
 	url: string;
 	image: string;
+	storageIds: string[];
 	deploymentId?: string;
 	hardwareAssetId: string;
 	internalIp: string;
@@ -30,6 +31,8 @@ type EditServiceProps = {
 		internalIp?: string | null;
 	} | null;
 	hardwareOptions?: Array<{ id: string; name: string }>;
+	storageOptions?: Array<{ id: string; name: string }>;
+	initialStorageIds?: string[];
 	deploymentContextHint?: string;
 	onClose: () => void;
 	onSave: (values: EditServiceValues) => void | Promise<void>;
@@ -49,6 +52,8 @@ export default function EditService({
 	service,
 	deployment,
 	hardwareOptions,
+	storageOptions,
+	initialStorageIds,
 	deploymentContextHint,
 	onClose,
 	onSave,
@@ -59,6 +64,8 @@ export default function EditService({
 	const [port, setPort] = useState('');
 	const [url, setUrl] = useState('');
 	const [image, setImage] = useState('');
+	const [storageIds, setStorageIds] = useState<string[]>([]);
+	const [storagePickerKey, setStoragePickerKey] = useState('picker-none');
 	const [hardwareAssetId, setHardwareAssetId] = useState('');
 	const [internalIp, setInternalIp] = useState('');
 
@@ -70,6 +77,8 @@ export default function EditService({
 		setPort(service.port ? String(service.port) : '');
 		setUrl(service.url || '');
 		setImage(service.image || '');
+		setStorageIds(initialStorageIds || []);
+		setStoragePickerKey('picker-none');
 		setHardwareAssetId(deployment?.hardwareAssetId ? String(deployment.hardwareAssetId) : '');
 		setInternalIp(deployment?.internalIp || '');
 	}, [
@@ -80,6 +89,7 @@ export default function EditService({
 		service?.port,
 		service?.url,
 		service?.image,
+		initialStorageIds,
 		deployment?.id,
 		deployment?.hardwareAssetId,
 		deployment?.internalIp
@@ -98,10 +108,22 @@ export default function EditService({
 			port,
 			url: url.trim(),
 			image: image.trim(),
+			storageIds,
 			deploymentId: deployment?.id ? String(deployment.id) : undefined,
 			hardwareAssetId,
 			internalIp
 		});
+	};
+
+	const addStorageId = (storageId: string) => {
+		setStorageIds((prev) =>
+			prev.includes(storageId) ? prev : [...prev, storageId]
+		);
+		setStoragePickerKey('picker-none');
+	};
+
+	const removeStorageId = (storageId: string) => {
+		setStorageIds((prev) => prev.filter((id) => id !== storageId));
 	};
 
 	return (
@@ -179,6 +201,68 @@ export default function EditService({
 						<span className="text-xs text-slate-400">Image</span>
 						<Input value={image} onChange={(e) => setImage(e.target.value)} className="w-full" />
 					</label>
+
+					{!!storageOptions?.length && (
+						<div className="space-y-1 block">
+							<span className="text-xs text-slate-400">Storage (optional, 0..N)</span>
+							<Select
+								selectedKey={storagePickerKey}
+								onChange={(key) => {
+									if (key == null) return;
+									const value = String(key);
+									if (value === 'picker-none') return;
+									addStorageId(value);
+								}}
+								className="w-full"
+							>
+								<Select.Trigger className="w-full px-3 flex items-center justify-between">
+									<Select.Value />
+									<ChevronDown size={16} className="text-slate-400" />
+								</Select.Trigger>
+								<Select.Popover className="w-[var(--trigger-width)]">
+									<ListBox>
+										<ListBox.Item id="picker-none" className="pl-2">Select storage to add</ListBox.Item>
+										{storageOptions.map((option) => (
+											<ListBox.Item key={option.id} id={option.id} className="pl-2">{option.name}</ListBox.Item>
+										))}
+									</ListBox>
+								</Select.Popover>
+							</Select>
+							<div className="w-full rounded-lg border border-slate-700/50 bg-slate-900/60 p-2 min-h-11">
+								{storageIds.length === 0 ? (
+									<p className="text-xs text-slate-400">No storage selected.</p>
+								) : (
+									<div className="flex flex-wrap gap-2">
+										{storageIds.map((storageId) => {
+											const label = storageOptions.find((option) => option.id === storageId)?.name || storageId;
+											return (
+												<span key={storageId} className="group inline-flex items-center gap-1 rounded-full border border-slate-700/60 bg-slate-800/70 px-2.5 py-1 text-xs text-slate-100">
+													{label}
+													<button
+														type="button"
+														onMouseDown={(event) => {
+															event.preventDefault();
+															event.stopPropagation();
+														}}
+														onClick={(event) => {
+															event.preventDefault();
+															event.stopPropagation();
+															removeStorageId(storageId);
+														}}
+														className="ml-1 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+														aria-label={`Remove ${label}`}
+													>
+														×
+													</button>
+												</span>
+											);
+										})}
+									</div>
+								)}
+							</div>
+							<p className="text-[11px] text-slate-400">Add one by one via dropdown. Remove via x on tag hover.</p>
+						</div>
+					)}
 
 					<label className="space-y-1 block">
 						<span className="text-xs text-slate-400">Internal IP</span>

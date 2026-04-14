@@ -19,6 +19,7 @@ export default function Services() {
   const [services, setServices] = useState<any[]>([]);
   const [deployments, setDeployments] = useState<any[]>([]);
   const [hardware, setHardware] = useState<any[]>([]);
+  const [storageItems, setStorageItems] = useState<any[]>([]);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [serviceEditId, setServiceEditId] = useState<string | null>(null);
   const [editingService, setEditingService] = useState<any | null>(null);
@@ -28,6 +29,8 @@ export default function Services() {
   const [newServicePort, setNewServicePort] = useState('');
   const [newServiceUrl, setNewServiceUrl] = useState('');
   const [newServiceImage, setNewServiceImage] = useState('');
+  const [newServiceStorageIds, setNewServiceStorageIds] = useState<string[]>([]);
+  const [editingServiceStorageIds, setEditingServiceStorageIds] = useState<string[]>([]);
   const [sortKey, setSortKey] = useState<ServiceSortKey>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -39,15 +42,17 @@ export default function Services() {
   const fetchServices = async () => {
     if (!token) return;
     try {
-      const [servicesRes, deploymentsRes, hardwareRes] = await Promise.all([
+      const [servicesRes, deploymentsRes, hardwareRes, storageRes] = await Promise.all([
         fetch(`${API_BASE}/services`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API_BASE}/deployments`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_BASE}/hardware`, { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${API_BASE}/hardware`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/storage`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       setServices(await servicesRes.json());
       setDeployments(await deploymentsRes.json());
       setHardware(await hardwareRes.json());
+      setStorageItems(await storageRes.json());
     } catch (error) {
       console.error(error);
     }
@@ -63,6 +68,7 @@ export default function Services() {
     setNewServicePort('');
     setNewServiceUrl('');
     setNewServiceImage('');
+    setNewServiceStorageIds([]);
   };
 
   const handleAddService = () => {
@@ -82,6 +88,13 @@ export default function Services() {
     setServiceEditId(String(service.id));
     setEditingService(service);
     setEditingDeployment(editableDeployment);
+    setEditingServiceStorageIds(
+      Array.isArray(service.storageAssignments)
+        ? service.storageAssignments
+            .map((assignment: any) => String(assignment.storageId || assignment.storage?.id || ''))
+            .filter(Boolean)
+        : []
+    );
     setIsServiceModalOpen(true);
   };
 
@@ -97,7 +110,8 @@ export default function Services() {
         type: newServiceType,
         image: newServiceImage.trim() || null,
         port: newServicePort ? Number(newServicePort) : null,
-        url: newServiceUrl.trim() || null
+        url: newServiceUrl.trim() || null,
+        storageIds: newServiceStorageIds
       })
     });
 
@@ -121,6 +135,7 @@ export default function Services() {
     port: string;
     url: string;
     image: string;
+  storageIds: string[];
     deploymentId?: string;
     hardwareAssetId: string;
     internalIp: string;
@@ -135,7 +150,8 @@ export default function Services() {
         type: values.type,
         image: values.image || null,
         port: values.port ? Number(values.port) : null,
-        url: values.url || null
+        url: values.url || null,
+        storageIds: values.storageIds
       })
     });
 
@@ -324,6 +340,8 @@ export default function Services() {
           service={editingService}
           deployment={editingDeployment}
           hardwareOptions={hardware.map((hw) => ({ id: String(hw.id), name: hw.name }))}
+          storageOptions={storageItems.map((item) => ({ id: String(item.id), name: item.name }))}
+          initialStorageIds={editingServiceStorageIds}
           deploymentContextHint={editingDeployment ? undefined : 'No deployment found for this service. Service fields can still be edited.'}
           onClose={() => setIsServiceModalOpen(false)}
           onSave={saveEditedService}
@@ -339,6 +357,9 @@ export default function Services() {
           port={newServicePort}
           url={newServiceUrl}
           image={newServiceImage}
+          storageOptions={storageItems.map((item) => ({ id: String(item.id), name: item.name }))}
+          selectedStorageIds={newServiceStorageIds}
+          onSelectedStorageIdsChange={setNewServiceStorageIds}
           onClose={() => setIsServiceModalOpen(false)}
           onSubmit={saveNewService}
           onNameChange={setNewServiceName}

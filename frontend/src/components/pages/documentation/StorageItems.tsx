@@ -14,10 +14,19 @@ function sortIndicator(active: boolean, direction: 'asc' | 'desc') {
   return direction === 'asc' ? '↑' : '↓';
 }
 
+const getAssignedServiceNames = (item: any): string[] => {
+  if (!Array.isArray(item?.serviceAssignments)) return [];
+  return item.serviceAssignments
+    .map((assignment: any) => String(assignment.softwareUnit?.name || ''))
+    .filter(Boolean)
+    .sort((a: string, b: string) => a.localeCompare(b));
+};
+
 export default function StorageItems() {
   const { token } = useAuth();
   const [storageItems, setStorageItems] = useState<any[]>([]);
   const [hardware, setHardware] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
   const [isStorageModalOpen, setIsStorageModalOpen] = useState(false);
   const [storageEditId, setStorageEditId] = useState<string | null>(null);
   const [editingStorage, setEditingStorage] = useState<any | null>(null);
@@ -32,12 +41,14 @@ export default function StorageItems() {
   const fetchData = async () => {
     if (!token) return;
     try {
-      const [storageRes, hardwareRes] = await Promise.all([
+      const [storageRes, hardwareRes, servicesRes] = await Promise.all([
         fetch(`${API_BASE}/storage`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_BASE}/hardware`, { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${API_BASE}/hardware`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/services`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setStorageItems(await storageRes.json());
       setHardware(await hardwareRes.json());
+      setServices(await servicesRes.json());
     } catch (e) {
       console.error(e);
     }
@@ -76,7 +87,7 @@ export default function StorageItems() {
             case 'hardwareNode':
               return String(a.hardwareAsset?.name || '').toLowerCase();
             case 'service':
-              return String(a.softwareUnit?.name || '').toLowerCase();
+              return getAssignedServiceNames(a).join(', ').toLowerCase();
             default:
               return '';
           }
@@ -95,7 +106,7 @@ export default function StorageItems() {
             case 'hardwareNode':
               return String(b.hardwareAsset?.name || '').toLowerCase();
             case 'service':
-              return String(b.softwareUnit?.name || '').toLowerCase();
+              return getAssignedServiceNames(b).join(', ').toLowerCase();
             default:
               return '';
           }
@@ -155,7 +166,8 @@ export default function StorageItems() {
         serialNumber: values.serialNumber || null,
         interface: values.interfaceType || null,
         usableSpaceGB,
-        hardwareAssetId: values.hardwareAssetId
+        hardwareAssetId: values.hardwareAssetId,
+        serviceIds: values.softwareUnitIds || []
       })
     });
 
@@ -254,7 +266,22 @@ export default function StorageItems() {
                 <td className="px-4 py-3 text-slate-400">{item.serialNumber || '-'}</td>
                 <td className="px-4 py-3 text-slate-400">{displaySpace(item.usableSpaceGB)}</td>
                 <td className="px-4 py-3 text-slate-400">{item.hardwareAsset?.name || 'Unassigned'}</td>
-                <td className="px-4 py-3 text-slate-400">{item.softwareUnit?.name || '-'}</td>
+                <td className="px-4 py-3 text-slate-400">
+                  {getAssignedServiceNames(item).length === 0 ? (
+                    '-'
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {getAssignedServiceNames(item).map((serviceName) => (
+                        <span
+                          key={`${item.id}-${serviceName}`}
+                          className="inline-flex items-center rounded-full border border-slate-700/60 bg-slate-800/70 px-2 py-0.5 text-xs text-slate-100"
+                        >
+                          {serviceName}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <Button type="button" onClick={() => handleEditStorage(item)} className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
                 </td>
@@ -271,6 +298,7 @@ export default function StorageItems() {
           isOpen={isStorageModalOpen}
           storage={editingStorage}
           hardwareOptions={hardware.map((hw) => ({ id: String(hw.id), name: hw.name }))}
+          serviceOptions={services.map((sw) => ({ id: String(sw.id), name: sw.name }))}
           onClose={() => setIsStorageModalOpen(false)}
           onSave={saveStorage}
           onDelete={deleteStorage}
@@ -280,6 +308,7 @@ export default function StorageItems() {
           isOpen={isStorageModalOpen}
           initialValues={{ type: DEFAULT_STORAGE_TYPE }}
           hardwareOptions={hardware.map((hw) => ({ id: String(hw.id), name: hw.name }))}
+          serviceOptions={services.map((sw) => ({ id: String(sw.id), name: sw.name }))}
           onClose={() => setIsStorageModalOpen(false)}
           onSave={saveStorage}
         />

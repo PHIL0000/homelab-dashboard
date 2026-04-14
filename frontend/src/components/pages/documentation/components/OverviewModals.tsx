@@ -28,6 +28,7 @@ type OverviewModalsProps = {
     port: string;
     url: string;
     image: string;
+    storageIds: string[];
     deploymentId?: string;
     hardwareAssetId: string;
     internalIp: string;
@@ -38,6 +39,7 @@ type OverviewModalsProps = {
   newServicePort: string;
   newServiceUrl: string;
   newServiceImage: string;
+  newServiceStorageIds: string[];
   newDeploymentInternalIp: string;
   onSaveNewDeployment: (e: React.FormEvent) => void | Promise<void>;
   onNewServiceNameChange: (value: string) => void;
@@ -45,7 +47,12 @@ type OverviewModalsProps = {
   onNewServicePortChange: (value: string) => void;
   onNewServiceUrlChange: (value: string) => void;
   onNewServiceImageChange: (value: string) => void;
+  onNewServiceStorageIdsChange: (value: string[]) => void;
   onNewDeploymentInternalIpChange: (value: string) => void;
+  editingServiceStorageIds: string[];
+
+  services: any[];
+  storageItems: any[];
 
   storageEditId: string | null;
   isStorageModalOpen: boolean;
@@ -86,6 +93,7 @@ export default function OverviewModals({
   newServicePort,
   newServiceUrl,
   newServiceImage,
+  newServiceStorageIds,
   newDeploymentInternalIp,
   onSaveNewDeployment,
   onNewServiceNameChange,
@@ -93,7 +101,11 @@ export default function OverviewModals({
   onNewServicePortChange,
   onNewServiceUrlChange,
   onNewServiceImageChange,
+  onNewServiceStorageIdsChange,
   onNewDeploymentInternalIpChange,
+  editingServiceStorageIds,
+  services,
+  storageItems,
   storageEditId,
   isStorageModalOpen,
   editingStorage,
@@ -136,6 +148,8 @@ export default function OverviewModals({
           service={editingService}
           deployment={editingDeployment}
           hardwareOptions={hardware.map((hw) => ({ id: String(hw.id), name: hw.name }))}
+          storageOptions={storageItems.map((item) => ({ id: String(item.id), name: item.name }))}
+          initialStorageIds={editingServiceStorageIds}
           onClose={onCloseDeploymentModal}
           onSave={onSaveEditedService}
           onDelete={onDeleteDeployment}
@@ -150,6 +164,9 @@ export default function OverviewModals({
           port={newServicePort}
           url={newServiceUrl}
           image={newServiceImage}
+          storageOptions={storageItems.map((item) => ({ id: String(item.id), name: item.name }))}
+          selectedStorageIds={newServiceStorageIds}
+          onSelectedStorageIdsChange={onNewServiceStorageIdsChange}
           internalIp={newDeploymentInternalIp}
           showInternalIp
           createHint="The new service will be created and directly linked to this hardware."
@@ -169,6 +186,7 @@ export default function OverviewModals({
           isOpen={isStorageModalOpen}
           storage={editingStorage}
           hardwareOptions={hardware.map((hw) => ({ id: String(hw.id), name: hw.name }))}
+          serviceOptions={services.map((service) => ({ id: String(service.id), name: service.name }))}
           onClose={onCloseStorageModal}
           onSave={onSaveStorage}
           onDelete={onDeleteStorage}
@@ -178,6 +196,7 @@ export default function OverviewModals({
           isOpen={isStorageModalOpen}
           initialValues={{ type: 'SSD', hardwareAssetId: selectedHardwareId }}
           hardwareOptions={hardware.map((hw) => ({ id: String(hw.id), name: hw.name }))}
+          serviceOptions={services.map((service) => ({ id: String(service.id), name: service.name }))}
           onClose={onCloseStorageModal}
           onSave={onSaveStorage}
         />
