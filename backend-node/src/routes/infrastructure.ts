@@ -14,35 +14,33 @@ const ensureMarkdownExtension = (title: unknown) => {
 const collectDocSubtreeIds = async (tx: Prisma.TransactionClient, rootDocIds: string[]) => {
   if (rootDocIds.length === 0) return [] as string[];
 
-  const allDocs = await tx.doc.findMany({
-    select: {
-      id: true,
-      children: {
-        select: { id: true }
-      }
-    }
-  } as any);
+  const seen = new Set<string>();
+  let frontier = [...new Set(rootDocIds)];
 
-  const childrenByParent = new Map<string, string[]>();
-  for (const doc of allDocs as Array<{ id: string; children?: Array<{ id: string }> }>) {
-    const childIds = (doc.children || []).map((child) => child.id);
-    if (childIds.length > 0) {
-      childrenByParent.set(doc.id, childIds);
-    }
+  for (const docId of frontier) {
+    seen.add(docId);
   }
 
-  const seen = new Set<string>();
-  const stack = [...rootDocIds];
+  while (frontier.length > 0) {
+    const childDocs = await tx.doc.findMany({
+      where: {
+        parentId: {
+          in: frontier
+        }
+      },
+      select: {
+        id: true
+      }
+    } as any);
 
-  while (stack.length > 0) {
-    const current = stack.pop()!;
-    if (seen.has(current)) continue;
-    seen.add(current);
-
-    const children = childrenByParent.get(current) || [];
-    for (const childId of children) {
-      if (!seen.has(childId)) stack.push(childId);
+    const nextFrontier: string[] = [];
+    for (const child of childDocs as Array<{ id: string }>) {
+      if (seen.has(child.id)) continue;
+      seen.add(child.id);
+      nextFrontier.push(child.id);
     }
+
+    frontier = nextFrontier;
   }
 
   return Array.from(seen);
