@@ -1,0 +1,27 @@
+model Doc {
+  id                String           @id @default(uuid()) @db.Uuid
+  title             String
+  slug              String?
+  content           String           @db.Text // Markdown content
+
+  parentDocId       String?          @db.Uuid
+  parentDoc         Doc?             @relation("DocHierarchy", fields: [parentDocId], references: [id], onDelete: SetNull)
+  children          Doc[]            @relation("DocHierarchy")
+
+  hardwareAssetId   String?          @db.Uuid
+  hardwareAsset     HardwareAsset?   @relation(fields: [hardwareAssetId], references: [id], onDelete: Cascade)
+
+  softwareUnitId    String?          @db.Uuid
+  softwareUnit      SoftwareUnit?    @relation(fields: [softwareUnitId], references: [id], onDelete: Cascade)
+
+  serviceTemplateId String?          @db.Uuid
+  serviceTemplate   ServiceTemplate? @relation(fields: [serviceTemplateId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([hardwareAssetId])
+  @@index([softwareUnitId])
+  @@index([serviceTemplateId])
+  @@index([parentDocId])
+}

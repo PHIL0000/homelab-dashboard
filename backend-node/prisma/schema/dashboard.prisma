@@ -1,0 +1,61 @@
+model CardType {
+  id            String   @id @default(uuid()) @db.Uuid
+  key           String   @unique // graph, button, slider, text
+  name          String
+  description   String?  @db.Text
+  icon          String?
+  configSchema  Json?
+  metricsHint   Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  widgets       Widget[]
+}
+
+model UserDashboard {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  page        String   // dashboard, performance
+  title       String?
+  layout      Json?    // react-grid-layout Array
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  widgetLinks DashboardWidget[] // Explicit m:n connection for Widget -> Dashboard
+}
+
+model DashboardWidget {
+  id              String        @id @default(uuid()) @db.Uuid
+  userDashboardId String        @db.Uuid
+  widgetId        String        @db.Uuid
+  
+  userDashboard   UserDashboard @relation(fields: [userDashboardId], references: [id], onDelete: Cascade)
+  widget          Widget        @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  
+  // Here specific widget configurations could be stored for *exactly this dashboard*.
+  // For example, if you want to keep grid layout position data separately from dashboard JSON:
+  // x         Int?
+  // y         Int?
+  // w         Int?
+  // h         Int?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([userDashboardId, widgetId])
+}
+
+model Widget {
+  id              String          @id @default(uuid()) @db.Uuid
+  dashboardLinks  DashboardWidget[] // Explicit m:n connection for Widget -> Dashboard
+  cardTypeId      String          @db.Uuid
+  cardType        CardType        @relation(fields: [cardTypeId], references: [id])
+  customTitle     String?
+  config          Json?           // Global card-specific config
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  hardwareAssets  HardwareAsset[] // widget_hardware
+  softwareUnits   SoftwareUnit[]  // widget_software
+}

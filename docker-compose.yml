@@ -1,0 +1,45 @@
+services:
+  # Das React Frontend (wird in NGINX als statische Seite ausgeliefert)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: homelab-frontend
+    ports:
+      - "3000:80"  # Auf Port 3000 lokal erreichbar
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Das Node.js + Prisma Backend
+  backend:
+    build:
+      context: ./backend-node
+      dockerfile: Dockerfile
+    container_name: homelab-backend
+    ports:
+      - "3001:3001"
+    environment:
+      # Wir überschreiben die DB-URL, damit sie auf den Postgres-Container zeigt (Hostname: postgres)
+      - DATABASE_URL=postgresql://homelab:homelab_dev_password@postgres:5432/homelab?schema=public
+      - JWT_SECRET=homelab_dev_change_this_secret
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  # Die PostgreSQL Datenbank
+  postgres:
+    image: postgres:15-alpine
+    container_name: homelab-postgres
+    environment:
+      POSTGRES_USER: homelab
+      POSTGRES_PASSWORD: homelab_dev_password
+      POSTGRES_DB: homelab
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,0 +1,126 @@
+model HardwareAsset {
+  id          String         @id @default(uuid()) @db.Uuid
+  name        String         @unique
+  hostname    String?        @unique
+  type        HardwareType?
+  status      HardwareStatus @default(OFFLINE) // Live-Status
+  cpu         String?
+  cpuCores    Int?
+  ram         Int?
+  os          String?
+  ip          String?
+  mac         String?
+  make        String?
+  model       String?
+  serialNumber String?       @unique
+  location    String?
+  icon        String?
+  notes       String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  deployments       Deployment[]
+  docs              Doc[]
+  widgets           Widget[]       // Implicit m:n connection for Widget -> Hardware
+  networkInterfaces NetworkInterface[]
+  storage           Storage[]
+}
+
+model ServiceTemplate {
+  id              String           @id @default(uuid()) @db.Uuid
+  name            String           @unique
+  category        ServiceCategory?
+  description     String?
+  defaultPort     Int?
+  defaultImage    String?
+  defaultUrl      String?
+  defaultMetrics  String[]         // Array of strings
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  softwareUnits   SoftwareUnit[]
+  docs            Doc[]
+}
+
+model SoftwareUnit {
+  id                String            @id @default(uuid()) @db.Uuid
+  name              String
+  type              SoftwareUnitType
+  image             String?
+  port              Int?
+  url               String?
+  serviceTemplateId String?           @db.Uuid
+  serviceTemplate   ServiceTemplate?  @relation(fields: [serviceTemplateId], references: [id], onDelete: SetNull)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  deployments       Deployment[]
+  docs              Doc[]
+  widgets           Widget[]          // Implicit m:n connection for Widget -> Software-Unit
+  networkInterfaces NetworkInterface[]
+  storage           Storage[]
+}
+
+model Deployment {
+  id              String            @id @default(uuid()) @db.Uuid
+  hardwareAssetId String            @db.Uuid
+  hardwareAsset   HardwareAsset     @relation(fields: [hardwareAssetId], references: [id], onDelete: Cascade)
+  softwareUnitId  String            @db.Uuid
+  softwareUnit    SoftwareUnit      @relation(fields: [softwareUnitId], references: [id], onDelete: Cascade)
+  internalIp      String?
+  exposedPorts    Json?
+  envTags         Json?
+  status          DeploymentStatus? @default(UNKNOWN)
+  restartPolicy   String?
+  volumes         Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([hardwareAssetId, softwareUnitId])
+}
+
+model Storage {
+  id              String         @id @default(uuid()) @db.Uuid
+  name            String
+  storageType     String?        // array, zfs, btrfs, lvm, single, etc.
+  make            String?
+  model           String?
+  serialNumber    String?
+  interface       String?        // SATA, SAS, NVMe, USB, iSCSI, etc.
+  raidType        String?        // raid0, raid1, raid5, raidz2
+  driveCount      Int?
+  rawSpaceGB      Float?
+  usableSpaceGB   Float?
+  filesystem      String?        // ext4, xfs, zfs
+  notes           String?
+
+  // Exclusive relations (either Hardware or SoftwareUnit)
+  hardwareAssetId String?        @db.Uuid
+  hardwareAsset   HardwareAsset? @relation(fields: [hardwareAssetId], references: [id], onDelete: Cascade)
+
+  softwareUnitId  String?        @db.Uuid
+  softwareUnit    SoftwareUnit?  @relation(fields: [softwareUnitId], references: [id], onDelete: Cascade)
+
+  shares          StorageShare[]
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([hardwareAssetId])
+  @@index([softwareUnitId])
+}
+
+model StorageShare {
+  id          String    @id @default(uuid()) @db.Uuid
+  storageId   String    @db.Uuid
+  storage     Storage   @relation(fields: [storageId], references: [id], onDelete: Cascade)
+  name        String
+  shareType   String?   // SMB, NFS, iSCSI
+  path        String?   // /mnt/pool/share
+  notes       String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([storageId])
+}
