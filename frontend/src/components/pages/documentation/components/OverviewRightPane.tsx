@@ -113,11 +113,10 @@ export default function OverviewRightPane({
     return (
       <div key={doc.id} className={`${depth > 0 ? 'ml-5 border-l border-slate-700/50' : ''}`}>
   <div className="px-4 py-2.5 flex items-start justify-between gap-3 hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] transition-colors">
-          <Button
+          <button
             type="button"
             onClick={() => onOpenDocPreview(doc)}
-            className="min-w-0 flex-1 text-left !border-0 !border-transparent !ring-0 !shadow-none"
-            variant="ghost"
+            className="min-w-0 flex-1 text-left"
           >
             <p className="font-medium text-text truncate">{doc.title}</p>
             {docTags.length > 0 && (
@@ -129,7 +128,7 @@ export default function OverviewRightPane({
                 ))}
               </div>
             )}
-          </Button>
+          </button>
           <Button
             type="button"
             onClick={() => onEditDoc(doc)}
