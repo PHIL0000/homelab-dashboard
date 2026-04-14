@@ -57,7 +57,7 @@ export default function OverviewRightPane({
           <Button
             type="button"
             onClick={() => onEditDoc(doc)}
-            className="text-xs text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
+            className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none"
             variant="ghost"
           >
             Edit
@@ -89,7 +89,7 @@ export default function OverviewRightPane({
                 <Button
                   type="button"
                   onClick={() => onEditHardware(selectedHardware)}
-                  className="text-xs text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
+                  className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none"
                   variant="ghost"
                 >
                   Edit
@@ -126,7 +126,7 @@ export default function OverviewRightPane({
                     <Button
                       type="button"
                       onClick={() => onEditDeployment(dep)}
-                      className="text-xs text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
+                      className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none"
                       variant="ghost"
                     >
                       Edit
@@ -157,7 +157,7 @@ export default function OverviewRightPane({
                     <Button
                       type="button"
                       onClick={() => onEditStorage(item)}
-                      className="text-xs text-text-secondary hover:text-text !border-0 !border-transparent !ring-0 !shadow-none"
+                      className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none"
                       variant="ghost"
                     >
                       Edit
