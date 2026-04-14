@@ -2,6 +2,10 @@
 
 ## 1) Repository structure
 
+For the full and continuously maintainable path/file tree, see:
+
+- `doc/developer_doc/repository-structure.md`
+
 ```text
 homelab-dashboard/
 ├── docker-compose.yml
