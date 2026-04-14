@@ -3,8 +3,21 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
+declare global {
+  // eslint-disable-next-line no-var
+  var prismaAuthRoute: PrismaClient | undefined;
+}
+
+const globalForPrisma = globalThis as typeof globalThis & {
+  prismaAuthRoute?: PrismaClient;
+};
+
 const router = Router();
-const prisma = new PrismaClient();
+const prisma = globalForPrisma.prismaAuthRoute ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prismaAuthRoute = prisma;
+}
 const jwtSecret = process.env.JWT_SECRET;
 
 if (!jwtSecret) {
