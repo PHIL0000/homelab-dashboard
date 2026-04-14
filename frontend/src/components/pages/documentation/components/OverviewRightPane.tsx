@@ -187,7 +187,7 @@ export default function OverviewRightPane({
 
             <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between gap-3">
-                <h4 className="font-semibold text-slate-100">Services on this hardware</h4>
+                <h4 className="font-semibold text-slate-100">Services</h4>
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
@@ -270,7 +270,7 @@ export default function OverviewRightPane({
 
             <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between gap-3">
-                <h4 className="font-semibold text-slate-100">Disks / Storage</h4>
+                <h4 className="font-semibold text-slate-100">Storage</h4>
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
@@ -327,7 +327,7 @@ export default function OverviewRightPane({
 
             <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 flex items-center justify-between gap-3">
-                <h4 className="font-semibold text-slate-100">Linked markdown documents (hardware + services)</h4>
+                <h4 className="font-semibold text-slate-100">Markdown Documents</h4>
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"

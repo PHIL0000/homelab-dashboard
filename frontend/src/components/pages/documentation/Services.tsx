@@ -340,7 +340,7 @@ export default function Services() {
     <div className="documentation-area page-shell relative">
       <div className="h-full flex flex-col min-h-0">
         <div className="page-header">
-          <h2 className="page-title">Software/Services</h2>
+          <h2 className="page-title">Services</h2>
           <Button onClick={handleAddService} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all" variant="primary">+ Add service</Button>
         </div>
         <div className="page-content-scroll">
@@ -365,7 +365,7 @@ export default function Services() {
                   </th>
                   <th className="px-4 py-3 text-sm font-medium text-slate-400">
                     <button type="button" onClick={() => handleSort('ipPort')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
-                      IP+Port <span>{sortIndicator(sortKey === 'ipPort', sortDirection)}</span>
+                      IP <span>{sortIndicator(sortKey === 'ipPort', sortDirection)}</span>
                     </button>
                   </th>
                   <th className="px-4 py-3 text-sm font-medium text-slate-400">

@@ -234,7 +234,7 @@ export default function StorageItems() {
               </th>
               <th className="px-4 py-3 text-sm font-medium text-slate-400">
                 <button type="button" onClick={() => handleSort('hardwareNode')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
-                  Hardware Node <span>{sortIndicator(sortKey === 'hardwareNode', sortDirection)}</span>
+                  Hardware <span>{sortIndicator(sortKey === 'hardwareNode', sortDirection)}</span>
                 </button>
               </th>
               <th className="px-4 py-3 text-sm font-medium text-slate-400">
