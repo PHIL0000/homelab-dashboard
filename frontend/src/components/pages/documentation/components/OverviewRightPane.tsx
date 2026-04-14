@@ -2,6 +2,38 @@ import { useMemo, useState } from 'react';
 import { Button, Card } from '@heroui/react';
 import { getStorageInterfaceLabel, getStorageTypeLabel } from './AddStorage';
 
+const SOFTWARE_TYPE_LABELS: Record<string, string> = {
+  DOCKER_CONTAINER: 'Docker Container',
+  VM: 'VM',
+  POD: 'Pod',
+  BARE_METAL_SERVICE: 'Bare Metal',
+  OTHER: 'Other'
+};
+
+const getSoftwareTypeLabel = (type: unknown) => {
+  const normalized = String(type || 'OTHER').toUpperCase();
+  return SOFTWARE_TYPE_LABELS[normalized] || 'Other';
+};
+
+const toNavigableUrl = (value: unknown) => {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `http://${raw}`;
+};
+
+const toIpPortUrl = (ip: unknown, port: unknown) => {
+  const normalizedIp = String(ip || '').trim();
+  if (!normalizedIp) return null;
+
+  const portNumber = Number(port);
+  if (Number.isFinite(portNumber) && portNumber > 0) {
+    return `http://${normalizedIp}:${portNumber}`;
+  }
+
+  return `http://${normalizedIp}`;
+};
+
 type OverviewRightPaneProps = {
   selectedHardware: any | undefined;
   selectedDeployments: any[];
@@ -72,6 +104,11 @@ export default function OverviewRightPane({
     const children = getDocChildren(doc.id);
     const childCount = children.length;
     const orderedChildren = markdownSortDirection === 'asc' ? children : [...children].reverse();
+    const docTags = [
+      doc.softwareUnit?.name ? `Service: ${String(doc.softwareUnit.name)}` : null,
+      doc.hardwareAsset?.name ? `Hardware: ${String(doc.hardwareAsset.name)}` : null,
+      childCount > 0 ? `${childCount} ${childCount === 1 ? 'child' : 'children'}` : null
+    ].filter(Boolean) as string[];
 
     return (
       <div key={doc.id} className={`${depth > 0 ? 'ml-5 border-l border-slate-700/50' : ''}`}>
@@ -83,11 +120,15 @@ export default function OverviewRightPane({
             variant="ghost"
           >
             <p className="font-medium text-text truncate">{doc.title}</p>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {doc.softwareUnit?.name && <span className="text-[11px] bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded-full">Service</span>}
-              {doc.hardwareAsset?.name && <span className="text-[11px] bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-text px-2 py-0.5 rounded-full">Hardware</span>}
-              {childCount > 0 && <span className="text-[11px] bg-slate-800 border border-slate-700/50 text-slate-400 px-2 py-0.5 rounded-full">{childCount} child</span>}
-            </div>
+            {docTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {docTags.map((tag) => (
+                  <span key={`${doc.id}-${tag}`} className="text-[11px] border border-slate-700/60 bg-slate-800/70 text-slate-300 px-2 py-0.5 rounded-full">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </Button>
           <Button
             type="button"
@@ -163,10 +204,57 @@ export default function OverviewRightPane({
               <div className="divide-y divide-border">
                 {sortedDeployments.length === 0 && <p className="p-4 text-sm text-slate-400">No services assigned.</p>}
                 {sortedDeployments.map(dep => (
-                  <div key={dep.id} className="px-4 py-3 flex items-start justify-between gap-3">
+                  <div key={dep.id} className="px-4 py-2.5 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium text-slate-100">{dep.softwareUnit?.name || 'Unknown service'}</p>
-                      <p className="text-xs text-slate-400">{dep.softwareUnit?.type || '-'} • {dep.internalIp || '-'} • {dep.status || 'UNKNOWN'}</p>
+                      {(() => {
+                        const domainDisplay = String(dep.softwareUnit?.url || '').trim();
+                        const ipDisplay = String(dep.internalIp || '').trim();
+                        const portDisplay = dep.softwareUnit?.port ? String(dep.softwareUnit.port) : '';
+                        const serviceUrl = toNavigableUrl(dep.softwareUnit?.url);
+                        const ipUrl = toIpPortUrl(dep.internalIp, dep.softwareUnit?.port);
+                        const serviceMeta = [
+                          dep.softwareUnit?.type ? getSoftwareTypeLabel(dep.softwareUnit?.type) : null
+                        ].filter(Boolean) as string[];
+
+                        const serviceLinks = [
+                          serviceUrl
+                            ? {
+                                label: domainDisplay,
+                                href: serviceUrl
+                              }
+                            : null,
+                          ipUrl
+                            ? {
+                                label: portDisplay ? `${ipDisplay}:${portDisplay}` : ipDisplay,
+                                href: ipUrl
+                              }
+                            : null
+                        ].filter(Boolean) as Array<{ label: string; href: string }>;
+
+                        if (serviceMeta.length === 0 && serviceLinks.length === 0) return null;
+
+                        return (
+                          <div className="flex flex-wrap gap-1.5 mt-1">
+                            {serviceMeta.map((meta) => (
+                              <span key={`${dep.id}-${meta}`} className="inline-flex items-center rounded-full border border-slate-700/60 bg-slate-800/70 px-2 py-0.5 text-[11px] text-slate-300">
+                                {meta}
+                              </span>
+                            ))}
+                            {serviceLinks.map((link) => (
+                              <a
+                                key={`${dep.id}-${link.href}`}
+                                href={link.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/12 px-2 py-0.5 text-[11px] text-blue-300 hover:bg-blue-500/20"
+                              >
+                                {link.label}
+                              </a>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
                     <Button
                       type="button"
@@ -199,15 +287,31 @@ export default function OverviewRightPane({
               <div className="divide-y divide-border">
                 {sortedStorage.length === 0 && <p className="p-4 text-sm text-slate-400">No storage assigned.</p>}
                 {sortedStorage.map(item => (
-                  <div key={item.id} className="px-4 py-3 flex items-start justify-between gap-3">
+                  <div key={item.id} className="px-4 py-2.5 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium text-slate-100">{item.name}</p>
-                      <p className="text-xs text-slate-400">{getStorageTypeLabel(item.storageType)} • {displaySpace(item.usableSpaceGB)}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {[item.make, item.model].filter(Boolean).join(' ') || '-'}
-                        {item.serialNumber ? ` • S/N ${item.serialNumber}` : ''}
-                        {item.interface ? ` • ${getStorageInterfaceLabel(item.interface)}` : ''}
-                      </p>
+                      {(() => {
+                        const modelLabel = [item.make, item.model].filter(Boolean).join(' ');
+                        const storageMeta = [
+                          item.storageType ? getStorageTypeLabel(String(item.storageType)) : null,
+                          item.usableSpaceGB != null ? displaySpace(item.usableSpaceGB) : null,
+                          modelLabel || null,
+                          item.interface ? getStorageInterfaceLabel(String(item.interface)) : null,
+                          item.serialNumber ? `S/N ${String(item.serialNumber)}` : null
+                        ].filter(Boolean) as string[];
+
+                        if (storageMeta.length === 0) return null;
+
+                        return (
+                          <div className="flex flex-wrap gap-1.5 mt-1">
+                            {storageMeta.map((meta) => (
+                              <span key={`${item.id}-${meta}`} className="inline-flex items-center rounded-full border border-slate-700/60 bg-slate-800/70 px-2 py-0.5 text-[11px] text-slate-300">
+                                {meta}
+                              </span>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
                     <Button
                       type="button"
