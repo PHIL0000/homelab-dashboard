@@ -7,7 +7,7 @@ import EditStorage from './components/EditStorage';
 const API_BASE = 'http://localhost:3001/api/infrastructure';
 const DEFAULT_STORAGE_TYPE = 'SSD';
 
-type StorageSortKey = 'name' | 'type' | 'makeModel' | 'serial' | 'size' | 'hardwareNode' | 'service';
+type StorageSortKey = 'name' | 'type' | 'makeModel' | 'size' | 'hardwareNode' | 'service';
 
 function sortIndicator(active: boolean, direction: 'asc' | 'desc') {
   if (!active) return '↕';
@@ -82,8 +82,6 @@ export default function StorageItems() {
               return getStorageTypeLabel(String(a.storageType || 'OTHER')).toLowerCase();
             case 'makeModel':
               return String([a.make, a.model].filter(Boolean).join(' ') || '').toLowerCase();
-            case 'serial':
-              return String(a.serialNumber || '').toLowerCase();
             case 'hardwareNode':
               return String(a.hardwareAsset?.name || '').toLowerCase();
             case 'service':
@@ -101,8 +99,6 @@ export default function StorageItems() {
               return getStorageTypeLabel(String(b.storageType || 'OTHER')).toLowerCase();
             case 'makeModel':
               return String([b.make, b.model].filter(Boolean).join(' ') || '').toLowerCase();
-            case 'serial':
-              return String(b.serialNumber || '').toLowerCase();
             case 'hardwareNode':
               return String(b.hardwareAsset?.name || '').toLowerCase();
             case 'service':
@@ -232,11 +228,6 @@ export default function StorageItems() {
                 </button>
               </th>
               <th className="px-4 py-3 text-sm font-medium text-slate-400">
-                <button type="button" onClick={() => handleSort('serial')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
-                  Serial <span>{sortIndicator(sortKey === 'serial', sortDirection)}</span>
-                </button>
-              </th>
-              <th className="px-4 py-3 text-sm font-medium text-slate-400">
                 <button type="button" onClick={() => handleSort('size')} className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors">
                   Size <span>{sortIndicator(sortKey === 'size', sortDirection)}</span>
                 </button>
@@ -256,14 +247,13 @@ export default function StorageItems() {
           </thead>
           <tbody className="divide-y divide-border">
             {sortedStorageItems.length === 0 && (
-              <tr><td colSpan={8} className="p-4 text-center text-slate-400">No storage items found.</td></tr>
+              <tr><td colSpan={7} className="p-4 text-center text-slate-400">No storage items found.</td></tr>
             )}
             {sortedStorageItems.map(item => (
               <tr key={item.id} className="hover:bg-slate-800/50 transition-colors">
                 <td className="px-4 py-3 font-medium text-slate-100">{item.name}</td>
                 <td className="px-4 py-3 text-slate-400">{getStorageTypeLabel(item.storageType)}</td>
                 <td className="px-4 py-3 text-slate-400">{[item.make, item.model].filter(Boolean).join(' ') || '-'}</td>
-                <td className="px-4 py-3 text-slate-400">{item.serialNumber || '-'}</td>
                 <td className="px-4 py-3 text-slate-400">{displaySpace(item.usableSpaceGB)}</td>
                 <td className="px-4 py-3 text-slate-400">{item.hardwareAsset?.name || 'Unassigned'}</td>
                 <td className="px-4 py-3 text-slate-400">
