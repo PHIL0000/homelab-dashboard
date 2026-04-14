@@ -75,21 +75,36 @@ router.delete('/hardware/:id', authenticate, async (req, res) => {
         select: { softwareUnitId: true }
       });
 
-      const softwareIdsToDelete = Array.from(
+      const affectedSoftwareIds = Array.from(
         new Set(
           deploymentsForHardware
             .map((dep) => dep.softwareUnitId)
             .filter(Boolean)
         )
-      );
+      ) as string[];
+
+      // Delete deployments for this hardware first
+      await tx.deployment.deleteMany({ where: { hardwareAssetId: hardwareId } });
+
+      // Find which software units have no remaining deployments (orphaned)
+      let orphanedSoftwareIds: string[] = [];
+      if (affectedSoftwareIds.length > 0) {
+        const stillDeployed = await tx.deployment.findMany({
+          where: { softwareUnitId: { in: affectedSoftwareIds } },
+          select: { softwareUnitId: true }
+        });
+        const stillDeployedIds = new Set(stillDeployed.map((d) => d.softwareUnitId));
+        orphanedSoftwareIds = affectedSoftwareIds.filter((id) => !stillDeployedIds.has(id));
+      }
+
+      // Collect docs to delete: hardware docs + orphaned software docs only
+      const docFilters: Prisma.DocWhereInput[] = [{ hardwareAssetId: hardwareId }];
+      if (orphanedSoftwareIds.length > 0) {
+        docFilters.push({ softwareUnitId: { in: orphanedSoftwareIds } });
+      }
 
       const relatedDocs = await tx.doc.findMany({
-        where: {
-          OR: [
-            { hardwareAssetId: hardwareId },
-            softwareIdsToDelete.length > 0 ? { softwareUnitId: { in: softwareIdsToDelete } } : undefined
-          ].filter(Boolean) as Prisma.DocWhereInput[]
-        },
+        where: { OR: docFilters },
         select: { id: true }
       });
 
@@ -99,9 +114,9 @@ router.delete('/hardware/:id', authenticate, async (req, res) => {
         await tx.doc.deleteMany({ where: { id: { in: docsToDelete } } });
       }
 
-      if (softwareIdsToDelete.length > 0) {
+      if (orphanedSoftwareIds.length > 0) {
         await tx.softwareUnit.deleteMany({
-          where: { id: { in: softwareIdsToDelete } }
+          where: { id: { in: orphanedSoftwareIds } }
         });
       }
 
