@@ -82,11 +82,11 @@ model Deployment {
 model Storage {
   id              String         @id @default(uuid()) @db.Uuid
   name            String
-  storageType     String?        // array, zfs, btrfs, lvm, single, etc.
+  storageType     String?        // app-controlled values: SSD | HDD | SD | EMMC | USB_FLASH | OPTICAL | TAPE | OTHER
   make            String?
   model           String?
   serialNumber    String?
-  interface       String?        // SATA, SAS, NVMe, USB, iSCSI, etc.
+  interface       String?        // app-controlled values: SATA | SAS | NVME M.2 | SATA NVME | U.2/U.3 NVME | PCIE | USB | THUNDERBOLT | SDIO | EMMC | ISCSI | FIBRE_CHANNEL | OTHER
   raidType        String?        // raid0, raid1, raid5, raidz2
   driveCount      Int?
   rawSpaceGB      Float?

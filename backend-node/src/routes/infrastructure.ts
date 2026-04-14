@@ -5,6 +5,31 @@ import { authenticate } from './auth';
 const router = Router();
 const prisma = new PrismaClient();
 
+const ALLOWED_STORAGE_TYPES = ['SSD', 'HDD', 'SD', 'EMMC', 'USB_FLASH', 'OPTICAL', 'TAPE', 'OTHER'] as const;
+const ALLOWED_STORAGE_INTERFACES = [
+  'SATA',
+  'SAS',
+  'NVME M.2',
+  'SATA NVME',
+  'U.2/U.3 NVME',
+  'PCIE',
+  'USB',
+  'THUNDERBOLT',
+  'SDIO',
+  'EMMC',
+  'ISCSI',
+  'FIBRE_CHANNEL',
+  'OTHER'
+] as const;
+
+const isAllowedStorageType = (value: unknown): value is (typeof ALLOWED_STORAGE_TYPES)[number] => {
+  return typeof value === 'string' && ALLOWED_STORAGE_TYPES.includes(value as (typeof ALLOWED_STORAGE_TYPES)[number]);
+};
+
+const isAllowedStorageInterface = (value: unknown): value is (typeof ALLOWED_STORAGE_INTERFACES)[number] => {
+  return typeof value === 'string' && ALLOWED_STORAGE_INTERFACES.includes(value as (typeof ALLOWED_STORAGE_INTERFACES)[number]);
+};
+
 const ensureMarkdownExtension = (title: unknown) => {
   const normalized = typeof title === 'string' ? title.trim() : '';
   if (!normalized) return 'untitled.md';
@@ -211,10 +236,25 @@ router.get('/storage', authenticate, async (req, res) => {
 
 // STORAGE POST
 router.post('/storage', authenticate, async (req, res) => {
-  const { hardwareAssetId, softwareUnitId, ...rest } = req.body;
+  const { hardwareAssetId, softwareUnitId, storageType, interface: interfaceValue, ...rest } = req.body;
+
+  if (storageType != null && storageType !== '' && !isAllowedStorageType(storageType)) {
+    return res.status(400).json({
+      error: `Invalid storage type. Allowed values: ${ALLOWED_STORAGE_TYPES.join(', ')}`
+    });
+  }
+
+  if (interfaceValue != null && interfaceValue !== '' && !isAllowedStorageInterface(interfaceValue)) {
+    return res.status(400).json({
+      error: `Invalid storage interface. Allowed values: ${ALLOWED_STORAGE_INTERFACES.join(', ')}`
+    });
+  }
+
   const storage = await prisma.storage.create({
     data: {
       ...rest,
+      storageType: storageType || null,
+      interface: interfaceValue || null,
       hardwareAssetId: hardwareAssetId || null,
       softwareUnitId: softwareUnitId || null
     }
@@ -224,11 +264,26 @@ router.post('/storage', authenticate, async (req, res) => {
 
 // STORAGE PUT
 router.put('/storage/:id', authenticate, async (req, res) => {
-  const { hardwareAssetId, softwareUnitId, ...rest } = req.body;
+  const { hardwareAssetId, softwareUnitId, storageType, interface: interfaceValue, ...rest } = req.body;
+
+  if (storageType != null && storageType !== '' && !isAllowedStorageType(storageType)) {
+    return res.status(400).json({
+      error: `Invalid storage type. Allowed values: ${ALLOWED_STORAGE_TYPES.join(', ')}`
+    });
+  }
+
+  if (interfaceValue != null && interfaceValue !== '' && !isAllowedStorageInterface(interfaceValue)) {
+    return res.status(400).json({
+      error: `Invalid storage interface. Allowed values: ${ALLOWED_STORAGE_INTERFACES.join(', ')}`
+    });
+  }
+
   const storage = await prisma.storage.update({
     where: { id: req.params.id },
     data: {
       ...rest,
+      storageType: storageType || null,
+      interface: interfaceValue || null,
       hardwareAssetId: hardwareAssetId || null,
       softwareUnitId: softwareUnitId || null
     }

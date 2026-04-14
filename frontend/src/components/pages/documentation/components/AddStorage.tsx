@@ -2,6 +2,63 @@ import { useEffect, useState } from 'react';
 import { Button, Input, Select, ListBox } from '@heroui/react';
 import { ChevronDown } from 'lucide-react';
 
+export const STORAGE_TYPE_OPTIONS = ['SSD', 'HDD', 'SD', 'EMMC', 'USB_FLASH', 'OPTICAL', 'TAPE', 'OTHER'] as const;
+export const STORAGE_INTERFACE_OPTIONS = [
+	'SATA',
+	'SAS',
+	'NVME M.2',
+	'SATA NVME',
+	'U.2/U.3 NVME',
+	'PCIE',
+	'USB',
+	'THUNDERBOLT',
+	'SDIO',
+	'EMMC',
+	'ISCSI',
+	'FIBRE_CHANNEL',
+	'OTHER'
+] as const;
+
+export const STORAGE_TYPE_LABELS: Record<(typeof STORAGE_TYPE_OPTIONS)[number], string> = {
+	SSD: 'SSD',
+	HDD: 'HDD',
+	SD: 'SD Card',
+	EMMC: 'eMMC',
+	USB_FLASH: 'USB Flash',
+	OPTICAL: 'Optical Disc',
+	TAPE: 'Tape',
+	OTHER: 'Other'
+};
+
+export const STORAGE_INTERFACE_LABELS: Record<(typeof STORAGE_INTERFACE_OPTIONS)[number], string> = {
+	SATA: 'SATA',
+	SAS: 'SAS',
+	'NVME M.2': 'NVMe M.2',
+	'SATA NVME': 'SATA NVMe',
+	'U.2/U.3 NVME': 'U.2/U.3 NVMe',
+	PCIE: 'PCIe',
+	USB: 'USB',
+	THUNDERBOLT: 'Thunderbolt',
+	SDIO: 'SDIO',
+	EMMC: 'eMMC',
+	ISCSI: 'iSCSI',
+	FIBRE_CHANNEL: 'Fibre Channel',
+	OTHER: 'Other'
+};
+
+export const getStorageTypeLabel = (value: string | null | undefined) => {
+	if (!value) return '-';
+	return STORAGE_TYPE_LABELS[value as StorageTypeOption] || value;
+};
+
+export const getStorageInterfaceLabel = (value: string | null | undefined) => {
+	if (!value) return '-';
+	return STORAGE_INTERFACE_LABELS[value as StorageInterfaceOption] || value;
+};
+
+export type StorageTypeOption = (typeof STORAGE_TYPE_OPTIONS)[number];
+export type StorageInterfaceOption = (typeof STORAGE_INTERFACE_OPTIONS)[number];
+
 type SelectOption = {
 	id: string;
 	name: string;
@@ -9,11 +66,11 @@ type SelectOption = {
 
 export type StorageFormValues = {
 	name: string;
-	type: string;
+	type: StorageTypeOption;
 	make: string;
 	model: string;
 	serialNumber: string;
-	interfaceType: string;
+	interfaceType: StorageInterfaceOption;
 	usableSpace: number | '';
 	spaceUnit: 'GB' | 'TB';
 	hardwareAssetId: string;
@@ -35,11 +92,11 @@ export default function AddStorage({
 	onSave
 }: AddStorageProps) {
 	const [name, setName] = useState('');
-	const [type, setType] = useState('SSD');
+	const [type, setType] = useState<StorageTypeOption>('SSD');
 	const [make, setMake] = useState('');
 	const [model, setModel] = useState('');
 	const [serialNumber, setSerialNumber] = useState('');
-	const [interfaceType, setInterfaceType] = useState('');
+	const [interfaceType, setInterfaceType] = useState<StorageInterfaceOption>('SATA');
 	const [usableSpace, setUsableSpace] = useState<number | ''>('');
 	const [spaceUnit, setSpaceUnit] = useState<'GB' | 'TB'>('GB');
 	const [hardwareAssetId, setHardwareAssetId] = useState('');
@@ -47,11 +104,11 @@ export default function AddStorage({
 	useEffect(() => {
 		if (!isOpen) return;
 		setName(initialValues?.name || '');
-		setType(initialValues?.type || 'SSD');
+		setType((initialValues?.type as StorageTypeOption) || 'SSD');
 		setMake(initialValues?.make || '');
 		setModel(initialValues?.model || '');
 		setSerialNumber(initialValues?.serialNumber || '');
-		setInterfaceType(initialValues?.interfaceType || '');
+		setInterfaceType((initialValues?.interfaceType as StorageInterfaceOption) || 'SATA');
 		setUsableSpace(initialValues?.usableSpace ?? '');
 		setSpaceUnit(initialValues?.spaceUnit || 'GB');
 		setHardwareAssetId(initialValues?.hardwareAssetId || '');
@@ -67,7 +124,7 @@ export default function AddStorage({
 			make: make.trim(),
 			model: model.trim(),
 			serialNumber: serialNumber.trim(),
-			interfaceType: interfaceType.trim(),
+			interfaceType,
 			usableSpace,
 			spaceUnit,
 			hardwareAssetId
@@ -115,26 +172,35 @@ export default function AddStorage({
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 						<label className="space-y-1">
 							<span className="text-xs text-slate-400">Type</span>
-							<Select selectedKey={type} onChange={(key) => { if (key != null) setType(String(key)); }} className="w-full">
+							<Select selectedKey={type} onChange={(key) => { if (key != null) setType(String(key) as StorageTypeOption); }} className="w-full">
 								<Select.Trigger className="w-full px-3 flex items-center justify-between">
 									<Select.Value />
 									<ChevronDown size={16} className="text-slate-400" />
 								</Select.Trigger>
 								<Select.Popover className="w-[var(--trigger-width)]">
 									<ListBox>
-										<ListBox.Item id="SSD" className="pl-2">SSD</ListBox.Item>
-										<ListBox.Item id="HDD" className="pl-2">HDD</ListBox.Item>
-										<ListBox.Item id="NVME" className="pl-2">NVME</ListBox.Item>
-										<ListBox.Item id="USB" className="pl-2">USB</ListBox.Item>
-										<ListBox.Item id="ARRAY" className="pl-2">ARRAY</ListBox.Item>
-										<ListBox.Item id="OTHER" className="pl-2">OTHER</ListBox.Item>
+										{STORAGE_TYPE_OPTIONS.map((option) => (
+											<ListBox.Item key={option} id={option} className="pl-2">{STORAGE_TYPE_LABELS[option]}</ListBox.Item>
+										))}
 									</ListBox>
 								</Select.Popover>
 							</Select>
 						</label>
 						<label className="space-y-1">
 							<span className="text-xs text-slate-400">Interface</span>
-							<Input value={interfaceType} onChange={(e) => setInterfaceType(e.target.value)} className="w-full" />
+							<Select selectedKey={interfaceType} onChange={(key) => { if (key != null) setInterfaceType(String(key) as StorageInterfaceOption); }} className="w-full">
+								<Select.Trigger className="w-full px-3 flex items-center justify-between">
+									<Select.Value />
+									<ChevronDown size={16} className="text-slate-400" />
+								</Select.Trigger>
+								<Select.Popover className="w-[var(--trigger-width)]">
+									<ListBox>
+										{STORAGE_INTERFACE_OPTIONS.map((option) => (
+											<ListBox.Item key={option} id={option} className="pl-2">{STORAGE_INTERFACE_LABELS[option]}</ListBox.Item>
+										))}
+									</ListBox>
+								</Select.Popover>
+							</Select>
 						</label>
 						<label className="space-y-1">
 							<span className="text-xs text-slate-400">Make</span>

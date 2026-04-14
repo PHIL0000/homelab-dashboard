@@ -1,4 +1,5 @@
 import { Button, Card } from '@heroui/react';
+import { getStorageInterfaceLabel, getStorageTypeLabel } from './AddStorage';
 
 type OverviewRightPaneProps = {
   selectedHardware: any | undefined;
@@ -147,11 +148,11 @@ export default function OverviewRightPane({
                   <div key={item.id} className="px-4 py-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium text-slate-100">{item.name}</p>
-                      <p className="text-xs text-slate-400">{item.storageType || '-'} • {displaySpace(item.usableSpaceGB)}</p>
+                      <p className="text-xs text-slate-400">{getStorageTypeLabel(item.storageType)} • {displaySpace(item.usableSpaceGB)}</p>
                       <p className="text-xs text-slate-400 mt-0.5">
                         {[item.make, item.model].filter(Boolean).join(' ') || '-'}
                         {item.serialNumber ? ` • S/N ${item.serialNumber}` : ''}
-                        {item.interface ? ` • ${item.interface}` : ''}
+                        {item.interface ? ` • ${getStorageInterfaceLabel(item.interface)}` : ''}
                       </p>
                     </div>
                     <Button

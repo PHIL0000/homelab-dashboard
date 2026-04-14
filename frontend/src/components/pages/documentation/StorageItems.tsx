@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Button, Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
-import AddStorage, { type StorageFormValues } from './components/AddStorage';
+import AddStorage, { getStorageTypeLabel, type StorageFormValues } from './components/AddStorage';
 import EditStorage from './components/EditStorage';
 
 const API_BASE = 'http://localhost:3001/api/infrastructure';
@@ -146,7 +146,7 @@ export default function StorageItems() {
             {storageItems.map(item => (
               <tr key={item.id} className="hover:bg-slate-800/50 transition-colors">
                 <td className="px-4 py-3 font-medium text-slate-100">{item.name}</td>
-                <td className="px-4 py-3 text-slate-400">{item.storageType}</td>
+                <td className="px-4 py-3 text-slate-400">{getStorageTypeLabel(item.storageType)}</td>
                 <td className="px-4 py-3 text-slate-400">{[item.make, item.model].filter(Boolean).join(' ') || '-'}</td>
                 <td className="px-4 py-3 text-slate-400">{item.serialNumber || '-'}</td>
                 <td className="px-4 py-3 text-slate-400">{displaySpace(item.usableSpaceGB)}</td>
