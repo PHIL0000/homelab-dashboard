@@ -9,6 +9,10 @@ interface User {
   lastName?: string;
   email?: string;
   avatarUrl?: string;
+  dashboardName?: string;
+  timezone?: string;
+  timeFormat?: '12h' | '24h' | string;
+  dateFormat?: 'DD-MM-YYYY' | 'MM-DD-YYYY' | 'YYYY-MM-DD' | 'DD.MM.YYYY' | string;
   role: string;
 }
 

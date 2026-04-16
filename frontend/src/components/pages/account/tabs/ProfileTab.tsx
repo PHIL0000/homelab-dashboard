@@ -55,7 +55,7 @@ export default function ProfileTab() {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 max-w-3xl">
+    <div className="doc-theme-form grid grid-cols-1 gap-6 max-w-3xl">
       <Card className="p-6 bg-slate-900/50 border border-slate-700/50">
         <h2 className="text-xl font-semibold mb-2 text-slate-100">{t('account.profileInfo')}</h2>
         

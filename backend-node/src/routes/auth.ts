@@ -25,6 +25,21 @@ if (!jwtSecret) {
 }
 
 const JWT_SECRET = jwtSecret;
+
+const toPublicUser = (user: any) => ({
+  id: user.id,
+  username: user.username,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  email: user.email,
+  role: user.role,
+  avatarUrl: user.avatarUrl,
+  dashboardName: user.dashboardName,
+  timezone: user.timezone,
+  timeFormat: user.timeFormat,
+  dateFormat: user.dateFormat
+});
+
 // Check if initial setup is needed (i.e. no users exist)
 router.get('/setup-status', async (req, res) => {
   try {
@@ -64,7 +79,7 @@ router.post('/setup', async (req, res) => {
 
     // Generate token
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.status(201).json({ user: { id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role, avatarUrl: user.avatarUrl }, token });
+    res.status(201).json({ user: toPublicUser(user as any), token });
   } catch (error) {
     console.error("Error during setup:", error);
     res.status(500).json({ error: "Internal server error during setup" });
@@ -95,7 +110,7 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ user: { id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role, avatarUrl: user.avatarUrl }, token });
+    res.json({ user: toPublicUser(user as any), token });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: "Internal server error during login" });
@@ -120,7 +135,7 @@ router.get('/me', authenticate, async (req: any, res: any) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
     if (!user) return res.status(404).json({ error: "User not found" });
-    res.json({ id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role, avatarUrl: user.avatarUrl });
+    res.json(toPublicUser(user as any));
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }

@@ -6,6 +6,22 @@ import { authenticate } from './auth';
 const router = Router();
 const prisma = new PrismaClient();
 
+const userSelectWithPreferences: any = {
+  id: true,
+  username: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  avatarUrl: true,
+  dashboardName: true,
+  timezone: true,
+  timeFormat: true,
+  dateFormat: true,
+  role: true,
+  createdAt: true,
+  updatedAt: true
+};
+
 // List all users. Only ADMIN can do this.
 router.get('/', authenticate, async (req: any, res: any) => {
   try {
@@ -13,17 +29,7 @@ router.get('/', authenticate, async (req: any, res: any) => {
       return res.status(403).json({ error: "Forbidden: Admins only" });
     }
     const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        avatarUrl: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true
-      }
+      select: userSelectWithPreferences
     });
     res.json(users);
   } catch (error) {
@@ -60,17 +66,7 @@ router.post('/', authenticate, async (req: any, res: any) => {
         role: userRole,
         avatarUrl: avatarUrl || null
       },
-      select: {
-        id: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        avatarUrl: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true
-      }
+      select: userSelectWithPreferences
     });
 
     res.status(201).json(user);
@@ -84,7 +80,18 @@ router.post('/', authenticate, async (req: any, res: any) => {
 router.put('/:id', authenticate, async (req: any, res: any) => {
   try {
     const targetUserId = req.params.id;
-    const { username, firstName, lastName, email, avatarUrl } = req.body;
+    const { username, firstName, lastName, email, avatarUrl, dashboardName, timezone, timeFormat, dateFormat } = req.body;
+
+    const allowedTimeFormats = new Set(['12h', '24h']);
+    const allowedDateFormats = new Set(['DD-MM-YYYY', 'MM-DD-YYYY', 'YYYY-MM-DD', 'DD.MM.YYYY']);
+
+    if (timeFormat !== undefined && !allowedTimeFormats.has(String(timeFormat))) {
+      return res.status(400).json({ error: 'Invalid time format' });
+    }
+
+    if (dateFormat !== undefined && !allowedDateFormats.has(String(dateFormat))) {
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
     
     // Only allow if user is updating themselves, or if the requester is an ADMIN
     if (req.user.userId !== targetUserId && req.user.role !== 'ADMIN') {
@@ -99,18 +106,12 @@ router.put('/:id', authenticate, async (req: any, res: any) => {
         ...(lastName !== undefined && { lastName }),
         ...(email !== undefined && { email }),
         ...(avatarUrl !== undefined && { avatarUrl }),
+        ...(dashboardName !== undefined && { dashboardName }),
+        ...(timezone !== undefined && { timezone }),
+        ...(timeFormat !== undefined && { timeFormat }),
+        ...(dateFormat !== undefined && { dateFormat }),
       },
-      select: {
-        id: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        avatarUrl: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true
-      }
+      select: userSelectWithPreferences
     });
 
     res.json(updatedUser);
