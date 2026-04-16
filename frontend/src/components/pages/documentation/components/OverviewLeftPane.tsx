@@ -100,7 +100,7 @@ export default function OverviewLeftPane({
           </label>
         </div>
       </div>
-      <div className="divide-y divide-border overflow-y-auto min-h-0">
+  <div className="theme-scrollbar divide-y divide-border overflow-y-auto min-h-0 pr-1">
         {sortedHardware.length === 0 && <p className="p-4 text-slate-400">No hardware found.</p>}
         {sortedHardware.map(hw => (
           <Button

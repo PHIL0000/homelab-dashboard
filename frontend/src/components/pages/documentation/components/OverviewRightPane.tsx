@@ -145,7 +145,7 @@ export default function OverviewRightPane({
   };
 
   return (
-    <div className="xl:col-span-8 min-h-0 overflow-y-auto pr-1">
+  <div className="theme-scrollbar xl:col-span-8 min-h-0 overflow-y-auto pr-2">
       <div className="space-y-6">
         {!selectedHardware && (
           <Card className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-6 text-slate-400">
