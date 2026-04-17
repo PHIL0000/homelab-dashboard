@@ -17,6 +17,9 @@
 ### Weitere Seiten
 * Einkaufsliste (könnte man auch eigenes Backend erstellen)
 * Paperless (Rechnungs Suchfeld etc)
+* Notizen Seite (Joplin)
+* Withboard (geht glaub mit Nextcloud)
+
 
 
 ## Überblick und Design-Philosophie
