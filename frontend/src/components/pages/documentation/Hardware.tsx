@@ -174,7 +174,7 @@ export default function Hardware() {
           <Button onClick={handleAddHardware} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all" variant="primary">+ Add hardware</Button>
         </div>
 
-        <div className="space-y-6 flex-1 min-h-0 overflow-y-auto pr-1">
+  <div className="space-y-6 page-content-scroll">
         <Card className="doc-theme-form rounded-xl p-4 bg-slate-900/50 border border-slate-700/50">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <label className="space-y-1 block">

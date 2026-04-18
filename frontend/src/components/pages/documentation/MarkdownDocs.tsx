@@ -386,7 +386,7 @@ export default function MarkdownDocs() {
                 </div>
               </div>
 
-              <div className="border border-slate-700/50 rounded-lg p-4 bg-slate-800/40 max-h-[460px] overflow-auto break-words">
+              <div className="theme-scrollbar border border-slate-700/50 rounded-lg p-4 bg-slate-800/40 max-h-[460px] overflow-auto break-words">
                 <ReactMarkdown components={markdownComponents}>{selectedDoc.content || ''}</ReactMarkdown>
               </div>
 
