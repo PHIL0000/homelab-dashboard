@@ -249,34 +249,38 @@ export default function StorageItems() {
             {sortedStorageItems.length === 0 && (
               <tr><td colSpan={7} className="p-4 text-center text-slate-400">No storage items found.</td></tr>
             )}
-            {sortedStorageItems.map(item => (
-              <tr key={item.id} className="hover:bg-slate-800/50 transition-colors">
-                <td className="px-4 py-3 font-medium text-slate-100">{item.name}</td>
-                <td className="px-4 py-3 text-slate-400">{getStorageTypeLabel(item.storageType)}</td>
-                <td className="px-4 py-3 text-slate-400">{[item.make, item.model].filter(Boolean).join(' ') || '-'}</td>
-                <td className="px-4 py-3 text-slate-400">{displaySpace(item.usableSpaceGB)}</td>
-                <td className="px-4 py-3 text-slate-400">{item.hardwareAsset?.name || 'Unassigned'}</td>
-                <td className="px-4 py-3 text-slate-400">
-                  {getAssignedServiceNames(item).length === 0 ? (
-                    '-'
-                  ) : (
-                    <div className="flex flex-wrap gap-1.5">
-                      {getAssignedServiceNames(item).map((serviceName) => (
-                        <span
-                          key={`${item.id}-${serviceName}`}
-                          className="inline-flex items-center rounded-full border border-slate-700/60 bg-slate-800/70 px-2 py-0.5 text-xs text-slate-100"
-                        >
-                          {serviceName}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Button type="button" onClick={() => handleEditStorage(item)} className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
-                </td>
-              </tr>
-            ))}
+            {sortedStorageItems.map(item => {
+              const assignedServiceNames = getAssignedServiceNames(item);
+
+              return (
+                <tr key={item.id} className="hover:bg-slate-800/50 transition-colors">
+                  <td className="px-4 py-3 font-medium text-slate-100">{item.name}</td>
+                  <td className="px-4 py-3 text-slate-400">{getStorageTypeLabel(item.storageType)}</td>
+                  <td className="px-4 py-3 text-slate-400">{[item.make, item.model].filter(Boolean).join(' ') || '-'}</td>
+                  <td className="px-4 py-3 text-slate-400">{displaySpace(item.usableSpaceGB)}</td>
+                  <td className="px-4 py-3 text-slate-400">{item.hardwareAsset?.name || 'Unassigned'}</td>
+                  <td className="px-4 py-3 text-slate-400">
+                    {assignedServiceNames.length === 0 ? (
+                      '-'
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {assignedServiceNames.map((serviceName) => (
+                          <span
+                            key={`${item.id}-${serviceName}`}
+                            className="inline-flex items-center rounded-full border border-slate-700/60 bg-slate-800/70 px-2 py-0.5 text-xs text-slate-100"
+                          >
+                            {serviceName}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Button type="button" onClick={() => handleEditStorage(item)} className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Edit</Button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </Card>

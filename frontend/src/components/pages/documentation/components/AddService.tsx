@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Input, Select, ListBox } from '@heroui/react';
 import { ChevronDown } from 'lucide-react';
 
@@ -71,10 +71,16 @@ export default function AddService({
 	onInternalIpChange,
 	onHardwareAssetIdChange
 }: AddServiceProps) {
-	if (!isOpen) return null;
-
 	const selectedIds = selectedStorageIds || [];
 	const [storagePickerKey, setStoragePickerKey] = useState('picker-none');
+
+	useEffect(() => {
+		if (isOpen) {
+			setStoragePickerKey('picker-none');
+		}
+	}, [isOpen]);
+
+	if (!isOpen) return null;
 
 	const addStorageId = (storageId: string) => {
 		if (!onSelectedStorageIdsChange) return;
