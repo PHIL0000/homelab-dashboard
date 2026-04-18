@@ -40,6 +40,7 @@ const SOFTWARE_TYPE_OPTIONS = [
 	{ value: 'BARE_METAL_SERVICE', label: 'Bare Metal' },
 	{ value: 'OTHER', label: 'Other' }
 ] as const;
+const STORAGE_PICKER_NONE_KEY = 'picker-none';
 
 export default function AddService({
 	isOpen,
@@ -72,11 +73,11 @@ export default function AddService({
 	onHardwareAssetIdChange
 }: AddServiceProps) {
 	const selectedIds = selectedStorageIds || [];
-	const [storagePickerKey, setStoragePickerKey] = useState('picker-none');
+	const [storagePickerKey, setStoragePickerKey] = useState(STORAGE_PICKER_NONE_KEY);
 
 	useEffect(() => {
 		if (isOpen) {
-			setStoragePickerKey('picker-none');
+			setStoragePickerKey(STORAGE_PICKER_NONE_KEY);
 		}
 	}, [isOpen]);
 
@@ -190,7 +191,7 @@ export default function AddService({
 								onChange={(key) => {
 									if (key == null) return;
 									const value = String(key);
-									if (value === 'picker-none') return;
+									if (value === STORAGE_PICKER_NONE_KEY) return;
 									addStorageId(value);
 								}}
 								className="w-full"
@@ -201,7 +202,7 @@ export default function AddService({
 								</Select.Trigger>
 								<Select.Popover className="w-[var(--trigger-width)]">
 									<ListBox>
-										<ListBox.Item id="picker-none" className="pl-2">Select storage to add</ListBox.Item>
+										<ListBox.Item id={STORAGE_PICKER_NONE_KEY} className="pl-2">Select storage to add</ListBox.Item>
 										{storageOptions.map((option) => (
 											<ListBox.Item key={option.id} id={option.id} className="pl-2">{option.name}</ListBox.Item>
 										))}
