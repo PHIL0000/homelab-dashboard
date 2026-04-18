@@ -51,6 +51,8 @@ export const translations = {
     'settings.haDomain.desc': 'Die URL zur Home Assistant Instanz für dieses Dashboard (z.B. https://ha.example.com)',
     'settings.haDomain.placeholder': 'https://...',
     'settings.save': 'Speichern',
+    'settings.saveSuccess': 'Einstellungen erfolgreich gespeichert.',
+    'settings.saveError': 'Einstellungen konnten nicht gespeichert werden.',
 
     // Account
     'account.title': 'Konto',
@@ -133,6 +135,8 @@ export const translations = {
     'settings.haDomain.desc': 'The URL to the Home Assistant instance for this dashboard (e.g. https://ha.example.com)',
     'settings.haDomain.placeholder': 'https://...',
     'settings.save': 'Save',
+    'settings.saveSuccess': 'Settings saved successfully.',
+    'settings.saveError': 'Failed to save settings.',
 
     // Account
     'account.title': 'Account',
