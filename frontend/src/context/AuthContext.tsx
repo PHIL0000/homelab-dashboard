@@ -13,6 +13,12 @@ interface User {
   timezone?: string;
   timeFormat?: '12h' | '24h' | string;
   dateFormat?: 'DD-MM-YYYY' | 'MM-DD-YYYY' | 'YYYY-MM-DD' | 'DD.MM.YYYY' | string;
+  pageVisibility?: Record<string, boolean>;
+  oledAccentRgb?: {
+    r: number;
+    g: number;
+    b: number;
+  } | null;
   role: string;
 }
 

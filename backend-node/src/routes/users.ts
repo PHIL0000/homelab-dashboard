@@ -17,9 +17,36 @@ const userSelectWithPreferences: any = {
   timezone: true,
   timeFormat: true,
   dateFormat: true,
+  pageVisibility: true,
+  oledAccentRgb: true,
   role: true,
   createdAt: true,
   updatedAt: true
+};
+
+const allowedPagePaths = new Set([
+  '/dashboard',
+  '/calendar',
+  '/home-assistant',
+  '/ai',
+  '/documentation',
+  '/storage',
+  '/ai/chat',
+  '/ai/image-gen',
+  '/storage/nas',
+  '/storage/nextcloud',
+  '/storage/gitlab',
+  '/documentation/overview',
+  '/documentation/map',
+  '/documentation/hardware',
+  '/documentation/services',
+  '/documentation/storage',
+  '/documentation/docs',
+  '/performance'
+]);
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
 };
 
 // List all users. Only ADMIN can do this.
@@ -80,7 +107,19 @@ router.post('/', authenticate, async (req: any, res: any) => {
 router.put('/:id', authenticate, async (req: any, res: any) => {
   try {
     const targetUserId = req.params.id;
-    const { username, firstName, lastName, email, avatarUrl, dashboardName, timezone, timeFormat, dateFormat } = req.body;
+    const {
+      username,
+      firstName,
+      lastName,
+      email,
+      avatarUrl,
+      dashboardName,
+      timezone,
+      timeFormat,
+      dateFormat,
+      pageVisibility,
+      oledAccentRgb
+    } = req.body;
 
     const allowedTimeFormats = new Set(['12h', '24h']);
     const allowedDateFormats = new Set(['DD-MM-YYYY', 'MM-DD-YYYY', 'YYYY-MM-DD', 'DD.MM.YYYY']);
@@ -91,6 +130,42 @@ router.put('/:id', authenticate, async (req: any, res: any) => {
 
     if (dateFormat !== undefined && !allowedDateFormats.has(String(dateFormat))) {
       return res.status(400).json({ error: 'Invalid date format' });
+    }
+
+    let sanitizedPageVisibility: Record<string, boolean> | undefined;
+    if (pageVisibility !== undefined) {
+      if (!isPlainObject(pageVisibility)) {
+        return res.status(400).json({ error: 'Invalid page visibility payload' });
+      }
+
+      sanitizedPageVisibility = {};
+      for (const [key, value] of Object.entries(pageVisibility)) {
+        if (!allowedPagePaths.has(key)) {
+          return res.status(400).json({ error: `Invalid page path in visibility map: ${key}` });
+        }
+        if (typeof value !== 'boolean') {
+          return res.status(400).json({ error: `Visibility for ${key} must be boolean` });
+        }
+        sanitizedPageVisibility[key] = value;
+      }
+    }
+
+    let sanitizedOledAccentRgb: { r: number; g: number; b: number } | null | undefined;
+    if (oledAccentRgb !== undefined) {
+      if (oledAccentRgb === null) {
+        sanitizedOledAccentRgb = null;
+      } else if (isPlainObject(oledAccentRgb)) {
+        const r = Number(oledAccentRgb.r);
+        const g = Number(oledAccentRgb.g);
+        const b = Number(oledAccentRgb.b);
+        const isValid = [r, g, b].every((v) => Number.isInteger(v) && v >= 0 && v <= 255);
+        if (!isValid) {
+          return res.status(400).json({ error: 'oledAccentRgb must contain integer r,g,b values in range 0..255' });
+        }
+        sanitizedOledAccentRgb = { r, g, b };
+      } else {
+        return res.status(400).json({ error: 'Invalid oledAccentRgb payload' });
+      }
     }
     
     // Only allow if user is updating themselves, or if the requester is an ADMIN
@@ -110,6 +185,8 @@ router.put('/:id', authenticate, async (req: any, res: any) => {
         ...(timezone !== undefined && { timezone }),
         ...(timeFormat !== undefined && { timeFormat }),
         ...(dateFormat !== undefined && { dateFormat }),
+        ...(sanitizedPageVisibility !== undefined && { pageVisibility: sanitizedPageVisibility }),
+        ...(sanitizedOledAccentRgb !== undefined && { oledAccentRgb: sanitizedOledAccentRgb }),
       },
       select: userSelectWithPreferences
     });

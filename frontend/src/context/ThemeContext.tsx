@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export type Theme =
   | "midnight"
@@ -234,9 +235,35 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const clampByte = (value: number) => Math.min(255, Math.max(0, Math.round(value)));
+
+const rgbToHex = (r: number, g: number, b: number) => {
+  return `#${[r, g, b]
+    .map((v) => clampByte(v).toString(16).padStart(2, "0"))
+    .join("")}`;
+};
+
+const scaleRgb = (rgb: { r: number; g: number; b: number }, factor: number) => {
+  return {
+    r: clampByte(rgb.r * factor),
+    g: clampByte(rgb.g * factor),
+    b: clampByte(rgb.b * factor),
+  };
+};
+
+const isRgbObject = (value: unknown): value is { r: number; g: number; b: number } => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const rgb = value as Record<string, unknown>;
+  return [rgb.r, rgb.g, rgb.b].every((entry) => Number.isInteger(entry) && Number(entry) >= 0 && Number(entry) <= 255);
+};
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { user } = useAuth();
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = localStorage.getItem("theme") as Theme;
     // Prüfen, ob das gespeicherte Theme noch existiert (sonst Fallback auf Midnight)
@@ -249,10 +276,36 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     localStorage.setItem("theme", theme);
     applyTheme(theme);
-  }, [theme]);
+  }, [theme, user?.oledAccentRgb]);
 
   const applyTheme = (selectedTheme: Theme) => {
-    const config = themes[selectedTheme] || themes["midnight"];
+    const baseConfig = themes[selectedTheme] || themes["midnight"];
+    const customOledRgb = isRgbObject(user?.oledAccentRgb) ? user?.oledAccentRgb : null;
+
+    let config: ThemeConfig = baseConfig;
+    if (selectedTheme === "oled" && customOledRgb) {
+      const secondaryRgb = scaleRgb(customOledRgb, 0.55);
+      const accentRgb = scaleRgb(customOledRgb, 1.15);
+      const borderRgb = scaleRgb(customOledRgb, 0.35);
+      const primaryHex = rgbToHex(customOledRgb.r, customOledRgb.g, customOledRgb.b);
+      const secondaryHex = rgbToHex(secondaryRgb.r, secondaryRgb.g, secondaryRgb.b);
+      const accentHex = rgbToHex(accentRgb.r, accentRgb.g, accentRgb.b);
+      const borderHex = rgbToHex(borderRgb.r, borderRgb.g, borderRgb.b);
+
+      config = {
+        ...baseConfig,
+        colors: {
+          ...baseConfig.colors,
+          primary: primaryHex,
+          secondary: secondaryHex,
+          accent: accentHex,
+          glow: accentHex,
+          border: borderHex,
+          gradientMid: secondaryHex,
+        },
+      };
+    }
+
     const html = document.documentElement;
     const body = document.body;
 

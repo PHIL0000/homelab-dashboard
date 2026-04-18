@@ -9,6 +9,8 @@ model User {
   timezone      String          @default("Europe/Berlin")
   timeFormat    String          @default("24h")
   dateFormat    String          @default("DD-MM-YYYY")
+  pageVisibility Json?
+  oledAccentRgb  Json?
   passwordHash  String
   role          UserRole        @default(USER)
   createdAt     DateTime        @default(now())

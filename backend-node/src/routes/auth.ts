@@ -37,7 +37,9 @@ const toPublicUser = (user: any) => ({
   dashboardName: user.dashboardName,
   timezone: user.timezone,
   timeFormat: user.timeFormat,
-  dateFormat: user.dateFormat
+  dateFormat: user.dateFormat,
+  pageVisibility: user.pageVisibility,
+  oledAccentRgb: user.oledAccentRgb
 });
 
 // Check if initial setup is needed (i.e. no users exist)

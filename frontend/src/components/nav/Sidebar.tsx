@@ -107,6 +107,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
       : "text-[var(--color-textSecondary)] hover:text-[var(--color-text)] hover:bg-[color-mix(in_srgb,var(--color-primary)_18%,transparent)]";
   };
 
+  const pageVisibilityMap = user?.pageVisibility ?? {};
+  const isPageVisible = (path: string) => pageVisibilityMap[path] !== false;
+  const isAiGroupVisible = isPageVisible('/ai');
+  const isStorageGroupVisible = isPageVisible('/storage');
+  const isDocsGroupVisible = isPageVisible('/documentation');
+
   const topItems = [
     { label: t("nav.dashboard"), path: "/dashboard", icon: LayoutDashboard },
     { label: t("nav.calendar"), path: "/calendar", icon: CalendarDays },
@@ -137,6 +143,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
     { label: t("nav.performance"), path: "/performance", icon: Activity },
   ];
 
+  const visibleTopItems = topItems.filter((item) => isPageVisible(item.path));
+  const visibleAiItems = isAiGroupVisible ? aiItems.filter((item) => isPageVisible(item.path)) : [];
+  const visibleStorageItems = isStorageGroupVisible
+    ? storageItems.filter((item) => isPageVisible(item.path))
+    : [];
+  const visibleDocumentationItems = isDocsGroupVisible
+    ? documentationItems.filter((item) => isPageVisible(item.path))
+    : [];
+  const visibleBottomItems = bottomItems.filter((item) => isPageVisible(item.path));
+
   return (
     <div
       className={`${isCollapsed ? "w-20" : "w-64"} sidebar-theme-gradient h-screen rounded-none border-r border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] flex flex-col transition-all duration-300 ease-in-out relative z-20 shrink-0`}
@@ -164,7 +180,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
 
       <nav className="flex-1 p-3 overflow-y-auto overflow-x-hidden scrollbar-thin">
         {/* TOP ITEMS */}
-        {topItems.map((item) => (
+        {visibleTopItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
@@ -177,6 +193,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
         ))}
 
         {/* AI SECTION */}
+        {visibleAiItems.length > 0 && (
         <div className="mb-1.5 mt-4">
           {isCollapsed ? (
             <Button
@@ -207,7 +224,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
 
           {openAI && !isCollapsed && (
             <div className="ml-4 mt-2 space-y-1 border-l border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] pl-3">
-              {aiItems.map((item) => (
+              {visibleAiItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
@@ -220,8 +237,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
             </div>
           )}
         </div>
+        )}
 
         {/* STORAGE SECTION */}
+        {visibleStorageItems.length > 0 && (
         <div className="mb-1.5">
           {isCollapsed ? (
             <Button
@@ -252,7 +271,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
 
           {openStorage && !isCollapsed && (
             <div className="ml-4 mt-2 space-y-1 border-l border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] pl-3">
-              {storageItems.map((item) => (
+              {visibleStorageItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
@@ -265,8 +284,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
             </div>
           )}
         </div>
+        )}
 
         {/* DOCUMENTATION SECTION */}
+        {visibleDocumentationItems.length > 0 && (
         <div className="mb-1.5">
           {isCollapsed ? (
             <Button
@@ -297,7 +318,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
 
           {openDocs && !isCollapsed && (
             <div className="ml-4 mt-2 space-y-1 border-l border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] pl-3">
-              {documentationItems.map((item) => (
+              {visibleDocumentationItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
@@ -310,10 +331,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
             </div>
           )}
         </div>
+        )}
 
 
         {/* BOTTOM ITEMS */}
-        {bottomItems.map((item) => (
+        {visibleBottomItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
