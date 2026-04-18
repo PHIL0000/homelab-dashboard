@@ -58,7 +58,7 @@ model SoftwareUnit {
   docs              Doc[]
   widgets           Widget[]          // Implicit m:n connection for Widget -> Software-Unit
   networkInterfaces NetworkInterface[]
-  storage           Storage[]
+  storageAssignments StorageServiceAssignment[]
 }
 
 model Deployment {
@@ -82,11 +82,11 @@ model Deployment {
 model Storage {
   id              String         @id @default(uuid()) @db.Uuid
   name            String
-  storageType     String?        // array, zfs, btrfs, lvm, single, etc.
+  storageType     String?        // app-controlled values: SSD | HDD | SD | EMMC | USB_FLASH | OPTICAL | TAPE | OTHER
   make            String?
   model           String?
   serialNumber    String?
-  interface       String?        // SATA, SAS, NVMe, USB, iSCSI, etc.
+  interface       String?        // app-controlled values: SATA | SAS | NVME M.2 | SATA NVME | U.2/U.3 NVME | PCIE | USB | THUNDERBOLT | SDIO | EMMC | ISCSI | FIBRE_CHANNEL | OTHER
   raidType        String?        // raid0, raid1, raid5, raidz2
   driveCount      Int?
   rawSpaceGB      Float?
@@ -94,12 +94,11 @@ model Storage {
   filesystem      String?        // ext4, xfs, zfs
   notes           String?
 
-  // Exclusive relations (either Hardware or SoftwareUnit)
+  // Hardware host; service links are managed via StorageServiceAssignment (0..N)
   hardwareAssetId String?        @db.Uuid
   hardwareAsset   HardwareAsset? @relation(fields: [hardwareAssetId], references: [id], onDelete: Cascade)
 
-  softwareUnitId  String?        @db.Uuid
-  softwareUnit    SoftwareUnit?  @relation(fields: [softwareUnitId], references: [id], onDelete: Cascade)
+  serviceAssignments StorageServiceAssignment[]
 
   shares          StorageShare[]
 
@@ -107,6 +106,19 @@ model Storage {
   updatedAt       DateTime       @updatedAt
 
   @@index([hardwareAssetId])
+}
+
+model StorageServiceAssignment {
+  id            String       @id @default(uuid()) @db.Uuid
+  storageId     String       @db.Uuid
+  softwareUnitId String      @db.Uuid
+  createdAt     DateTime     @default(now())
+
+  storage       Storage      @relation(fields: [storageId], references: [id], onDelete: Cascade)
+  softwareUnit  SoftwareUnit @relation(fields: [softwareUnitId], references: [id], onDelete: Cascade)
+
+  @@unique([storageId, softwareUnitId])
+  @@index([storageId])
   @@index([softwareUnitId])
 }
 

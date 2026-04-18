@@ -17,7 +17,7 @@ export const translations = {
   'nav.docs.map': 'Map',
     'nav.docs.hardware': 'Hardware',
     'nav.docs.services': 'Dienste',
-    'nav.docs.storage': 'Speicher Config',
+    'nav.docs.storage': 'Speichermedien',
     'nav.docs.documents': 'Markdown Docs',
     'nav.ai.chat': 'Chat',
     'nav.ai.imageGen': 'Bild-Gen',
@@ -51,6 +51,8 @@ export const translations = {
     'settings.haDomain.desc': 'Die URL zur Home Assistant Instanz für dieses Dashboard (z.B. https://ha.example.com)',
     'settings.haDomain.placeholder': 'https://...',
     'settings.save': 'Speichern',
+    'settings.saveSuccess': 'Einstellungen erfolgreich gespeichert.',
+    'settings.saveError': 'Einstellungen konnten nicht gespeichert werden.',
 
     // Account
     'account.title': 'Konto',
@@ -99,7 +101,7 @@ export const translations = {
   'nav.docs.map': 'Map',
     'nav.docs.hardware': 'Hardware',
     'nav.docs.services': 'Services',
-    'nav.docs.storage': 'Storage Config',
+    'nav.docs.storage': 'Storage Drives',
     'nav.docs.documents': 'Markdown Docs',
     'nav.ai.chat': 'Chat',
     'nav.ai.imageGen': 'Image Gen',
@@ -133,6 +135,8 @@ export const translations = {
     'settings.haDomain.desc': 'The URL to the Home Assistant instance for this dashboard (e.g. https://ha.example.com)',
     'settings.haDomain.placeholder': 'https://...',
     'settings.save': 'Save',
+    'settings.saveSuccess': 'Settings saved successfully.',
+    'settings.saveError': 'Failed to save settings.',
 
     // Account
     'account.title': 'Account',

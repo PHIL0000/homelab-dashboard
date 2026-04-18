@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Button, Input, Select, ListBox } from '@heroui/react';
 import { ChevronDown } from 'lucide-react';
 
@@ -14,6 +15,8 @@ type AddServiceProps = {
 	port: string;
 	url: string;
 	image: string;
+	storageOptions?: Array<{ id: string; name: string }>;
+	selectedStorageIds?: string[];
 	internalIp?: string;
 	showInternalIp?: boolean;
 	createHint?: string;
@@ -25,6 +28,7 @@ type AddServiceProps = {
 	onPortChange: (value: string) => void;
 	onUrlChange: (value: string) => void;
 	onImageChange: (value: string) => void;
+	onSelectedStorageIdsChange?: (value: string[]) => void;
 	onInternalIpChange?: (value: string) => void;
 	onHardwareAssetIdChange?: (value: string) => void;
 };
@@ -36,6 +40,7 @@ const SOFTWARE_TYPE_OPTIONS = [
 	{ value: 'BARE_METAL_SERVICE', label: 'Bare Metal' },
 	{ value: 'OTHER', label: 'Other' }
 ] as const;
+const STORAGE_PICKER_NONE_KEY = 'picker-none';
 
 export default function AddService({
 	isOpen,
@@ -50,6 +55,8 @@ export default function AddService({
 	port,
 	url,
 	image,
+	storageOptions,
+	selectedStorageIds,
 	internalIp,
 	showInternalIp,
 	createHint,
@@ -61,10 +68,35 @@ export default function AddService({
 	onPortChange,
 	onUrlChange,
 	onImageChange,
+	onSelectedStorageIdsChange,
 	onInternalIpChange,
 	onHardwareAssetIdChange
 }: AddServiceProps) {
+	const selectedIds = selectedStorageIds || [];
+	const [storagePickerKey, setStoragePickerKey] = useState(STORAGE_PICKER_NONE_KEY);
+
+	useEffect(() => {
+		if (isOpen) {
+			setStoragePickerKey(STORAGE_PICKER_NONE_KEY);
+		}
+	}, [isOpen]);
+
 	if (!isOpen) return null;
+
+	const addStorageId = (storageId: string) => {
+		if (!onSelectedStorageIdsChange) return;
+		onSelectedStorageIdsChange(
+			selectedIds.includes(storageId)
+				? selectedIds
+				: [...selectedIds, storageId]
+		);
+		setStoragePickerKey('picker-none');
+	};
+
+	const removeStorageId = (storageId: string) => {
+		if (!onSelectedStorageIdsChange) return;
+		onSelectedStorageIdsChange(selectedIds.filter((id) => id !== storageId));
+	};
 
 	return (
 		<div className="doc-theme-form fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -133,6 +165,14 @@ export default function AddService({
 						</label>
 					</div>
 
+					{showInternalIp && (
+						<label className="space-y-1 block">
+							<span className="text-xs text-slate-400">Internal IP</span>
+							<Input value={internalIp || ''} onChange={(e) => onInternalIpChange?.(e.target.value)} className="w-full" />
+							<p className="text-[11px] text-slate-400">IP address where this service is reachable. Usually the hardware IP, but it can be different.</p>
+						</label>
+					)}
+
 					<label className="space-y-1 block">
 						<span className="text-xs text-slate-400">URL</span>
 						<Input value={url} onChange={(e) => onUrlChange(e.target.value)} className="w-full" />
@@ -143,11 +183,66 @@ export default function AddService({
 						<Input value={image} onChange={(e) => onImageChange(e.target.value)} className="w-full" />
 					</label>
 
-					{showInternalIp && (
-						<label className="space-y-1 block">
-							<span className="text-xs text-slate-400">Internal IP</span>
-							<Input value={internalIp || ''} onChange={(e) => onInternalIpChange?.(e.target.value)} className="w-full" />
-						</label>
+					{!!storageOptions?.length && (
+						<div className="space-y-1 block">
+							<span className="text-xs text-slate-400">Storage (optional, 0..N)</span>
+							<Select
+								selectedKey={storagePickerKey}
+								onChange={(key) => {
+									if (key == null) return;
+									const value = String(key);
+									if (value === STORAGE_PICKER_NONE_KEY) return;
+									addStorageId(value);
+								}}
+								className="w-full"
+							>
+								<Select.Trigger className="w-full px-3 flex items-center justify-between">
+									<Select.Value />
+									<ChevronDown size={16} className="text-slate-400" />
+								</Select.Trigger>
+								<Select.Popover className="w-[var(--trigger-width)]">
+									<ListBox>
+										<ListBox.Item id={STORAGE_PICKER_NONE_KEY} className="pl-2">Select storage to add</ListBox.Item>
+										{storageOptions.map((option) => (
+											<ListBox.Item key={option.id} id={option.id} className="pl-2">{option.name}</ListBox.Item>
+										))}
+									</ListBox>
+								</Select.Popover>
+							</Select>
+							<div className="w-full rounded-lg border border-slate-700/50 bg-slate-900/60 p-2 min-h-11">
+								{selectedIds.length === 0 ? (
+									<p className="text-xs text-slate-400">No storage selected.</p>
+								) : (
+									<div className="flex flex-wrap gap-2">
+										{selectedIds.map((storageId) => {
+											const label = storageOptions.find((option) => option.id === storageId)?.name || storageId;
+											return (
+												<span key={storageId} className="group inline-flex items-center gap-1 rounded-full border border-slate-700/60 bg-slate-800/70 px-2.5 py-1 text-xs text-slate-100">
+													{label}
+													<button
+														type="button"
+														onMouseDown={(event) => {
+															event.preventDefault();
+															event.stopPropagation();
+														}}
+														onClick={(event) => {
+															event.preventDefault();
+															event.stopPropagation();
+															removeStorageId(storageId);
+														}}
+														className="ml-1 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+														aria-label={`Remove ${label}`}
+													>
+														×
+													</button>
+												</span>
+											);
+										})}
+									</div>
+								)}
+							</div>
+							<p className="text-[11px] text-slate-400">Add one by one via dropdown. Remove via x on tag hover.</p>
+						</div>
 					)}
 
 					<div className="pt-4 border-t border-slate-700/50 flex items-center justify-between gap-2">

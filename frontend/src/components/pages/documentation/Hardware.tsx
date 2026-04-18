@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect } from 'react';
-import { Button, Card } from '@heroui/react';
+import { Button, Card, Input, Select, ListBox } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { ChevronDown } from 'lucide-react';
 import AddHardware, { type HardwareFormValues } from './components/AddHardware';
 import EditHardware from './components/EditHardware';
 
@@ -17,6 +18,9 @@ export default function Hardware() {
   const [isHardwareModalOpen, setIsHardwareModalOpen] = useState(false);
   const [hardwareEditId, setHardwareEditId] = useState<string | null>(null);
   const [editingHardware, setEditingHardware] = useState<any | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   const authHeaders = useMemo(
     () => ({
@@ -137,6 +141,31 @@ export default function Hardware() {
     return counts;
   }, [storageItems]);
 
+  const hardwareTypes = useMemo(
+    () => Array.from(new Set(hardware.map((hw) => String(hw.type || 'OTHER')))).sort(),
+    [hardware]
+  );
+
+  const hardwareStatuses = useMemo(
+    () => Array.from(new Set(hardware.map((hw) => String(hw.status || 'UNKNOWN')))).sort(),
+    [hardware]
+  );
+
+  const filteredHardware = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return hardware.filter((hw) => {
+      const matchesSearch =
+        query.length === 0 ||
+        String(hw.name || '').toLowerCase().includes(query) ||
+        String(hw.hostname || '').toLowerCase().includes(query) ||
+        String(hw.ip || '').toLowerCase().includes(query) ||
+        String(hw.os || '').toLowerCase().includes(query);
+      const matchesType = typeFilter === 'ALL' || String(hw.type || 'OTHER') === typeFilter;
+      const matchesStatus = statusFilter === 'ALL' || String(hw.status || 'UNKNOWN') === statusFilter;
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [hardware, searchTerm, typeFilter, statusFilter]);
+
   return (
   <div className="documentation-area page-shell">
       <div className="h-full flex flex-col min-h-0">
@@ -145,14 +174,62 @@ export default function Hardware() {
           <Button onClick={handleAddHardware} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168, 85, 247, 0.5)] transition-all" variant="primary">+ Add hardware</Button>
         </div>
 
-        <div className="space-y-6 flex-1 min-h-0 overflow-y-auto pr-1">
-        {hardware.length === 0 && (
+  <div className="space-y-6 page-content-scroll">
+        <Card className="doc-theme-form rounded-xl p-4 bg-slate-900/50 border border-slate-700/50">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <label className="space-y-1 block">
+              <span className="text-xs text-slate-400">Search</span>
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search name, host, IP, OS"
+                className="w-full"
+              />
+            </label>
+            <label className="space-y-1 block">
+              <span className="text-xs text-slate-400">Type</span>
+              <Select selectedKey={typeFilter} onChange={(key) => { if (key != null) setTypeFilter(String(key)); }} className="w-full">
+                <Select.Trigger className="w-full px-3 flex items-center justify-between">
+                  <Select.Value />
+                  <ChevronDown size={16} className="text-slate-400" />
+                </Select.Trigger>
+                <Select.Popover className="w-[var(--trigger-width)]">
+                  <ListBox>
+                    <ListBox.Item id="ALL" className="pl-2">All types</ListBox.Item>
+                    {hardwareTypes.map((type) => (
+                      <ListBox.Item key={type} id={type} className="pl-2">{type}</ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+            </label>
+            <label className="space-y-1 block">
+              <span className="text-xs text-slate-400">Status</span>
+              <Select selectedKey={statusFilter} onChange={(key) => { if (key != null) setStatusFilter(String(key)); }} className="w-full">
+                <Select.Trigger className="w-full px-3 flex items-center justify-between">
+                  <Select.Value />
+                  <ChevronDown size={16} className="text-slate-400" />
+                </Select.Trigger>
+                <Select.Popover className="w-[var(--trigger-width)]">
+                  <ListBox>
+                    <ListBox.Item id="ALL" className="pl-2">All status</ListBox.Item>
+                    {hardwareStatuses.map((status) => (
+                      <ListBox.Item key={status} id={status} className="pl-2">{status}</ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+            </label>
+          </div>
+        </Card>
+
+        {filteredHardware.length === 0 && (
           <Card className="rounded-xl p-4 bg-slate-900/50 border border-slate-700/50 text-slate-400">
             No hardware entries available.
           </Card>
         )}
 
-        {hardware.map(hw => (
+        {filteredHardware.map(hw => (
           <Card key={hw.id} className="rounded-xl p-4 bg-slate-900/50 border border-slate-700/50 flex flex-col gap-2">
             <div className="flex items-start justify-between gap-3">
               <h3 className="text-xl font-bold text-purple-400">{hw.name} <span className="text-sm text-slate-400">({hw.type})</span></h3>

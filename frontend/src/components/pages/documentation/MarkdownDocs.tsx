@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Button, Card } from '@heroui/react';
+import { Button, Card, Input, Select, ListBox } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
 import ReactMarkdown from 'react-markdown';
+import { ChevronDown } from 'lucide-react';
 import AddMarkdown, { type MarkdownFormValues } from './components/AddMarkdown';
 import EditMarkdown from './components/EditMarkdown';
 
@@ -43,6 +44,8 @@ export default function MarkdownDocs() {
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [docEditId, setDocEditId] = useState<string | null>(null);
   const [editingDoc, setEditingDoc] = useState<DocItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [relationFilter, setRelationFilter] = useState<'ALL' | 'HARDWARE' | 'SERVICE' | 'UNASSIGNED'>('ALL');
 
   const authHeaders = useMemo(() => ({
     'Content-Type': 'application/json',
@@ -58,6 +61,25 @@ export default function MarkdownDocs() {
       .filter((doc) => !doc.parentDocId)
       .sort((a, b) => a.title.localeCompare(b.title));
   }, [docs]);
+
+  const filteredTopLevelDocs = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return topLevelDocs.filter((doc) => {
+      const matchesSearch =
+        query.length === 0 ||
+        String(doc.title || '').toLowerCase().includes(query) ||
+        String(doc.hardwareAsset?.name || '').toLowerCase().includes(query) ||
+        String(doc.softwareUnit?.name || '').toLowerCase().includes(query);
+
+      const matchesRelation =
+        relationFilter === 'ALL' ||
+        (relationFilter === 'HARDWARE' && Boolean(doc.hardwareAssetId)) ||
+        (relationFilter === 'SERVICE' && Boolean(doc.softwareUnitId)) ||
+        (relationFilter === 'UNASSIGNED' && !doc.hardwareAssetId && !doc.softwareUnitId);
+
+      return matchesSearch && matchesRelation;
+    });
+  }, [topLevelDocs, searchTerm, relationFilter]);
 
   const selectedDoc = useMemo(() => docs.find((doc) => doc.id === selectedDocId) || null, [docs, selectedDocId]);
 
@@ -268,34 +290,79 @@ export default function MarkdownDocs() {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 page-content-scroll">
   <Card className="xl:col-span-4 rounded-xl border border-slate-700/50 bg-slate-900/50 p-0 overflow-hidden h-fit">
           <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800 text-sm font-semibold text-slate-400">Top-Level Markdown Files</div>
-          <div className="divide-y divide-border">
-            {topLevelDocs.length === 0 && <p className="p-4 text-slate-400">No top-level markdown files found.</p>}
-            {topLevelDocs.map((doc) => (
-              <Button
-                key={doc.id}
-                onClick={() => setSelectedDocId(doc.id)}
-                className={`w-full text-left px-4 py-3 transition-all border-l-4 !ring-0 !shadow-none ${selectedDocId === doc.id
-                  ? 'bg-[color-mix(in_srgb,var(--color-primary)_24%,var(--color-content))] border-primary shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-primary)_46%,transparent)]'
-                  : 'hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] border-transparent'}`}
-                variant="ghost"
+          <div className="doc-theme-form p-3 border-b border-slate-700/50 bg-slate-900/70 space-y-2">
+            <label className="space-y-1 block">
+              <span className="text-xs text-slate-400">Search</span>
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search title, hardware, service"
+                className="w-full"
+              />
+            </label>
+            <label className="space-y-1 block">
+              <span className="text-xs text-slate-400">Relation</span>
+              <Select
+                selectedKey={relationFilter}
+                onChange={(key) => {
+                  if (key == null) return;
+                  const next = String(key);
+                  if (next === 'ALL' || next === 'HARDWARE' || next === 'SERVICE' || next === 'UNASSIGNED') {
+                    setRelationFilter(next);
+                  }
+                }}
+                className="w-full"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className={`font-medium truncate ${selectedDocId === doc.id ? 'text-text' : 'text-text'}`}>{doc.title}</p>
-                    <div className="flex gap-2 mt-1 flex-wrap">
-                      {doc.hardwareAsset?.name && <span className={`text-xs px-2 py-0.5 rounded-full ${selectedDocId === doc.id ? 'bg-[color-mix(in_srgb,var(--color-primary)_22%,transparent)] text-text' : 'bg-purple-600/15 text-purple-400'}`}>HW: {doc.hardwareAsset.name}</span>}
-                      {doc.softwareUnit?.name && <span className={`text-xs px-2 py-0.5 rounded-full ${selectedDocId === doc.id ? 'bg-[color-mix(in_srgb,var(--color-primary)_18%,transparent)] text-text' : 'bg-blue-500/15 text-blue-300'}`}>Service: {doc.softwareUnit.name}</span>}
-                      {!doc.hardwareAssetId && !doc.softwareUnitId && <span className="text-xs bg-slate-800 border border-slate-700/50 text-slate-400 px-2 py-0.5 rounded-full">Unassigned</span>}
-                    </div>
+                <Select.Trigger className="w-full px-3 flex items-center justify-between">
+                  <Select.Value />
+                  <ChevronDown size={16} className="text-slate-400" />
+                </Select.Trigger>
+                <Select.Popover className="w-[var(--trigger-width)]">
+                  <ListBox>
+                    <ListBox.Item id="ALL" className="pl-2">All relations</ListBox.Item>
+                    <ListBox.Item id="HARDWARE" className="pl-2">Hardware-linked</ListBox.Item>
+                    <ListBox.Item id="SERVICE" className="pl-2">Service-linked</ListBox.Item>
+                    <ListBox.Item id="UNASSIGNED" className="pl-2">Unassigned</ListBox.Item>
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+            </label>
+          </div>
+          <div className="divide-y divide-border">
+            {filteredTopLevelDocs.length === 0 && <p className="p-4 text-slate-400">No top-level markdown files found.</p>}
+            {filteredTopLevelDocs.map((doc) => {
+              const childCount = doc.children?.length || 0;
+              const docTags = [
+                doc.softwareUnit?.name ? `Service: ${doc.softwareUnit.name}` : null,
+                doc.hardwareAsset?.name ? `Hardware: ${doc.hardwareAsset.name}` : null,
+                childCount > 0 ? `${childCount} ${childCount === 1 ? 'child' : 'children'}` : null,
+                !doc.hardwareAssetId && !doc.softwareUnitId ? 'Unassigned' : null
+              ].filter(Boolean) as string[];
+
+              return (
+                <Button
+                  key={doc.id}
+                  onClick={() => setSelectedDocId(doc.id)}
+                  className={`w-full !h-auto !min-h-0 text-left px-4 py-2.5 transition-all !border-0 !ring-0 !shadow-none ${selectedDocId === doc.id
+                    ? 'bg-[color-mix(in_srgb,var(--color-primary)_20%,var(--color-content))] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-primary)_46%,transparent)]'
+                    : 'hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]'}`}
+                  variant="ghost"
+                >
+                  <div className="min-w-0 w-full">
+                    <p className="font-medium text-text truncate">{doc.title}</p>
+                    {docTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {docTags.map((tag) => (
+                          <span key={`${doc.id}-${tag}`} className="text-[11px] border border-slate-700/60 bg-slate-800/70 text-slate-300 px-2 py-0.5 rounded-full">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {doc.children && doc.children.length > 0 && (
-                    <span className="text-xs bg-slate-800 border border-slate-700/50 text-slate-400 px-2 py-0.5 rounded-full shrink-0">
-                      {doc.children.length}
-                    </span>
-                  )}
-                </div>
-              </Button>
-            ))}
+                </Button>
+              );
+            })}
           </div>
         </Card>
 
@@ -319,7 +386,7 @@ export default function MarkdownDocs() {
                 </div>
               </div>
 
-              <div className="border border-slate-700/50 rounded-lg p-4 bg-slate-800/40 max-h-[460px] overflow-auto break-words">
+              <div className="theme-scrollbar border border-slate-700/50 rounded-lg p-4 bg-slate-800/40 max-h-[460px] overflow-auto break-words">
                 <ReactMarkdown components={markdownComponents}>{selectedDoc.content || ''}</ReactMarkdown>
               </div>
 

@@ -198,7 +198,49 @@ body::before {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 0.25rem;
+  padding-right: 0.5rem;
+  scrollbar-gutter: stable both-edges;
+}
+
+.theme-scrollbar,
+.page-content-scroll,
+.sidebar-theme-gradient nav,
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-primary) 42%, transparent) transparent;
+  scrollbar-gutter: stable both-edges;
+}
+
+.theme-scrollbar::-webkit-scrollbar,
+.page-content-scroll::-webkit-scrollbar,
+.sidebar-theme-gradient nav::-webkit-scrollbar,
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.theme-scrollbar::-webkit-scrollbar-track,
+.page-content-scroll::-webkit-scrollbar-track,
+.sidebar-theme-gradient nav::-webkit-scrollbar-track,
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.theme-scrollbar::-webkit-scrollbar-thumb,
+.page-content-scroll::-webkit-scrollbar-thumb,
+.sidebar-theme-gradient nav::-webkit-scrollbar-thumb,
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.theme-scrollbar::-webkit-scrollbar-thumb:hover,
+.page-content-scroll::-webkit-scrollbar-thumb:hover,
+.sidebar-theme-gradient nav::-webkit-scrollbar-thumb:hover,
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-primary) 58%, transparent);
 }
 
 html.light {

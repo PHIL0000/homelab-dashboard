@@ -62,7 +62,12 @@ export default function DocsOverview() {
   const [newServiceImage, setNewServiceImage] = useState('');
   const [newServicePort, setNewServicePort] = useState('');
   const [newServiceUrl, setNewServiceUrl] = useState('');
+  const [newServiceStorageIds, setNewServiceStorageIds] = useState<string[]>([]);
+  const [editingServiceStorageIds, setEditingServiceStorageIds] = useState<string[]>([]);
   const [newDeploymentInternalIp, setNewDeploymentInternalIp] = useState('');
+
+  const [overviewSearchTerm, setOverviewSearchTerm] = useState('');
+  const [overviewTypeFilter, setOverviewTypeFilter] = useState('ALL');
 
   const [previewDoc, setPreviewDoc] = useState<any | null>(null);
   const [pendingHardwareDelete, setPendingHardwareDelete] = useState<{
@@ -140,6 +145,25 @@ export default function DocsOverview() {
   }, [token]);
 
   const selectedHardware = hardware.find(hw => isSelectedHardware(hw.id));
+
+  const overviewHardwareTypes = useMemo(
+    () => Array.from(new Set(hardware.map((hw) => String(hw.type || 'OTHER')))).sort(),
+    [hardware]
+  );
+
+  const filteredOverviewHardware = useMemo(() => {
+    const query = overviewSearchTerm.trim().toLowerCase();
+    return hardware.filter((hw) => {
+      const matchesSearch =
+        query.length === 0 ||
+        String(hw.name || '').toLowerCase().includes(query) ||
+        String(hw.hostname || '').toLowerCase().includes(query) ||
+        String(hw.ip || '').toLowerCase().includes(query);
+      const matchesType = overviewTypeFilter === 'ALL' || String(hw.type || 'OTHER') === overviewTypeFilter;
+      return matchesSearch && matchesType;
+    });
+  }, [hardware, overviewSearchTerm, overviewTypeFilter]);
+
   const selectedDeployments = deployments.filter(dep => String(dep.hardwareAssetId) === normalizedSelectedHardwareId);
   const selectedStorage = storageItems.filter(item => String(item.hardwareAssetId) === normalizedSelectedHardwareId);
   const selectedDocs = docs.filter(doc => String(doc.hardwareAssetId) === normalizedSelectedHardwareId);
@@ -310,6 +334,8 @@ export default function DocsOverview() {
     setNewServiceImage('');
     setNewServicePort('');
     setNewServiceUrl('');
+    setNewServiceStorageIds([]);
+    setEditingServiceStorageIds([]);
     setNewDeploymentInternalIp('');
     setIsDeploymentModalOpen(true);
   };
@@ -318,6 +344,13 @@ export default function DocsOverview() {
     const linkedService = dep.softwareUnit || services.find((sw) => String(sw.id) === String(dep.softwareUnitId));
     setEditingDeployment(dep);
     setEditingService(linkedService || null);
+    setEditingServiceStorageIds(
+      Array.isArray(linkedService?.storageAssignments)
+        ? linkedService.storageAssignments
+            .map((assignment: any) => String(assignment.storageId || assignment.storage?.id || ''))
+            .filter(Boolean)
+        : []
+    );
     setIsDeploymentModalOpen(true);
   };
 
@@ -344,7 +377,8 @@ export default function DocsOverview() {
         type: newServiceType,
         image: newServiceImage.trim() || null,
         port: newServicePort ? Number(newServicePort) : null,
-        url: newServiceUrl.trim() || null
+        url: newServiceUrl.trim() || null,
+        storageIds: newServiceStorageIds
       })
     });
 
@@ -383,6 +417,7 @@ export default function DocsOverview() {
     port: string;
     url: string;
     image: string;
+  storageIds: string[];
     deploymentId?: string;
     hardwareAssetId: string;
     internalIp: string;
@@ -397,7 +432,8 @@ export default function DocsOverview() {
         type: values.type,
         image: values.image || null,
         port: values.port ? Number(values.port) : null,
-        url: values.url || null
+        url: values.url || null,
+        storageIds: values.storageIds
       })
     });
 
@@ -443,7 +479,11 @@ export default function DocsOverview() {
 
     const targetService = services.find((service) => String(service.id) === editingServiceId);
     const relatedDeployments = deployments.filter((dep) => String(dep.softwareUnitId) === editingServiceId);
-    const relatedStorage = storageItems.filter((item) => String(item.softwareUnitId) === editingServiceId);
+    const relatedStorage = storageItems.filter((item) =>
+      Array.isArray(item.serviceAssignments)
+        ? item.serviceAssignments.some((assignment: any) => String(assignment.softwareUnitId) === editingServiceId)
+        : false
+    );
     const rootServiceDocs = docs.filter((doc) => String(doc.softwareUnitId) === editingServiceId);
     const docSubtreeIds = collectDocSubtreeIds(rootServiceDocs.map((doc) => doc.id));
     const impactedDocs = docs.filter((doc) => docSubtreeIds.has(doc.id));
@@ -519,7 +559,8 @@ export default function DocsOverview() {
         serialNumber: values.serialNumber || null,
         interface: values.interfaceType || null,
         usableSpaceGB,
-        hardwareAssetId: targetHardwareId
+        hardwareAssetId: targetHardwareId,
+        serviceIds: values.softwareUnitIds || []
       })
     });
 
@@ -537,11 +578,17 @@ export default function DocsOverview() {
     if (!storageEditId) return;
 
     const storageItem = storageItems.find((item) => String(item.id) === String(storageEditId));
+    const assignedServiceNames = Array.isArray(storageItem?.serviceAssignments)
+      ? storageItem.serviceAssignments
+          .map((assignment: any) => assignment.softwareUnit?.name)
+          .filter(Boolean)
+          .join(', ')
+      : undefined;
     setPendingStorageDelete({
       id: String(storageEditId),
       name: storageItem?.name || editingStorage?.name || 'Selected storage',
       hardwareName: storageItem?.hardwareAsset?.name,
-      serviceName: storageItem?.softwareUnit?.name
+      serviceName: assignedServiceNames
     });
   };
 
@@ -688,10 +735,15 @@ export default function DocsOverview() {
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0">
           <OverviewLeftPane
-            hardware={hardware}
+            hardware={filteredOverviewHardware}
+            hardwareTypes={overviewHardwareTypes}
             selectedHardwareId={normalizedSelectedHardwareId}
             onSelectHardware={setSelectedHardwareId}
             onAddHardware={handleAddHardware}
+            searchTerm={overviewSearchTerm}
+            onSearchChange={setOverviewSearchTerm}
+            typeFilter={overviewTypeFilter}
+            onTypeFilterChange={setOverviewTypeFilter}
           />
 
           <OverviewRightPane
@@ -734,6 +786,7 @@ export default function DocsOverview() {
         newServicePort={newServicePort}
         newServiceUrl={newServiceUrl}
         newServiceImage={newServiceImage}
+  newServiceStorageIds={newServiceStorageIds}
         newDeploymentInternalIp={newDeploymentInternalIp}
         onSaveNewDeployment={saveNewDeployment}
         onNewServiceNameChange={setNewServiceName}
@@ -741,7 +794,11 @@ export default function DocsOverview() {
         onNewServicePortChange={setNewServicePort}
         onNewServiceUrlChange={setNewServiceUrl}
         onNewServiceImageChange={setNewServiceImage}
+  onNewServiceStorageIdsChange={setNewServiceStorageIds}
         onNewDeploymentInternalIpChange={setNewDeploymentInternalIp}
+  editingServiceStorageIds={editingServiceStorageIds}
+  services={services}
+  storageItems={storageItems}
         storageEditId={storageEditId}
         isStorageModalOpen={isStorageModalOpen}
         editingStorage={editingStorage}

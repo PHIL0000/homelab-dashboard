@@ -78,7 +78,7 @@ export default function Settings() {
     }`;
 
   return (
-    <div className="flex h-[80vh] overflow-hidden rounded-3xl bg-slate-900/30">
+    <div className="doc-theme-form flex h-[80vh] overflow-hidden rounded-3xl bg-slate-900/30">
       <div className="w-64 border-r border-slate-700/50 bg-slate-900/50 p-4 shrink-0 overflow-y-auto hidden md:block">
         <h2 className="text-xl font-bold mb-6 text-slate-100 px-2">{t("settings.title")}</h2>
         <nav className="space-y-1">

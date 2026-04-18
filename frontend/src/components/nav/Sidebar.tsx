@@ -34,6 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   const [openAI, setOpenAI] = useState(false);
   const [openStorage, setOpenStorage] = useState(false);
   const [openDocs, setOpenDocs] = useState(false);
+  const [now, setNow] = useState(() => new Date());
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebarCollapsed");
     return saved === "true";
@@ -42,6 +43,61 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", isCollapsed.toString());
   }, [isCollapsed]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const dashboardTitle = user?.dashboardName?.trim() || 'Homelab';
+  const userTimezone = user?.timezone || 'Europe/Berlin';
+  const userTimeFormat = user?.timeFormat === '12h' ? '12h' : '24h';
+  const userDateFormat = user?.dateFormat || 'DD-MM-YYYY';
+
+  const formatDate = (date: Date) => {
+    try {
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: userTimezone,
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }).formatToParts(date);
+
+      const day = parts.find((part) => part.type === 'day')?.value || '';
+      const month = parts.find((part) => part.type === 'month')?.value || '';
+      const year = parts.find((part) => part.type === 'year')?.value || '';
+
+      switch (userDateFormat) {
+        case 'MM-DD-YYYY':
+          return `${month}-${day}-${year}`;
+        case 'YYYY-MM-DD':
+          return `${year}-${month}-${day}`;
+        case 'DD.MM.YYYY':
+          return `${day}.${month}.${year}`;
+        case 'DD-MM-YYYY':
+        default:
+          return `${day}-${month}-${year}`;
+      }
+    } catch {
+      return date.toLocaleDateString();
+    }
+  };
+
+  const formatTime = (date: Date) => {
+    try {
+      return new Intl.DateTimeFormat('en-GB', {
+        timeZone: userTimezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: userTimeFormat === '12h'
+      }).format(date);
+    } catch {
+      return date.toLocaleTimeString();
+    }
+  };
+
+  const sidebarClockLabel = `${formatDate(now)} • ${formatTime(now)}`;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -89,9 +145,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
         {!isCollapsed && (
           <div className="overflow-hidden transition-all duration-300 whitespace-nowrap">
             <h1 className="text-2xl font-bold tracking-tight text-[var(--color-primary)]">
-              Homelab
+              {dashboardTitle}
             </h1>
             <p className="text-[10px] mt-0.5 text-[var(--color-textSecondary)] uppercase tracking-widest font-medium">Dashboard</p>
+            <p className="text-[10px] mt-1 text-[var(--color-textSecondary)]">{sidebarClockLabel}</p>
           </div>
         )}
         <Button
