@@ -1,5 +1,27 @@
 # HomeLab Setup Plan
 
+## Ideen für Frontend
+### Einstellungen
+* Eine Settings page für jede Seite mit folgenden Funktionen.
+  - Aktivieren/Deaktivieren
+  - Switch zwischen externem Dienst und Buildin Lösung (z.B. vei Einkaufsliste, AI Chat)
+  - Link zum Dienst
+  - Switch zwischen iFrame und komplett eigener UI (eventull mit Backend) (Für AI könnte man z.B. zwischen Open-WebUI und eigener UI mit backend, wo man nurnoch API Key angiebt wechseln)
+* Themes
+  - Akzent farbe bei OLED Theme anpassbar machen (RGB)
+
+### Dokumentation
+* Button pro Hardware zur installation von einem Status Tracker
+* Button pro Hardware für SSH Terminal
+* Kleiner Performance Overview (Auf Hardware Page und eventuell auf Overview)
+### Weitere Seiten
+* Einkaufsliste (könnte man auch eigenes Backend erstellen)
+* Paperless (Rechnungs Suchfeld etc)
+* Notizen Seite (Joplin)
+* Withboard (geht glaub mit Nextcloud)
+
+
+
 ## Überblick und Design-Philosophie
 
 Dieses HomeLab trennt **Frontend/UI** (RPi 5 8GB), **Productivity** (RPi 5 16GB), **Dev/CI** (CM3588), **AI/Storage** (UGREEN NAS) und **Network** (RPi 4s). Lokale Storage pro Host, UGREEN mit intelligentem Bay-Split.
