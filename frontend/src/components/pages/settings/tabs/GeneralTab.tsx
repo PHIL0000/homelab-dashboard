@@ -70,14 +70,14 @@ export default function GeneralTab() {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save settings');
+        throw new Error(data.error || t('settings.saveError'));
       }
 
       updateUser(data);
-      setMessage({ type: 'success', text: 'Settings saved successfully.' });
+      setMessage({ type: 'success', text: t('settings.saveSuccess') });
       setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Failed to save settings.' });
+      setMessage({ type: 'error', text: error.message || t('settings.saveError') });
     } finally {
       setIsSaving(false);
     }
