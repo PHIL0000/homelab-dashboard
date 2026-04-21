@@ -3,7 +3,11 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 
 import type { PageSettingKey } from "./PageSettings/types";
-import { ALL_PAGE_KEYS, GROUP_CHILDREN, PAGE_SETTINGS_TREE } from "./PageSettings/config";
+import {
+  ALL_PAGE_KEYS,
+  GROUP_CHILDREN,
+  PAGE_SETTINGS_TREE,
+} from "./PageSettings/config";
 import DashboardPageSettings from "./PageSettings/Dashboard/DashboardPageSettings";
 import CalendarPageSettings from "./PageSettings/Calendar/CalendarPageSettings";
 import HomeAssistantPageSettings from "./PageSettings/HomeAssistant/HomeAssistantPageSettings";
@@ -27,7 +31,14 @@ type PagesTabProps = {
   selectedPageKey: PageSettingKey;
 };
 
-const PAGE_COMPONENTS: Record<PageSettingKey, React.ComponentType<{ visible: boolean; disabled: boolean; onToggle: () => void }>> = {
+const PAGE_COMPONENTS: Record<
+  PageSettingKey,
+  React.ComponentType<{
+    visible: boolean;
+    disabled: boolean;
+    onToggle: () => void;
+  }>
+> = {
   "/dashboard": DashboardPageSettings,
   "/calendar": CalendarPageSettings,
   "/home-assistant": HomeAssistantPageSettings,
@@ -70,16 +81,25 @@ const findLabelKey = (key: PageSettingKey): string => {
   return "settings.pages";
 };
 
-const isPageVisibilityMap = (value: unknown): value is Record<string, boolean> => {
+const isPageVisibilityMap = (
+  value: unknown,
+): value is Record<string, boolean> => {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
 
-  return Object.values(value as Record<string, unknown>).every((entry) => typeof entry === "boolean");
+  return Object.values(value as Record<string, unknown>).every(
+    (entry) => typeof entry === "boolean",
+  );
 };
 
-const buildVisibilityMap = (rawMap: unknown): Record<PageSettingKey, boolean> => {
-  const map: Record<PageSettingKey, boolean> = {} as Record<PageSettingKey, boolean>;
+const buildVisibilityMap = (
+  rawMap: unknown,
+): Record<PageSettingKey, boolean> => {
+  const map: Record<PageSettingKey, boolean> = {} as Record<
+    PageSettingKey,
+    boolean
+  >;
 
   for (const page of ALL_PAGE_KEYS) {
     map[page] = true;
@@ -103,9 +123,14 @@ export default function PagesTab({ selectedPageKey }: PagesTabProps) {
   const { t } = useLanguage();
   const { user, token, updateUser } = useAuth();
 
-  const [pageVisibility, setPageVisibility] = useState<Record<PageSettingKey, boolean>>(() => buildVisibilityMap(user?.pageVisibility));
+  const [pageVisibility, setPageVisibility] = useState<
+    Record<PageSettingKey, boolean>
+  >(() => buildVisibilityMap(user?.pageVisibility));
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     setPageVisibility(buildVisibilityMap(user?.pageVisibility));
@@ -115,7 +140,10 @@ export default function PagesTab({ selectedPageKey }: PagesTabProps) {
     return pageVisibility[selectedPageKey] !== false;
   }, [pageVisibility, selectedPageKey]);
 
-  const selectedPageTitle = useMemo(() => t(findLabelKey(selectedPageKey) as any), [selectedPageKey, t]);
+  const selectedPageTitle = useMemo(
+    () => t(findLabelKey(selectedPageKey) as any),
+    [selectedPageKey, t],
+  );
 
   const SelectedPageComponent = PAGE_COMPONENTS[selectedPageKey];
 
@@ -126,14 +154,17 @@ export default function PagesTab({ selectedPageKey }: PagesTabProps) {
     setMessage(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${user.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `http://localhost:3001/api/users/${user.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ pageVisibility: nextMap }),
         },
-        body: JSON.stringify({ pageVisibility: nextMap }),
-      });
+      );
 
       const data = await response.json();
       if (!response.ok) {
@@ -144,7 +175,10 @@ export default function PagesTab({ selectedPageKey }: PagesTabProps) {
       setMessage({ type: "success", text: t("settings.saveSuccess") });
       setTimeout(() => setMessage(null), 2500);
     } catch (error: any) {
-      setMessage({ type: "error", text: error.message || t("settings.saveError") });
+      setMessage({
+        type: "error",
+        text: error.message || t("settings.saveError"),
+      });
     } finally {
       setIsSaving(false);
     }
@@ -178,7 +212,9 @@ export default function PagesTab({ selectedPageKey }: PagesTabProps) {
 
   return (
     <div className="doc-theme-form grid grid-cols-1 gap-6 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-2 text-slate-100">{selectedPageTitle}</h1>
+      <h1 className="text-2xl font-bold mb-2 text-slate-100">
+        {selectedPageTitle}
+      </h1>
 
       {message && (
         <div
@@ -192,7 +228,11 @@ export default function PagesTab({ selectedPageKey }: PagesTabProps) {
         </div>
       )}
 
-      <SelectedPageComponent visible={selectedPageVisible} disabled={isSaving} onToggle={handleVisibilityToggle} />
+      <SelectedPageComponent
+        visible={selectedPageVisible}
+        disabled={isSaving}
+        onToggle={handleVisibilityToggle}
+      />
     </div>
   );
 }

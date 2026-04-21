@@ -4,5 +4,11 @@ import PageVisibilitySlider from "../components/PageVisibilitySlider";
 
 export default function AiPageSettings(props: PageSettingsViewProps) {
   const { t } = useLanguage();
-  return <PageVisibilitySlider title={t("nav.ai")} helper={t("settings.groupToggleHint")} {...props} />;
+  return (
+    <PageVisibilitySlider
+      title={t("nav.ai")}
+      helper={t("settings.groupToggleHint")}
+      {...props}
+    />
+  );
 }

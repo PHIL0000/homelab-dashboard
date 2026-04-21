@@ -1,17 +1,18 @@
 import type { PageSettingKey, PageSettingsNode } from "./types";
 
-export const GROUP_CHILDREN: Partial<Record<PageSettingKey, PageSettingKey[]>> = {
-  "/ai": ["/ai/chat", "/ai/image-gen"],
-  "/storage": ["/storage/nas", "/storage/nextcloud", "/storage/gitlab"],
-  "/documentation": [
-    "/documentation/overview",
-    "/documentation/map",
-    "/documentation/hardware",
-    "/documentation/services",
-    "/documentation/storage",
-    "/documentation/docs",
-  ],
-};
+export const GROUP_CHILDREN: Partial<Record<PageSettingKey, PageSettingKey[]>> =
+  {
+    "/ai": ["/ai/chat", "/ai/image-gen"],
+    "/storage": ["/storage/nas", "/storage/nextcloud", "/storage/gitlab"],
+    "/documentation": [
+      "/documentation/overview",
+      "/documentation/map",
+      "/documentation/hardware",
+      "/documentation/services",
+      "/documentation/storage",
+      "/documentation/docs",
+    ],
+  };
 
 export const ALL_PAGE_KEYS: PageSettingKey[] = [
   "/dashboard",

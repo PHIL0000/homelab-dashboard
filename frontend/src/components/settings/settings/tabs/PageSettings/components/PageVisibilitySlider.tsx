@@ -21,11 +21,21 @@ export default function PageVisibilitySlider({
   return (
     <div className="rounded-lg border border-slate-700/50 bg-slate-800/40 p-4">
       <span className="sr-only">{title}</span>
-      <h3 className="text-base font-semibold text-slate-100">{t("settings.visibility")}</h3>
-      <p className="mt-0.5 text-sm text-slate-300">{visible ? t("settings.pageVisible") : t("settings.pageHidden")}</p>
+      <h3 className="text-base font-semibold text-slate-100">
+        {t("settings.visibility")}
+      </h3>
+      <p className="mt-0.5 text-sm text-slate-300">
+        {visible ? t("settings.pageVisible") : t("settings.pageHidden")}
+      </p>
       {helper && <div className="mt-0.5 text-xs text-slate-400">{helper}</div>}
       <label className="mt-2 inline-flex items-center gap-3 cursor-pointer select-none">
-        <input type="checkbox" checked={visible} onChange={onToggle} disabled={disabled} className="sr-only" />
+        <input
+          type="checkbox"
+          checked={visible}
+          onChange={onToggle}
+          disabled={disabled}
+          className="sr-only"
+        />
         <span
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
             visible ? "bg-[var(--color-primary)]" : "bg-slate-600"
@@ -37,7 +47,9 @@ export default function PageVisibilitySlider({
             }`}
           />
         </span>
-        <span className="text-sm text-slate-200">{visible ? t("settings.hidePage") : t("settings.showPage")}</span>
+        <span className="text-sm text-slate-200">
+          {visible ? t("settings.hidePage") : t("settings.showPage")}
+        </span>
       </label>
     </div>
   );

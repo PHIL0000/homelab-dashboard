@@ -24,22 +24,29 @@ import DocumentationMap from "./components/pages/documentation/Map";
 import { useAuth } from "./context/AuthContext";
 
 const App: React.FC = () => {
-  const [activeModal, setActiveModal] = useState<"settings" | "account" | null>(null);
+  const [activeModal, setActiveModal] = useState<"settings" | "account" | null>(
+    null,
+  );
   const location = useLocation();
   const navigate = useNavigate();
   const { isLoading, user } = useAuth();
 
-  const isAuthRoute = location.pathname === "/login" || location.pathname === "/setup";
+  const isAuthRoute =
+    location.pathname === "/login" || location.pathname === "/setup";
 
   // Redirect unauthenticated users to login
   useEffect(() => {
     if (!isLoading && !user && !isAuthRoute) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [isLoading, user, isAuthRoute, navigate]);
 
   if (isLoading) {
-    return <div className="flex h-screen items-center justify-center bg-background text-text">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center bg-background text-text">
+        Loading...
+      </div>
+    );
   }
 
   if (isAuthRoute) {
@@ -55,9 +62,25 @@ const App: React.FC = () => {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-text">
         <div className="flex flex-col items-center gap-3">
-          <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          <svg
+            className="animate-spin h-8 w-8 text-primary"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
           </svg>
           <span className="text-text-secondary">Redirecting…</span>
         </div>
@@ -82,14 +105,17 @@ const App: React.FC = () => {
               <Route path="/storage/gitlab" element={<PlaceholderPage />} />
               <Route path="/ai/chat" element={<PlaceholderPage />} />
               <Route path="/ai/image-gen" element={<PlaceholderPage />} />
-              <Route path="/documentation/overview" element={<DocsOverview />} />
+              <Route
+                path="/documentation/overview"
+                element={<DocsOverview />}
+              />
               <Route path="/documentation/hardware" element={<Hardware />} />
               <Route path="/documentation/services" element={<Services />} />
               <Route path="/documentation/storage" element={<StorageItems />} />
               <Route path="/documentation/docs" element={<MarkdownDocs />} />
               <Route path="/documentation/map" element={<DocumentationMap />} />
               <Route path="/performance" element={<PlaceholderPage />} />
-              
+
               {/* Placeholder für alle Seiten zuerst */}
               <Route path="*" element={<PlaceholderPage />} />
             </Routes>
@@ -105,7 +131,20 @@ const App: React.FC = () => {
                 isIconOnly
                 variant="ghost"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
               </Button>
               <div className="p-2 flex-grow">
                 <AccountPage />
@@ -123,7 +162,20 @@ const App: React.FC = () => {
                 isIconOnly
                 variant="ghost"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
               </Button>
               <div className="p-2 flex-grow">
                 <SettingsPage />
@@ -131,7 +183,6 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
