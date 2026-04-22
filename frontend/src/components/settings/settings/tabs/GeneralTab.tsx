@@ -29,6 +29,7 @@ export default function GeneralTab() {
   const [weatherLocation, setWeatherLocation] = useState("");
   const [weatherLat, setWeatherLat] = useState("");
   const [weatherLon, setWeatherLon] = useState("");
+  const [weatherStationId, setWeatherStationId] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -42,7 +43,27 @@ export default function GeneralTab() {
     } else {
       setDateFormat('DD-MM-YYYY');
     }
-  }, [user]);
+
+    // Fetch weather station settings from backend
+    const fetchWeatherSettings = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/api/weatherstation', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data) {
+          setWeatherStationId(data.stationId || "");
+          setWeatherLocation(data.city || "");
+          setWeatherLat(data.latitude ? String(data.latitude) : "");
+          setWeatherLon(data.longitude ? String(data.longitude) : "");
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    fetchWeatherSettings();
+  }, [user, token]);
 
   const handleLanguageChange = (value: string) => {
     if (value === "en" || value === "de") {
@@ -57,6 +78,7 @@ export default function GeneralTab() {
     setMessage(null);
 
     try {
+      // Save user settings
       const response = await fetch(`http://localhost:3001/api/users/${user.id}`, {
         method: 'PUT',
         headers: {
@@ -77,6 +99,36 @@ export default function GeneralTab() {
       }
 
       updateUser(data);
+
+      // Save weather station settings
+      await fetch('http://localhost:3001/api/weatherstation', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          stationId: weatherStationId,
+          city: weatherLocation,
+          latitude: parseFloat(weatherLat) || null,
+          longitude: parseFloat(weatherLon) || null
+        })
+      });
+
+      // Re-fetch weather station settings after save
+      try {
+        const res = await fetch('http://localhost:3001/api/weatherstation', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const ws = await res.json();
+          setWeatherStationId(ws.stationId || "");
+          setWeatherLocation(ws.city || "");
+          setWeatherLat(ws.latitude ? String(ws.latitude) : "");
+          setWeatherLon(ws.longitude ? String(ws.longitude) : "");
+        }
+      } catch (e) { /* ignore */ }
+
       setMessage({ type: 'success', text: t('settings.saveSuccess') });
       setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
@@ -192,6 +244,16 @@ export default function GeneralTab() {
         <h2 className="text-xl font-semibold mb-2 text-slate-100">{t('settings.weather')}</h2>
         <p className="text-slate-400 mb-4">{t('settings.weather.desc')}</p>
         <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">Station ID</label>
+            <Input
+              type="text"
+              value={weatherStationId}
+              onChange={(e) => setWeatherStationId(e.target.value)}
+              placeholder="e.g. DE000123"
+              className="w-full"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.weather.location')}</label>
             <Input
