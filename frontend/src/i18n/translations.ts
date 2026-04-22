@@ -71,6 +71,15 @@ export const translations = {
     "settings.saveError": "Einstellungen konnten nicht gespeichert werden.",
     "settings.resetAccent": "Akzentfarbe zurücksetzen",
 
+    // Weather Settings
+    "settings.weather": "Weather Data",
+    "settings.weather.desc": "Set location data for weather information",
+    "settings.weather.location": "Location / City",
+    "settings.weather.gps": "GPS Coordinates",
+    "settings.weather.placeholder.location": "e.g. Berlin",
+    "settings.weather.placeholder.gps": "e.g. 52.5200, 13.4050",
+    "settings.weather.info": "Provide at least one information to get weather data.",
+
     // Account
     "account.title": "Konto",
     "account.profile": "Profil",
@@ -175,6 +184,15 @@ export const translations = {
     "settings.saveSuccess": "Settings saved successfully.",
     "settings.saveError": "Failed to save settings.",
     "settings.resetAccent": "Reset accent color",
+
+    // Weather Settings
+    "settings.weather": "Weather Data",
+    "settings.weather.desc": "Set location data for weather information",
+    "settings.weather.location": "Location / City",
+    "settings.weather.gps": "GPS Coordinates",
+    "settings.weather.placeholder.location": "e.g. Berlin",
+    "settings.weather.placeholder.gps": "e.g. 52.5200, 13.4050",
+    "settings.weather.info": "Provide at least one information to get weather data.",
 
     // Account
     "account.title": "Account",
