@@ -52,11 +52,8 @@ export default function Login() {
           </div>
           <div>
             <h1 className="text-4xl font-bold text-[var(--color-text)]">
-              Homelab
+              Homelab Dashboard
             </h1>
-            <p className="mt-2 text-[var(--color-textSecondary)]">
-              Secure Dashboard Access
-            </p>
           </div>
         </div>
 
@@ -133,7 +130,7 @@ export default function Login() {
                 "color-mix(in srgb, var(--color-border) 72%, transparent)",
             }}
           >
-            🔐 Protected by your homelab security
+            🔐 Not Protected
           </div>
         </Card>
       </div>
