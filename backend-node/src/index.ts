@@ -3,6 +3,7 @@ import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import authRoutes, { authenticate } from './routes/auth';
 import userRoutes from './routes/users';
+import userSettingsRoutes from './routes/user_settings';
 import infrastructureRoutes from './routes/infrastructure';
 
 const prisma = new PrismaClient();
@@ -15,6 +16,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/user-settings', userSettingsRoutes);
 app.use('/api/infrastructure', infrastructureRoutes);
 
 // GET /api/settings - get settings (create default if missing)

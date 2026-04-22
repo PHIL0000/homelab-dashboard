@@ -155,7 +155,7 @@ export default function PagesTab({ selectedPageKey }: PagesTabProps) {
 
     try {
       const response = await fetch(
-        `http://localhost:3001/api/users/${user.id}`,
+        `http://localhost:3001/api/user-settings/${user.id}`,
         {
           method: "PUT",
           headers: {

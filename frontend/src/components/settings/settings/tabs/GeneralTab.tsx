@@ -79,7 +79,7 @@ export default function GeneralTab() {
 
     try {
       // Save user settings
-      const response = await fetch(`http://localhost:3001/api/users/${user.id}`, {
+      const response = await fetch(`http://localhost:3001/api/user-settings/${user.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

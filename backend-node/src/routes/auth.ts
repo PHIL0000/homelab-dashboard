@@ -13,7 +13,7 @@ const globalForPrisma = globalThis as typeof globalThis & {
 };
 
 const router = Router();
-const prisma = globalForPrisma.prismaAuthRoute ?? new PrismaClient();
+const prisma: any = globalForPrisma.prismaAuthRoute ?? new PrismaClient();
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prismaAuthRoute = prisma;
@@ -26,6 +26,15 @@ if (!jwtSecret) {
 
 const JWT_SECRET = jwtSecret;
 
+const defaultSettings = {
+  dashboardName: 'Homelab',
+  timezone: 'Europe/Berlin',
+  timeFormat: '24h',
+  dateFormat: 'DD-MM-YYYY',
+  pageVisibility: null,
+  oledAccentRgb: null
+};
+
 const toPublicUser = (user: any) => ({
   id: user.id,
   username: user.username,
@@ -34,12 +43,12 @@ const toPublicUser = (user: any) => ({
   email: user.email,
   role: user.role,
   avatarUrl: user.avatarUrl,
-  dashboardName: user.dashboardName,
-  timezone: user.timezone,
-  timeFormat: user.timeFormat,
-  dateFormat: user.dateFormat,
-  pageVisibility: user.pageVisibility,
-  oledAccentRgb: user.oledAccentRgb
+  dashboardName: user.settings?.dashboardName ?? defaultSettings.dashboardName,
+  timezone: user.settings?.timezone ?? defaultSettings.timezone,
+  timeFormat: user.settings?.timeFormat ?? defaultSettings.timeFormat,
+  dateFormat: user.settings?.dateFormat ?? defaultSettings.dateFormat,
+  pageVisibility: user.settings?.pageVisibility ?? defaultSettings.pageVisibility,
+  oledAccentRgb: user.settings?.oledAccentRgb ?? defaultSettings.oledAccentRgb
 });
 
 // Check if initial setup is needed (i.e. no users exist)
@@ -75,8 +84,12 @@ router.post('/setup', async (req, res) => {
         lastName: lastName || null,
         email: email || null,
         passwordHash,
-        role: 'ADMIN' // Prisma enum value UserRole.ADMIN = 'ADMIN'
-      }
+        role: 'ADMIN', // Prisma enum value UserRole.ADMIN = 'ADMIN'
+        settings: {
+          create: {}
+        }
+      },
+      include: { settings: true }
     });
 
     // Generate token
@@ -99,7 +112,8 @@ router.post('/login', async (req, res) => {
           { email: identifier },
           { username: identifier }
         ]
-      }
+      },
+      include: { settings: true }
     });
 
     if (!user) {
@@ -135,7 +149,10 @@ export const authenticate = (req: any, res: any, next: any) => {
 // Me endpoint
 router.get('/me', authenticate, async (req: any, res: any) => {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      include: { settings: true }
+    });
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(toPublicUser(user as any));
   } catch (error) {
