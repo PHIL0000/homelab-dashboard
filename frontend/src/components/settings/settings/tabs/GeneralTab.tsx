@@ -27,7 +27,8 @@ export default function GeneralTab() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [weatherLocation, setWeatherLocation] = useState("");
-  const [weatherGPS, setWeatherGPS] = useState("");
+  const [weatherLat, setWeatherLat] = useState("");
+  const [weatherLon, setWeatherLon] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -201,15 +202,27 @@ export default function GeneralTab() {
               className="w-full"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.weather.gps')}</label>
-            <Input
-              type="text"
-              value={weatherGPS}
-              onChange={(e) => setWeatherGPS(e.target.value)}
-              placeholder={t('settings.weather.placeholder.gps')}
-              className="w-full"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.weather.gps')} (Lat)</label>
+              <Input
+                type="text"
+                value={weatherLat}
+                onChange={(e) => setWeatherLat(e.target.value)}
+                placeholder="52.5200"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.weather.gps')} (Lon)</label>
+              <Input
+                type="text"
+                value={weatherLon}
+                onChange={(e) => setWeatherLon(e.target.value)}
+                placeholder="13.4050"
+                className="w-full"
+              />
+            </div>
           </div>
           <p className="text-xs text-slate-500 mt-2">{t('settings.weather.info')}</p>
         </div>
