@@ -17,6 +17,8 @@ const TIMEZONE_OPTIONS = [
 const DATE_FORMAT_OPTIONS = ['DD-MM-YYYY', 'MM-DD-YYYY', 'YYYY-MM-DD', 'DD.MM.YYYY'] as const;
 const TIME_FORMAT_OPTIONS = ['24h', '12h'] as const;
 
+type WeatherLookupField = 'stationId' | 'city' | 'coordinates';
+
 export default function GeneralTab() {
   const { t, language, setLanguage } = useLanguage();
   const { user, token, updateUser } = useAuth();
@@ -30,6 +32,8 @@ export default function GeneralTab() {
   const [weatherLat, setWeatherLat] = useState("");
   const [weatherLon, setWeatherLon] = useState("");
   const [weatherStationId, setWeatherStationId] = useState("");
+  const [lastEditedWeatherField, setLastEditedWeatherField] = useState<WeatherLookupField | null>(null);
+  const [isResolvingWeather, setIsResolvingWeather] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -47,7 +51,7 @@ export default function GeneralTab() {
     // Fetch weather station settings from backend
     const fetchWeatherSettings = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/weatherstation', {
+        const res = await fetch('http://localhost:3001/api/settings/weather-station', {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (!res.ok) return;
@@ -55,8 +59,8 @@ export default function GeneralTab() {
         if (data) {
           setWeatherStationId(data.stationId || "");
           setWeatherLocation(data.city || "");
-          setWeatherLat(data.latitude ? String(data.latitude) : "");
-          setWeatherLon(data.longitude ? String(data.longitude) : "");
+          setWeatherLat(data.latitude !== null && data.latitude !== undefined ? String(data.latitude) : "");
+          setWeatherLon(data.longitude !== null && data.longitude !== undefined ? String(data.longitude) : "");
         }
       } catch (e) {
         // ignore
@@ -64,6 +68,83 @@ export default function GeneralTab() {
     };
     fetchWeatherSettings();
   }, [user, token]);
+
+  const buildWeatherLookupPayload = (field: WeatherLookupField): Record<string, unknown> | null => {
+    const stationIdInput = weatherStationId.trim();
+    const cityInput = weatherLocation.trim();
+    const latInput = weatherLat.trim();
+    const lonInput = weatherLon.trim();
+
+    const parsedLat = latInput ? Number(latInput) : undefined;
+    const parsedLon = lonInput ? Number(lonInput) : undefined;
+    const hasValidCoordinates = Number.isFinite(parsedLat) && Number.isFinite(parsedLon);
+
+    if (field === 'stationId') {
+      return stationIdInput ? { stationId: stationIdInput } : null;
+    }
+
+    if (field === 'city') {
+      return cityInput ? { city: cityInput } : null;
+    }
+
+    if (field === 'coordinates') {
+      return hasValidCoordinates ? { latitude: parsedLat, longitude: parsedLon } : null;
+    }
+
+    return null;
+  };
+
+  const resolveWeatherStation = async (payload: Record<string, unknown>, abortSignal?: AbortSignal) => {
+    if (!token) {
+      throw new Error(t('settings.saveError'));
+    }
+
+    const response = await fetch('http://localhost:3001/api/settings/weather-station/resolve', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(payload),
+      signal: abortSignal
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || t('settings.saveError'));
+    }
+
+    return data;
+  };
+
+  useEffect(() => {
+    if (!token || !lastEditedWeatherField) return;
+
+    const payload = buildWeatherLookupPayload(lastEditedWeatherField);
+    if (!payload) return;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
+      try {
+        setIsResolvingWeather(true);
+        const resolved = await resolveWeatherStation(payload, controller.signal);
+        setWeatherStationId(resolved.stationId || '');
+        setWeatherLocation(resolved.city || '');
+        setWeatherLat(resolved.latitude !== null && resolved.latitude !== undefined ? String(resolved.latitude) : '');
+        setWeatherLon(resolved.longitude !== null && resolved.longitude !== undefined ? String(resolved.longitude) : '');
+        setLastEditedWeatherField(null);
+      } catch (error: any) {
+        if (error?.name === 'AbortError') return;
+      } finally {
+        setIsResolvingWeather(false);
+      }
+    }, 350);
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [lastEditedWeatherField, token, weatherStationId, weatherLocation, weatherLat, weatherLon]);
 
   const handleLanguageChange = (value: string) => {
     if (value === "en" || value === "de") {
@@ -100,34 +181,59 @@ export default function GeneralTab() {
 
       updateUser(data);
 
-      // Save weather station settings
-      await fetch('http://localhost:3001/api/weatherstation', {
-        method: 'PUT',
+      let nextWeatherData = {
+        stationId: weatherStationId.trim(),
+        city: weatherLocation.trim(),
+        latitude: weatherLat.trim() ? Number(weatherLat.trim()) : undefined,
+        longitude: weatherLon.trim() ? Number(weatherLon.trim()) : undefined
+      };
+
+      if (lastEditedWeatherField) {
+        const livePayload = buildWeatherLookupPayload(lastEditedWeatherField);
+        if (!livePayload) {
+          throw new Error(t('settings.weather.info'));
+        }
+
+        const resolved = await resolveWeatherStation(livePayload);
+        nextWeatherData = {
+          stationId: resolved.stationId || '',
+          city: resolved.city || '',
+          latitude: resolved.latitude,
+          longitude: resolved.longitude
+        };
+        setLastEditedWeatherField(null);
+      }
+
+      const weatherLookupPayload: Record<string, unknown> = nextWeatherData.stationId
+        ? { stationId: nextWeatherData.stationId }
+        : (Number.isFinite(nextWeatherData.latitude) && Number.isFinite(nextWeatherData.longitude))
+          ? { latitude: nextWeatherData.latitude, longitude: nextWeatherData.longitude }
+          : nextWeatherData.city
+            ? { city: nextWeatherData.city }
+            : {};
+
+      if (Object.keys(weatherLookupPayload).length === 0) {
+        throw new Error(t('settings.weather.info'));
+      }
+
+      const weatherResponse = await fetch('http://localhost:3001/api/settings/weather-station', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
-          stationId: weatherStationId,
-          city: weatherLocation,
-          latitude: parseFloat(weatherLat) || null,
-          longitude: parseFloat(weatherLon) || null
-        })
+        body: JSON.stringify(weatherLookupPayload)
       });
 
-      // Re-fetch weather station settings after save
-      try {
-        const res = await fetch('http://localhost:3001/api/weatherstation', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const ws = await res.json();
-          setWeatherStationId(ws.stationId || "");
-          setWeatherLocation(ws.city || "");
-          setWeatherLat(ws.latitude ? String(ws.latitude) : "");
-          setWeatherLon(ws.longitude ? String(ws.longitude) : "");
-        }
-      } catch (e) { /* ignore */ }
+      const weatherData = await weatherResponse.json();
+      if (!weatherResponse.ok) {
+        throw new Error(weatherData.error || t('settings.saveError'));
+      }
+
+      setWeatherStationId(weatherData.stationId || '');
+      setWeatherLocation(weatherData.city || '');
+      setWeatherLat(weatherData.latitude !== null && weatherData.latitude !== undefined ? String(weatherData.latitude) : '');
+      setWeatherLon(weatherData.longitude !== null && weatherData.longitude !== undefined ? String(weatherData.longitude) : '');
 
       setMessage({ type: 'success', text: t('settings.saveSuccess') });
       setTimeout(() => setMessage(null), 3000);
@@ -245,21 +351,39 @@ export default function GeneralTab() {
         <p className="text-slate-400 mb-4">{t('settings.weather.desc')}</p>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Station ID</label>
+            <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.weather.stationId')}</label>
             <Input
               type="text"
               value={weatherStationId}
-              onChange={(e) => setWeatherStationId(e.target.value)}
-              placeholder="e.g. DE000123"
+              onChange={(e) => {
+                setWeatherStationId(e.target.value);
+                setLastEditedWeatherField('stationId');
+              }}
+              placeholder="e.g. G543"
               className="w-full"
             />
+            <p className="text-xs text-slate-500 mt-2">
+              {t('settings.weather.stationLookupHint')}{' '}
+              <a
+                href="https://www.dwd.de/DE/leistungen/klimadatendeutschland/stationsliste.html"
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-400 hover:text-blue-300 underline"
+              >
+                {t('settings.weather.stationLookupLink')}
+              </a>
+              .
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.weather.location')}</label>
             <Input
               type="text"
               value={weatherLocation}
-              onChange={(e) => setWeatherLocation(e.target.value)}
+              onChange={(e) => {
+                setWeatherLocation(e.target.value);
+                setLastEditedWeatherField('city');
+              }}
               placeholder={t('settings.weather.placeholder.location')}
               className="w-full"
             />
@@ -270,7 +394,10 @@ export default function GeneralTab() {
               <Input
                 type="text"
                 value={weatherLat}
-                onChange={(e) => setWeatherLat(e.target.value)}
+                onChange={(e) => {
+                  setWeatherLat(e.target.value);
+                  setLastEditedWeatherField('coordinates');
+                }}
                 placeholder="52.5200"
                 className="w-full"
               />
@@ -280,13 +407,18 @@ export default function GeneralTab() {
               <Input
                 type="text"
                 value={weatherLon}
-                onChange={(e) => setWeatherLon(e.target.value)}
+                onChange={(e) => {
+                  setWeatherLon(e.target.value);
+                  setLastEditedWeatherField('coordinates');
+                }}
                 placeholder="13.4050"
                 className="w-full"
               />
             </div>
           </div>
-          <p className="text-xs text-slate-500 mt-2">{t('settings.weather.info')}</p>
+          {isResolvingWeather && (
+            <p className="text-xs text-blue-400 mt-1">Resolving weather station…</p>
+          )}
         </div>
       </div>
 

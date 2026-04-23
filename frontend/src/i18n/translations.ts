@@ -74,11 +74,14 @@ export const translations = {
     // Weather Settings
     "settings.weather": "Weather Data",
     "settings.weather.desc": "Set location data for weather information",
-    "settings.weather.location": "Location / City",
-    "settings.weather.gps": "GPS Coordinates",
-    "settings.weather.placeholder.location": "e.g. Berlin",
+  "settings.weather.stationId": "Stationskennung",
+  "settings.weather.stationLookupHint": "Du kannst die Stationskennung (STAT) auch manuell in der DWD-Stationsliste nachschauen:",
+  "settings.weather.stationLookupLink": "DWD-Stationsliste öffnen",
+    "settings.weather.location": "Position / Stadt",
+    "settings.weather.gps": "GPS Koordinaten",
+    "settings.weather.placeholder.location": "e.g. Berlin-Kreuzberg",
     "settings.weather.placeholder.gps": "e.g. 52.5200, 13.4050",
-    "settings.weather.info": "Provide at least one information to get weather data.",
+    "settings.weather.info": "Geben Sie mindestens eine Information an, um Wetterdaten zu erhalten.",
 
     // Account
     "account.title": "Konto",
@@ -188,9 +191,12 @@ export const translations = {
     // Weather Settings
     "settings.weather": "Weather Data",
     "settings.weather.desc": "Set location data for weather information",
+    "settings.weather.stationId": "Station identifier",
+    "settings.weather.stationLookupHint": "You can also look up the Station identifier (STAT) manually in the DWD station list:",
+    "settings.weather.stationLookupLink": "Open DWD station list",
     "settings.weather.location": "Location / City",
     "settings.weather.gps": "GPS Coordinates",
-    "settings.weather.placeholder.location": "e.g. Berlin",
+    "settings.weather.placeholder.location": "e.g. Berlin-Kreuzberg",
     "settings.weather.placeholder.gps": "e.g. 52.5200, 13.4050",
     "settings.weather.info": "Provide at least one information to get weather data.",
 
