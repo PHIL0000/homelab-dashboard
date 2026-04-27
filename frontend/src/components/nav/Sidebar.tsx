@@ -1,6 +1,6 @@
 // components/nav/Sidebar.tsx
 import React, { useState, useEffect } from "react";
-import { Button } from "@heroui/react";
+import { Button, Card } from "@heroui/react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -21,20 +21,90 @@ import {
   GitBranch,
   PanelLeftClose,
   PanelLeftOpen,
+  Sun,
+  CloudSun,
+  CloudRain,
+  CloudDrizzle,
+  CloudSnow,
+  CloudLightning,
+  CloudFog,
+  CloudMoon,
 } from "lucide-react";
 
 interface SidebarProps {
   onOpenModal: (modal: "settings" | "account") => void;
 }
 
+interface SidebarWeatherInfo {
+  city: string;
+  icon: string | null;
+  condition: string | null;
+  temperature: number | null;
+}
+
+const parseNumericValue = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+
+const getWeatherPresentation = (
+  t: (key: string) => string,
+  icon?: string | null,
+  condition?: string | null,
+) => {
+  const normalizedIcon = (icon || "").toLowerCase();
+  const normalizedCondition = (condition || "").toLowerCase();
+  const combined = `${normalizedIcon} ${normalizedCondition}`;
+
+  if (combined.includes("thunder")) {
+    return { label: t("weather.thunder"), Icon: CloudLightning };
+  }
+  if (combined.includes("snow") || combined.includes("sleet")) {
+    return { label: t("weather.snow"), Icon: CloudSnow };
+  }
+  if (combined.includes("drizzle")) {
+    return { label: t("weather.drizzle"), Icon: CloudDrizzle };
+  }
+  if (
+    combined.includes("rain") ||
+    combined.includes("hail") ||
+    combined.includes("shower")
+  ) {
+    return { label: t("weather.rain"), Icon: CloudRain };
+  }
+  if (combined.includes("fog") || combined.includes("mist")) {
+    return { label: t("weather.fog"), Icon: CloudFog };
+  }
+  if (combined.includes("partly") || combined.includes("cloud-sun")) {
+    return { label: t("weather.partly"), Icon: CloudSun };
+  }
+  if (combined.includes("cloud") || combined.includes("overcast")) {
+    return { label: t("weather.cloud"), Icon: Cloud };
+  }
+  if (combined.includes("night") || normalizedIcon.includes("moon")) {
+    return { label: t("weather.clear"), Icon: CloudMoon };
+  }
+  return { label: t("weather.sun"), Icon: Sun };
+};
+
 const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const location = useLocation();
   const [openAI, setOpenAI] = useState(false);
   const [openStorage, setOpenStorage] = useState(false);
   const [openDocs, setOpenDocs] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const [weatherInfo, setWeatherInfo] = useState<SidebarWeatherInfo | null>(
+    null,
+  );
+  const [isWeatherLoading, setIsWeatherLoading] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebarCollapsed");
     return saved === "true";
@@ -48,6 +118,91 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!token) {
+      setWeatherInfo(null);
+      return;
+    }
+
+    let active = true;
+
+    const loadWeather = async () => {
+      if (active) {
+        setIsWeatherLoading(true);
+      }
+
+      try {
+        const stationResponse = await fetch(
+          "http://localhost:3001/api/settings/weather-station",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (!stationResponse.ok) {
+          throw new Error("Weather station settings unavailable");
+        }
+
+        const stationData = await stationResponse.json();
+        const latitude = parseNumericValue(stationData?.latitude);
+        const longitude = parseNumericValue(stationData?.longitude);
+
+        if (latitude === null || longitude === null) {
+          if (active) {
+            setWeatherInfo(null);
+          }
+          return;
+        }
+
+        const currentWeatherResponse = await fetch(
+          `https://api.brightsky.dev/current_weather?lat=${latitude}&lon=${longitude}`,
+        );
+
+        if (!currentWeatherResponse.ok) {
+          throw new Error("Current weather unavailable");
+        }
+
+        const currentWeatherData = await currentWeatherResponse.json();
+        const current = currentWeatherData?.weather ?? {};
+
+        if (active) {
+          setWeatherInfo({
+            city: String(stationData?.city || ""),
+            icon:
+              typeof current.icon === "string" && current.icon.trim().length > 0
+                ? current.icon
+                : null,
+            condition:
+              typeof current.condition === "string" &&
+              current.condition.trim().length > 0
+                ? current.condition
+                : null,
+            temperature: parseNumericValue(current.temperature),
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load sidebar weather", error);
+        if (active) {
+          setWeatherInfo(null);
+        }
+      } finally {
+        if (active) {
+          setIsWeatherLoading(false);
+        }
+      }
+    };
+
+    loadWeather();
+    const refreshTimer = window.setInterval(loadWeather, 10 * 60 * 1000);
+
+    return () => {
+      active = false;
+      window.clearInterval(refreshTimer);
+    };
+  }, [token]);
 
   const dashboardTitle = user?.dashboardName?.trim() || "Homelab";
   const userTimezone = user?.timezone || "Europe/Berlin";
@@ -98,6 +253,19 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   };
 
   const sidebarClockLabel = `${formatDate(now)} • ${formatTime(now)}`;
+  const weatherPresentation = getWeatherPresentation(
+    t as (key: string) => string,
+    weatherInfo?.icon,
+    weatherInfo?.condition,
+  );
+  const weatherDisplay = weatherInfo
+    ? weatherPresentation
+    : { label: t("weather.unknown"), Icon: Cloud };
+  const WeatherIcon = weatherDisplay.Icon;
+  const weatherTemperatureLabel =
+    weatherInfo?.temperature !== null && weatherInfo?.temperature !== undefined
+      ? `${Math.round(weatherInfo.temperature)}°C`
+      : "--°C";
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -182,7 +350,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
       className={`${isCollapsed ? "w-20" : "w-64"} sidebar-theme-gradient h-screen rounded-none border-r border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] flex flex-col transition-all duration-300 ease-in-out relative z-20 shrink-0`}
     >
       <div
-        className={`sidebar-theme-surface p-4 border-b border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] flex items-center justify-between h-[80px]`}
+        className={`sidebar-theme-surface p-4 border-b border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] flex items-start justify-between min-h-[120px]`}
       >
         {!isCollapsed && (
           <div className="overflow-hidden transition-all duration-300 whitespace-nowrap">
@@ -195,6 +363,33 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
             <p className="text-[10px] mt-1 text-[var(--color-textSecondary)]">
               {sidebarClockLabel}
             </p>
+
+            <Card className="mt-2 px-2.5 py-2 bg-[color-mix(in_srgb,var(--color-content1)_82%,transparent)] border border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] shadow-none">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <WeatherIcon
+                    size={16}
+                    className="text-[var(--color-primary)] shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-[var(--color-text)] font-medium truncate">
+                      {isWeatherLoading
+                        ? t("weather.loading")
+                        : weatherDisplay.label}
+                    </p>
+                    {/* Regenwahrscheinlichkeit entfernt */}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-semibold text-[var(--color-text)]">
+                    {isWeatherLoading ? "..." : weatherTemperatureLabel}
+                  </p>
+                  <p className="text-[10px] text-[var(--color-textSecondary)] truncate max-w-[90px]">
+                    {weatherInfo?.city?.trim() || "Kein Ort"}
+                  </p>
+                </div>
+              </div>
+            </Card>
           </div>
         )}
         <Button

@@ -83,6 +83,19 @@ export const translations = {
     "settings.weather.placeholder.gps": "z.B. 48.7784485, 9.1800132",
     "settings.weather.info": "Geben Sie mindestens eine Information an, um Wetterdaten zu erhalten.",
 
+  // Weather Labels (Sidebar)
+  "weather.sun": "Sonne",
+  "weather.rain": "Regen",
+  "weather.snow": "Schnee",
+  "weather.drizzle": "Nieselregen",
+  "weather.thunder": "Gewitter",
+  "weather.fog": "Nebel",
+  "weather.cloud": "Wolken",
+  "weather.partly": "Leicht bewölkt",
+  "weather.clear": "Klarer Himmel",
+  "weather.unknown": "Keine Wetterdaten",
+  "weather.loading": "Wetter wird geladen...",
+
     // Account
     "account.title": "Konto",
     "account.profile": "Profil",
@@ -199,6 +212,19 @@ export const translations = {
     "settings.weather.placeholder.location": "e.g. Stuttgart",
     "settings.weather.placeholder.gps": "e.g. 48.7784485, 9.1800132",
     "settings.weather.info": "Provide at least one information to get weather data.",
+
+  // Weather Labels (Sidebar)
+  "weather.sun": "Sun",
+  "weather.rain": "Rain",
+  "weather.snow": "Snow",
+  "weather.drizzle": "Drizzle",
+  "weather.thunder": "Thunderstorm",
+  "weather.fog": "Fog",
+  "weather.cloud": "Clouds",
+  "weather.partly": "Partly Cloudy",
+  "weather.clear": "Clear Sky",
+  "weather.unknown": "No weather data",
+  "weather.loading": "Loading weather...",
 
     // Account
     "account.title": "Account",
