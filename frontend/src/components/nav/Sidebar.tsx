@@ -4,10 +4,10 @@ import { Button } from "@heroui/react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
-import DateTimeInfo from "./components/DateTimeInfo";
-import WeatherInfo from "./components/WeatherInfo";
+import InfoCard from "./components/InfoCard";
+import NavGroupSection from "./components/NavGroupSection";
+import SidebarFooter from "./components/SidebarFooter";
 import {
-  ChevronDown,
   Settings,
   LayoutDashboard,
   CalendarDays,
@@ -46,7 +46,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   }, [isCollapsed]);
 
   const dashboardTitle = user?.dashboardName?.trim() || "Homelab";
-
   const isActive = (path: string) => location.pathname === path;
 
   const getNavItemClass = (active: boolean) => {
@@ -129,39 +128,58 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
     <div
       className={`${isCollapsed ? "w-20" : "w-64"} sidebar-theme-gradient h-screen rounded-none border-r border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] flex flex-col transition-all duration-300 ease-in-out relative z-20 shrink-0`}
     >
-      <div
-        className={`sidebar-theme-surface p-4 border-b border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] flex items-start justify-between min-h-[120px]`}
-      >
+      {/* ── HEADER ── */}
+      <div className="sidebar-theme-surface border-b border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] p-3">
+        {/* Expanded: Titel + Button */}
         {!isCollapsed && (
-          <div className="overflow-hidden transition-all duration-300 whitespace-nowrap">
-            <DateTimeInfo
-              dashboardTitle={dashboardTitle}
-              timezone={user?.timezone}
-              timeFormat={user?.timeFormat}
-              dateFormat={user?.dateFormat}
-            />
-            <WeatherInfo token={token} />
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <p className="text-xl font-bold text-[var(--color-primary)]">
+                {dashboardTitle}
+              </p>
+              <p className="text-xs text-[var(--color-textSecondary)] uppercase tracking-widest">
+                {t("nav.dashboard")}
+              </p>
+            </div>
+            <Button
+              onPress={() => setIsCollapsed(true)}
+              className="p-2 rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
+              aria-label={t("nav.sidebar.collapse")}
+              isIconOnly
+              variant="ghost"
+            >
+              <PanelLeftClose size={18} />
+            </Button>
           </div>
         )}
-        <Button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
-          aria-label={
-            isCollapsed ? t("nav.sidebar.expand") : t("nav.sidebar.collapse")
-          }
-          isIconOnly
-          variant="ghost"
-        >
-          {isCollapsed ? (
-            <PanelLeftOpen size={20} />
-          ) : (
-            <PanelLeftClose size={20} />
-          )}
-        </Button>
+
+        {/* Collapsed: nur Expand-Button */}
+        {isCollapsed && (
+          <div className="flex justify-center mb-2">
+            <Button
+              onPress={() => setIsCollapsed(false)}
+              className="p-2 rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
+              aria-label={t("nav.sidebar.expand")}
+              isIconOnly
+              variant="ghost"
+            >
+              <PanelLeftOpen size={18} />
+            </Button>
+          </div>
+        )}
+
+        {/* InfoCard */}
+        <InfoCard
+          timezone={user?.timezone}
+          timeFormat={user?.timeFormat}
+          dateFormat={user?.dateFormat}
+          token={token}
+          isCollapsed={isCollapsed}
+        />
       </div>
 
+      {/* ── NAV ── */}
       <nav className="flex-1 p-3 overflow-y-auto overflow-x-hidden scrollbar-thin">
-        {/* TOP ITEMS */}
         {visibleTopItems.map((item) => (
           <Link
             key={item.path}
@@ -178,157 +196,52 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
           </Link>
         ))}
 
-        {/* AI SECTION */}
-        {visibleAiItems.length > 0 && (
-          <div className="mb-1.5 mt-4">
-            {isCollapsed ? (
-              <Button
-                onClick={() => {
-                  setIsCollapsed(false);
-                  setOpenAI(true);
-                }}
-                aria-label={t("nav.ai")}
-                isIconOnly
-                variant="ghost"
-                className="w-full rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
-              >
-                <Bot size={20} />
-              </Button>
-            ) : (
-              <Button
-                onClick={() => setOpenAI(!openAI)}
-                className="w-full justify-between rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
-                variant="ghost"
-              >
-                <div className="flex items-center gap-3">
-                  <Bot size={20} />
-                  <span className="font-medium">{t("nav.ai")}</span>
-                </div>
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform ${openAI ? "rotate-180" : ""}`}
-                />
-              </Button>
-            )}
+        <NavGroupSection
+          containerClassName="mb-1.5 mt-4"
+          items={visibleAiItems}
+          groupLabel={t("nav.ai")}
+          groupIcon={Bot}
+          isCollapsed={isCollapsed}
+          isOpen={openAI}
+          onToggleOpen={() => setOpenAI(!openAI)}
+          onExpandFromCollapsed={() => {
+            setIsCollapsed(false);
+            setOpenAI(true);
+          }}
+          isActive={isActive}
+          getNavItemClass={getNavItemClass}
+        />
 
-            {openAI && !isCollapsed && (
-              <div className="ml-4 mt-2 space-y-1 border-l border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] pl-3">
-                {visibleAiItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${getNavItemClass(isActive(item.path))}`}
-                  >
-                    <item.icon size={16} className="shrink-0" />
-                    <span className="whitespace-nowrap">{item.label}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <NavGroupSection
+          items={visibleStorageItems}
+          groupLabel={t("nav.storage")}
+          groupIcon={HardDrive}
+          isCollapsed={isCollapsed}
+          isOpen={openStorage}
+          onToggleOpen={() => setOpenStorage(!openStorage)}
+          onExpandFromCollapsed={() => {
+            setIsCollapsed(false);
+            setOpenStorage(true);
+          }}
+          isActive={isActive}
+          getNavItemClass={getNavItemClass}
+        />
 
-        {/* STORAGE SECTION */}
-        {visibleStorageItems.length > 0 && (
-          <div className="mb-1.5">
-            {isCollapsed ? (
-              <Button
-                onClick={() => {
-                  setIsCollapsed(false);
-                  setOpenStorage(true);
-                }}
-                aria-label={t("nav.storage")}
-                isIconOnly
-                variant="ghost"
-                className="w-full rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
-              >
-                <HardDrive size={20} />
-              </Button>
-            ) : (
-              <Button
-                onClick={() => setOpenStorage(!openStorage)}
-                className="w-full justify-between rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
-                variant="ghost"
-              >
-                <div className="flex items-center gap-3">
-                  <HardDrive size={20} />
-                  <span className="font-medium">{t("nav.storage")}</span>
-                </div>
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform ${openStorage ? "rotate-180" : ""}`}
-                />
-              </Button>
-            )}
+        <NavGroupSection
+          items={visibleDocumentationItems}
+          groupLabel={t("nav.documentation")}
+          groupIcon={LayoutDashboard}
+          isCollapsed={isCollapsed}
+          isOpen={openDocs}
+          onToggleOpen={() => setOpenDocs(!openDocs)}
+          onExpandFromCollapsed={() => {
+            setIsCollapsed(false);
+            setOpenDocs(true);
+          }}
+          isActive={isActive}
+          getNavItemClass={getNavItemClass}
+        />
 
-            {openStorage && !isCollapsed && (
-              <div className="ml-4 mt-2 space-y-1 border-l border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] pl-3">
-                {visibleStorageItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${getNavItemClass(isActive(item.path))}`}
-                  >
-                    <item.icon size={16} className="shrink-0" />
-                    <span className="whitespace-nowrap">{item.label}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* DOCUMENTATION SECTION */}
-        {visibleDocumentationItems.length > 0 && (
-          <div className="mb-1.5">
-            {isCollapsed ? (
-              <Button
-                onClick={() => {
-                  setIsCollapsed(false);
-                  setOpenDocs(true);
-                }}
-                aria-label={t("nav.documentation")}
-                isIconOnly
-                variant="ghost"
-                className="w-full rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
-              >
-                <LayoutDashboard size={20} />
-              </Button>
-            ) : (
-              <Button
-                onClick={() => setOpenDocs(!openDocs)}
-                className="w-full justify-between rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
-                variant="ghost"
-              >
-                <div className="flex items-center gap-3">
-                  <LayoutDashboard size={20} />
-                  <span className="font-medium">{t("nav.documentation")}</span>
-                </div>
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform ${openDocs ? "rotate-180" : ""}`}
-                />
-              </Button>
-            )}
-
-            {openDocs && !isCollapsed && (
-              <div className="ml-4 mt-2 space-y-1 border-l border-[color-mix(in_srgb,var(--color-border)_72%,transparent)] pl-3">
-                {visibleDocumentationItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${getNavItemClass(isActive(item.path))}`}
-                  >
-                    <item.icon size={16} className="shrink-0" />
-                    <span className="whitespace-nowrap">{item.label}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* BOTTOM ITEMS */}
         {visibleBottomItems.map((item) => (
           <Link
             key={item.path}
@@ -346,58 +259,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
         ))}
       </nav>
 
-      {/* USER & SETTINGS FOOTER */}
-      <div
-        className={`sidebar-theme-surface p-3 flex ${isCollapsed ? "flex-col" : "items-center"} gap-2 border-t border-[color-mix(in_srgb,var(--color-border)_72%,transparent)]`}
-      >
-        <Button
-          onClick={() => onOpenModal("account")}
-          isIconOnly={isCollapsed}
-          variant="ghost"
-          className={`${isCollapsed ? "w-full h-10 justify-center" : "flex-1 justify-start"} rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover`}
-          aria-label={t("nav.account")}
-        >
-          {isCollapsed ? (
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
-              style={{ backgroundColor: "var(--color-primary)" }}
-            >
-              {user?.username
-                ? user.username.substring(0, 1).toUpperCase()
-                : "U"}
-            </div>
-          ) : (
-            <>
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-                style={{ backgroundColor: "var(--color-primary)" }}
-              >
-                {user?.username
-                  ? user.username.substring(0, 1).toUpperCase()
-                  : "U"}
-              </div>
-              <div className="flex-1 min-w-0 text-left pl-2">
-                <p className="text-sm font-medium text-[var(--color-text)] truncate">
-                  {user?.username || "User"}
-                </p>
-                <p className="text-xs text-[var(--color-textSecondary)] truncate">
-                  {user?.role === "ADMIN" ? "Administrator" : "User"}
-                </p>
-              </div>
-            </>
-          )}
-        </Button>
-
-        <Button
-          onClick={() => onOpenModal("settings")}
-          isIconOnly
-          variant="ghost"
-          className={`${isCollapsed ? "w-full" : "w-10"} h-10 rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover`}
-          aria-label={t("nav.settings")}
-        >
-          <Settings size={20} />
-        </Button>
-      </div>
+      {/* ── FOOTER ── */}
+      <SidebarFooter
+        isCollapsed={isCollapsed}
+        username={user?.username}
+        role={user?.role}
+        accountLabel={t("nav.account")}
+        settingsLabel={t("nav.settings")}
+        onOpenModal={onOpenModal}
+      />
     </div>
   );
 };
