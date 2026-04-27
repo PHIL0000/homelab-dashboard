@@ -1,6 +1,5 @@
 model WeatherStation {
   id         String  @id @default(uuid()) @db.Uuid
-  stationId  String  @unique
   city       String
   latitude   Float
   longitude  Float

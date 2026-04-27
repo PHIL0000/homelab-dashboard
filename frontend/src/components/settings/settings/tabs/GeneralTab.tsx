@@ -17,7 +17,7 @@ const TIMEZONE_OPTIONS = [
 const DATE_FORMAT_OPTIONS = ['DD-MM-YYYY', 'MM-DD-YYYY', 'YYYY-MM-DD', 'DD.MM.YYYY'] as const;
 const TIME_FORMAT_OPTIONS = ['24h', '12h'] as const;
 
-type WeatherLookupField = 'stationId' | 'city' | 'coordinates';
+type WeatherLookupField = 'city' | 'coordinates';
 
 export default function GeneralTab() {
   const { t, language, setLanguage } = useLanguage();
@@ -31,7 +31,6 @@ export default function GeneralTab() {
   const [weatherLocation, setWeatherLocation] = useState("");
   const [weatherLat, setWeatherLat] = useState("");
   const [weatherLon, setWeatherLon] = useState("");
-  const [weatherStationId, setWeatherStationId] = useState("");
   const [lastEditedWeatherField, setLastEditedWeatherField] = useState<WeatherLookupField | null>(null);
   const [isResolvingWeather, setIsResolvingWeather] = useState(false);
 
@@ -57,7 +56,6 @@ export default function GeneralTab() {
         if (!res.ok) return;
         const data = await res.json();
         if (data) {
-          setWeatherStationId(data.stationId || "");
           setWeatherLocation(data.city || "");
           setWeatherLat(data.latitude !== null && data.latitude !== undefined ? String(data.latitude) : "");
           setWeatherLon(data.longitude !== null && data.longitude !== undefined ? String(data.longitude) : "");
@@ -69,82 +67,55 @@ export default function GeneralTab() {
     fetchWeatherSettings();
   }, [user, token]);
 
-  const buildWeatherLookupPayload = (field: WeatherLookupField): Record<string, unknown> | null => {
-    const stationIdInput = weatherStationId.trim();
-    const cityInput = weatherLocation.trim();
-    const latInput = weatherLat.trim();
-    const lonInput = weatherLon.trim();
-
-    const parsedLat = latInput ? Number(latInput) : undefined;
-    const parsedLon = lonInput ? Number(lonInput) : undefined;
-    const hasValidCoordinates = Number.isFinite(parsedLat) && Number.isFinite(parsedLon);
-
-    if (field === 'stationId') {
-      return stationIdInput ? { stationId: stationIdInput } : null;
-    }
-
-    if (field === 'city') {
-      return cityInput ? { city: cityInput } : null;
-    }
-
-    if (field === 'coordinates') {
-      return hasValidCoordinates ? { latitude: parsedLat, longitude: parsedLon } : null;
-    }
-
-    return null;
+  // Nominatim lookup helpers
+  const nominatimForward = async (city: string) => {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Failed to resolve city');
+    const data = await res.json();
+    if (!data || !data[0]) throw new Error('No result for city');
+    return { lat: data[0].lat, lon: data[0].lon, display_name: data[0].display_name };
   };
 
-  const resolveWeatherStation = async (payload: Record<string, unknown>, abortSignal?: AbortSignal) => {
-    if (!token) {
-      throw new Error(t('settings.saveError'));
-    }
-
-    const response = await fetch('http://localhost:3001/api/settings/weather-station/resolve', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(payload),
-      signal: abortSignal
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || t('settings.saveError'));
-    }
-
-    return data;
+  const nominatimReverse = async (lat: string, lon: string) => {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&format=json`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Failed to resolve coordinates');
+    const data = await res.json();
+    if (!data || !data.address) throw new Error('No result for coordinates');
+    // Use city, town, or village
+    const city = data.address.city || data.address.town || data.address.village || data.display_name || '';
+    return { city };
   };
+
+  // Live lookup effect
 
   useEffect(() => {
-    if (!token || !lastEditedWeatherField) return;
-
-    const payload = buildWeatherLookupPayload(lastEditedWeatherField);
-    if (!payload) return;
-
+    if (!lastEditedWeatherField) return;
     const controller = new AbortController();
     const timeout = setTimeout(async () => {
       try {
         setIsResolvingWeather(true);
-        const resolved = await resolveWeatherStation(payload, controller.signal);
-        setWeatherStationId(resolved.stationId || '');
-        setWeatherLocation(resolved.city || '');
-        setWeatherLat(resolved.latitude !== null && resolved.latitude !== undefined ? String(resolved.latitude) : '');
-        setWeatherLon(resolved.longitude !== null && resolved.longitude !== undefined ? String(resolved.longitude) : '');
-        setLastEditedWeatherField(null);
+        if (lastEditedWeatherField === 'city' && weatherLocation.trim()) {
+          const result = await nominatimForward(weatherLocation.trim());
+          setWeatherLat(result.lat);
+          setWeatherLon(result.lon);
+        } else if (lastEditedWeatherField === 'coordinates' && weatherLat.trim() && weatherLon.trim()) {
+          const result = await nominatimReverse(weatherLat.trim(), weatherLon.trim());
+          setWeatherLocation(result.city);
+        }
       } catch (error: any) {
-        if (error?.name === 'AbortError') return;
+        // Optionally show error
       } finally {
         setIsResolvingWeather(false);
+        setLastEditedWeatherField(null);
       }
     }, 350);
-
     return () => {
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [lastEditedWeatherField, token, weatherStationId, weatherLocation, weatherLat, weatherLon]);
+  }, [lastEditedWeatherField, weatherLocation, weatherLat, weatherLon]);
 
   const handleLanguageChange = (value: string) => {
     if (value === "en" || value === "de") {
@@ -181,60 +152,30 @@ export default function GeneralTab() {
 
       updateUser(data);
 
-      let nextWeatherData = {
-        stationId: weatherStationId.trim(),
-        city: weatherLocation.trim(),
-        latitude: weatherLat.trim() ? Number(weatherLat.trim()) : undefined,
-        longitude: weatherLon.trim() ? Number(weatherLon.trim()) : undefined
-      };
-
-      if (lastEditedWeatherField) {
-        const livePayload = buildWeatherLookupPayload(lastEditedWeatherField);
-        if (!livePayload) {
-          throw new Error(t('settings.weather.info'));
-        }
-
-        const resolved = await resolveWeatherStation(livePayload);
-        nextWeatherData = {
-          stationId: resolved.stationId || '',
-          city: resolved.city || '',
-          latitude: resolved.latitude,
-          longitude: resolved.longitude
-        };
-        setLastEditedWeatherField(null);
+      // Save weather settings
+      const city = weatherLocation.trim();
+      const latitude = weatherLat.trim() ? Number(weatherLat.trim()) : undefined;
+      const longitude = weatherLon.trim() ? Number(weatherLon.trim()) : undefined;
+      if (!city || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        setMessage({ type: 'error', text: 'Please provide valid city, latitude, and longitude.' });
+        setIsSaving(false);
+        return;
       }
-
-      const weatherLookupPayload: Record<string, unknown> = nextWeatherData.stationId
-        ? { stationId: nextWeatherData.stationId }
-        : (Number.isFinite(nextWeatherData.latitude) && Number.isFinite(nextWeatherData.longitude))
-          ? { latitude: nextWeatherData.latitude, longitude: nextWeatherData.longitude }
-          : nextWeatherData.city
-            ? { city: nextWeatherData.city }
-            : {};
-
-      if (Object.keys(weatherLookupPayload).length === 0) {
-        throw new Error(t('settings.weather.info'));
-      }
-
       const weatherResponse = await fetch('http://localhost:3001/api/settings/weather-station', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(weatherLookupPayload)
+        body: JSON.stringify({ city, latitude, longitude })
       });
-
       const weatherData = await weatherResponse.json();
       if (!weatherResponse.ok) {
         throw new Error(weatherData.error || t('settings.saveError'));
       }
-
-      setWeatherStationId(weatherData.stationId || '');
       setWeatherLocation(weatherData.city || '');
       setWeatherLat(weatherData.latitude !== null && weatherData.latitude !== undefined ? String(weatherData.latitude) : '');
       setWeatherLon(weatherData.longitude !== null && weatherData.longitude !== undefined ? String(weatherData.longitude) : '');
-
       setMessage({ type: 'success', text: t('settings.saveSuccess') });
       setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
@@ -351,31 +292,6 @@ export default function GeneralTab() {
         <p className="text-slate-400 mb-4">{t('settings.weather.desc')}</p>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.weather.stationId')}</label>
-            <Input
-              type="text"
-              value={weatherStationId}
-              onChange={(e) => {
-                setWeatherStationId(e.target.value);
-                setLastEditedWeatherField('stationId');
-              }}
-              placeholder="e.g. G543"
-              className="w-full"
-            />
-            <p className="text-xs text-slate-500 mt-2">
-              {t('settings.weather.stationLookupHint')}{' '}
-              <a
-                href="https://www.dwd.de/DE/leistungen/klimadatendeutschland/stationsliste.html"
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline"
-              >
-                {t('settings.weather.stationLookupLink')}
-              </a>
-              .
-            </p>
-          </div>
-          <div>
             <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.weather.location')}</label>
             <Input
               type="text"
@@ -417,7 +333,7 @@ export default function GeneralTab() {
             </div>
           </div>
           {isResolvingWeather && (
-            <p className="text-xs text-blue-400 mt-1">Resolving weather station…</p>
+            <p className="text-xs text-blue-400 mt-1">Resolving location…</p>
           )}
         </div>
       </div>

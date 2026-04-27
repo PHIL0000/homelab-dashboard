@@ -79,8 +79,8 @@ export const translations = {
   "settings.weather.stationLookupLink": "DWD-Stationsliste öffnen",
     "settings.weather.location": "Position / Stadt",
     "settings.weather.gps": "GPS Koordinaten",
-    "settings.weather.placeholder.location": "e.g. Berlin-Kreuzberg",
-    "settings.weather.placeholder.gps": "e.g. 52.5200, 13.4050",
+    "settings.weather.placeholder.location": "z.B. Stuttgart",
+    "settings.weather.placeholder.gps": "z.B. 48.7784485, 9.1800132",
     "settings.weather.info": "Geben Sie mindestens eine Information an, um Wetterdaten zu erhalten.",
 
     // Account
@@ -196,8 +196,8 @@ export const translations = {
     "settings.weather.stationLookupLink": "Open DWD station list",
     "settings.weather.location": "Location / City",
     "settings.weather.gps": "GPS Coordinates",
-    "settings.weather.placeholder.location": "e.g. Berlin-Kreuzberg",
-    "settings.weather.placeholder.gps": "e.g. 52.5200, 13.4050",
+    "settings.weather.placeholder.location": "e.g. Stuttgart",
+    "settings.weather.placeholder.gps": "e.g. 48.7784485, 9.1800132",
     "settings.weather.info": "Provide at least one information to get weather data.",
 
     // Account
