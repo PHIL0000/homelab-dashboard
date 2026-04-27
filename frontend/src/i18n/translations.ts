@@ -95,6 +95,7 @@ export const translations = {
   "weather.clear": "Klarer Himmel",
   "weather.unknown": "Keine Wetterdaten",
   "weather.loading": "Wetter wird geladen...",
+  "weather.cityUnknown": "Kein Ort",
 
     // Account
     "account.title": "Konto",
@@ -225,6 +226,7 @@ export const translations = {
   "weather.clear": "Clear Sky",
   "weather.unknown": "No weather data",
   "weather.loading": "Loading weather...",
+  "weather.cityUnknown": "Unknown location",
 
     // Account
     "account.title": "Account",
