@@ -186,7 +186,7 @@ return (
     {/* Icon + Label untereinander */}
     <div className="flex flex-col items-center shrink-0">
       <WeatherIcon size={16} className="text-[var(--color-primary)]" />
-      <p className="text-[10px] text-[var(--color-text)] font-medium truncate max-w-[60px] text-center">
+      <p className="text-[10px] text-[var(--color-text)] font-medium break-words max-w-[60px] text-center">
         {isWeatherLoading ? t("weather.loading") : weatherDisplay.label}
       </p>
     </div>
