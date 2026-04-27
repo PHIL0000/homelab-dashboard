@@ -21,6 +21,7 @@ interface SidebarWeatherInfo {
 
 interface WeatherInfoProps {
   token: string | null;
+  isCollapsed?: boolean;
 }
 
 const parseNumericValue = (value: unknown): number | null => {
@@ -74,7 +75,7 @@ const getWeatherPresentation = (
   return { label: t("weather.sun"), Icon: Sun };
 };
 
-const WeatherInfo: React.FC<WeatherInfoProps> = ({ token }) => {
+const WeatherInfo: React.FC<WeatherInfoProps> = ({ token, isCollapsed }) => {
   const { t } = useLanguage();
   const [weatherInfo, setWeatherInfo] = useState<SidebarWeatherInfo | null>(
     null,
@@ -180,31 +181,31 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ token }) => {
       ? `${Math.round(weatherInfo.temperature)}°C`
       : "--°C";
 
-return (
-  <div className="flex items-center gap-2 w-full min-w-0 justify-end">
+  return (
+    <div
+      className={`flex w-full min-w-0 ${isCollapsed ? "flex-col items-center gap-1" : "items-center gap-2 justify-end"}`}
+    >
+      {/* Icon + Label */}
+      <div className="flex flex-col items-center shrink-0">
+        <WeatherIcon size={16} className="text-[var(--color-primary)]" />
+        <p className="text-[10px] text-[var(--color-text)] font-medium text-center break-words max-w-[60px]">
+          {isWeatherLoading ? t("weather.loading") : weatherDisplay.label}
+        </p>
+      </div>
 
-    {/* Icon + Label untereinander */}
-    <div className="flex flex-col items-center shrink-0">
-      <WeatherIcon size={16} className="text-[var(--color-primary)]" />
-      <p className="text-[10px] text-[var(--color-text)] font-medium break-words max-w-[60px] text-center">
-        {isWeatherLoading ? t("weather.loading") : weatherDisplay.label}
-      </p>
+      {/* Temp + City */}
+      <div
+        className={`flex flex-col min-w-0 ${isCollapsed ? "items-center" : "items-end"}`}
+      >
+        <p className="text-sm font-semibold text-[var(--color-text)] truncate">
+          {isWeatherLoading ? "..." : weatherTemperatureLabel}
+        </p>
+        <p className="text-[10px] text-[var(--color-textSecondary)] break-words max-w-[70px]">
+          {weatherInfo?.city?.trim() || t("weather.cityUnknown")}
+        </p>
+      </div>
     </div>
-
-    {/* Temp + City */}
-    <div className="flex flex-col items-end min-w-0">
-      <p className="text-sm font-semibold text-[var(--color-text)] truncate">
-        {isWeatherLoading ? "..." : weatherTemperatureLabel}
-      </p>
-      <p className="text-[10px] text-[var(--color-textSecondary)] truncate max-w-[70px]">
-        {weatherInfo?.city?.trim() || t("weather.cityUnknown")}
-      </p>
-    </div>
-
-  </div>
-);
-
-
+  );
 };
 
 export default WeatherInfo;

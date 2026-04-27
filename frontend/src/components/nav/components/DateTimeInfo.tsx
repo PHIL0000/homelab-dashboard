@@ -9,12 +9,14 @@ interface DateTimeInfoProps {
     | "YYYY-MM-DD"
     | "DD.MM.YYYY"
     | string;
+  isCollapsed?: boolean;
 }
 
 const DateTimeInfo: React.FC<DateTimeInfoProps> = ({
   timezone,
   timeFormat,
   dateFormat,
+  isCollapsed,
 }) => {
   const [now, setNow] = useState(() => new Date());
 
@@ -27,7 +29,7 @@ const DateTimeInfo: React.FC<DateTimeInfoProps> = ({
     return () => window.clearInterval(timer);
   }, []);
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date, short = false) => {
     try {
       const parts = new Intl.DateTimeFormat("en-GB", {
         timeZone: userTimezone,
@@ -36,9 +38,22 @@ const DateTimeInfo: React.FC<DateTimeInfoProps> = ({
         year: "numeric",
       }).formatToParts(date);
 
-      const day = parts.find((part) => part.type === "day")?.value || "";
-      const month = parts.find((part) => part.type === "month")?.value || "";
-      const year = parts.find((part) => part.type === "year")?.value || "";
+      const day = parts.find((p) => p.type === "day")?.value || "";
+      const month = parts.find((p) => p.type === "month")?.value || "";
+      const year = parts.find((p) => p.type === "year")?.value || "";
+
+      if (short) {
+        switch (userDateFormat) {
+          case "MM-DD-YYYY":
+            return `${month}-${day}`;
+          case "YYYY-MM-DD":
+            return `${month}-${day}`;
+          case "DD.MM.YYYY":
+            return `${day}.${month}`;
+          default:
+            return `${day}-${month}`;
+        }
+      }
 
       switch (userDateFormat) {
         case "MM-DD-YYYY":
@@ -47,7 +62,6 @@ const DateTimeInfo: React.FC<DateTimeInfoProps> = ({
           return `${year}-${month}-${day}`;
         case "DD.MM.YYYY":
           return `${day}.${month}.${year}`;
-        case "DD-MM-YYYY":
         default:
           return `${day}-${month}-${year}`;
       }
@@ -56,13 +70,13 @@ const DateTimeInfo: React.FC<DateTimeInfoProps> = ({
     }
   };
 
-  const formatTime = (date: Date) => {
+  const formatTime = (date: Date, short = false) => {
     try {
       return new Intl.DateTimeFormat("en-GB", {
         timeZone: userTimezone,
         hour: "2-digit",
         minute: "2-digit",
-        second: "2-digit",
+        ...(short ? {} : { second: "2-digit" }),
         hour12: userTimeFormat === "12h",
       }).format(date);
     } catch {
@@ -70,21 +84,25 @@ const DateTimeInfo: React.FC<DateTimeInfoProps> = ({
     }
   };
 
-  const currentTime = useMemo(() => `${formatTime(now)}`, [now]);
-
-  const currentDate = useMemo(() => `${formatDate(now)}`, [now]);
+  const currentTime = useMemo(
+    () => formatTime(now, isCollapsed),
+    [now, isCollapsed],
+  );
+  const currentDate = useMemo(
+    () => formatDate(now, isCollapsed),
+    [now, isCollapsed],
+  );
 
   return (
-  <div className="flex flex-col items-center w-full min-w-0">
-    <p className="text-sm font-semibold text-[var(--color-text)] tabular-nums truncate w-full text-center">
-      {currentTime}
-    </p>
-    <p className="text-[10px] text-[var(--color-textSecondary)] truncate w-full text-center">
-      {currentDate}
-    </p>
-  </div>
-);
-
+    <div className="flex flex-col items-center w-full min-w-0">
+      <p className="text-sm font-semibold text-[var(--color-text)] tabular-nums truncate w-full text-center">
+        {currentTime}
+      </p>
+      <p className="text-[10px] text-[var(--color-textSecondary)] truncate w-full text-center">
+        {currentDate}
+      </p>
+    </div>
+  );
 };
 
 export default DateTimeInfo;
