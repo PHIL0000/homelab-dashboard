@@ -1,3 +1,4 @@
+import { showError, showSuccess } from '../../../../toast';
 import { useState, useEffect } from "react";
 import { Button, Card, Input } from "@heroui/react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -51,10 +52,10 @@ export default function ProfileTab() {
       }
 
       updateUser(data);
-      setMessage({ type: "success", text: "Profile updated successfully!" });
-      setTimeout(() => setMessage(null), 3000);
+  showSuccess("Profile updated successfully!");
+  // Toast verschwindet automatisch
     } catch (error: any) {
-      setMessage({ type: "error", text: error.message });
+  showError(error.message);
     } finally {
       setIsSaving(false);
     }

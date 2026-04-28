@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { showError, showSuccess } from '../../../../toast';
 import { Button, Input } from "@heroui/react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -8,10 +9,7 @@ export default function AdvancedTab() {
   const { token } = useAuth();
   const [haDomain, setHaDomain] = useState("https://");
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  // Toasts werden global angezeigt, kein lokaler message-State mehr nötig
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -31,8 +29,7 @@ export default function AdvancedTab() {
   }, []);
 
   const saveHaDomain = async () => {
-    setIsSaving(true);
-    setMessage(null);
+  setIsSaving(true);
     try {
       const res = await fetch("http://localhost:3001/api/settings", {
         method: "PUT",
@@ -47,13 +44,9 @@ export default function AdvancedTab() {
         throw new Error("Failed to save settings");
       }
 
-      setMessage({
-        type: "success",
-        text: t("settings.save") + " Successful!",
-      });
-      setTimeout(() => setMessage(null), 3000);
+      showSuccess(t("settings.save") + " Successful!");
     } catch (error: any) {
-      setMessage({ type: "error", text: error.message });
+  showError(error.message);
     } finally {
       setIsSaving(false);
     }
@@ -66,13 +59,7 @@ export default function AdvancedTab() {
           {t("settings.integration")}
         </h2>
 
-        {message && (
-          <div
-            className={`p-3 rounded-lg mb-4 ${message.type === "success" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
-          >
-            {message.text}
-          </div>
-        )}
+        {/* Toasts werden global angezeigt */}
 
         {/* Home Assistant Integration */}
         <div className="space-y-4">

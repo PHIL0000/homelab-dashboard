@@ -1,3 +1,4 @@
+import { showError, showSuccess } from '../../../../toast';
 import { useState } from "react";
 import { Button, Card, Input } from "@heroui/react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -17,7 +18,7 @@ export default function SecurityTab() {
 
   const handleUpdatePassword = async () => {
     if (!currentPassword || !newPassword) {
-      setMessage({ type: "error", text: "Please fill in both fields" });
+  showError("Please fill in both fields");
       return;
     }
 
@@ -42,11 +43,11 @@ export default function SecurityTab() {
         throw new Error(data.error || "Failed to update password");
       }
 
-      setMessage({ type: "success", text: "Password updated successfully!" });
+  showSuccess("Password updated successfully!");
       setCurrentPassword("");
       setNewPassword("");
     } catch (error: any) {
-      setMessage({ type: "error", text: error.message });
+  showError(error.message);
     } finally {
       setIsSaving(false);
     }

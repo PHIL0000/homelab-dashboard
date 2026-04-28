@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { showError } from '../../../toast';
 import { Button, Card, Input, Select, ListBox } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -87,7 +88,7 @@ export default function Hardware() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || "Failed to save hardware"}`);
+        showError(`Error: ${errorData.error || "Failed to save hardware"}`);
       return;
     }
 
@@ -121,7 +122,7 @@ export default function Hardware() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || "Failed to delete hardware"}`);
+        showError(`Error: ${errorData.error || "Failed to delete hardware"}`);
       return;
     }
 

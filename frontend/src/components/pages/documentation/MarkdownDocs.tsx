@@ -1,3 +1,4 @@
+import { showError } from '../../../toast';
 import { useState, useEffect, useMemo } from "react";
 import { Button, Card, Input, Select, ListBox } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
@@ -278,7 +279,7 @@ export default function MarkdownDocs() {
 
     const normalizedTitle = ensureMarkdownFilename(values.title);
     if (!normalizedTitle) {
-      alert("Title is required");
+  showError("Title is required");
       return;
     }
 
@@ -301,7 +302,7 @@ export default function MarkdownDocs() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || "Failed to save markdown"}`);
+  showError(`Error: ${errorData.error || "Failed to save markdown"}`);
       return;
     }
 
@@ -323,7 +324,7 @@ export default function MarkdownDocs() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || "Failed to delete markdown"}`);
+  showError(`Error: ${errorData.error || "Failed to delete markdown"}`);
       return;
     }
 

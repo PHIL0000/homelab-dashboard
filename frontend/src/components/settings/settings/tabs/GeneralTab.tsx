@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react"; // *** NEU: useCallback hinzugefügt ***
+import { useCallback, useEffect, useState } from "react";
+import { showSuccess, showError } from '../../../../toast';
 import { Button, Input, Select, ListBox } from "@heroui/react";
 import { ChevronDown } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -34,10 +35,7 @@ export default function GeneralTab() {
     "DD-MM-YYYY" | "MM-DD-YYYY" | "YYYY-MM-DD" | "DD.MM.YYYY"
   >("DD-MM-YYYY");
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  // Toasts werden global angezeigt, kein lokaler message-State mehr nötig
   const [weatherLocation, setWeatherLocation] = useState("");
   const [weatherLat, setWeatherLat] = useState("");
   const [weatherLon, setWeatherLon] = useState("");
@@ -170,7 +168,7 @@ export default function GeneralTab() {
     if (!user || !token) return;
 
     setIsSaving(true);
-    setMessage(null);
+  // keine lokale Message mehr
 
     try {
       // User Settings speichern
@@ -198,7 +196,7 @@ export default function GeneralTab() {
       // Weather Station speichern
       const city = weatherLocation.trim();
       if (!city) {
-        setMessage({ type: "error", text: "Please enter a city name." });
+  showError("Please enter a city name.");
         setIsSaving(false);
         return;
       }
@@ -216,10 +214,7 @@ export default function GeneralTab() {
         }
       } catch {
         // Stadt nicht gefunden → Fehler anzeigen und alte DB-Werte wiederherstellen
-        setMessage({
-          type: "error",
-          text: `City "${city}" could not be found. Please check the name and try again.`,
-        });
+        showError(`City "${city}" could not be found. Please check the name and try again.`);
         await fetchWeatherSettings(); // Alte Werte wiederherstellen
         setIsSaving(false);
         return;
@@ -260,15 +255,12 @@ export default function GeneralTab() {
           : "",
       );
 
-      setMessage({ type: "success", text: t("settings.saveSuccess") });
+  showSuccess(t("settings.saveSuccess"));
       // *** NEU: Wetter in der Sidebar sofort neu laden ***
       window.dispatchEvent(new Event("weather-station-updated"));
-      setTimeout(() => setMessage(null), 3000);
+  // kein Timeout nötig, Toast verschwindet automatisch
     } catch (error: any) {
-      setMessage({
-        type: "error",
-        text: error.message || t("settings.saveError"),
-      });
+      showError(error.message || t("settings.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -282,17 +274,7 @@ export default function GeneralTab() {
           {t("settings.dashboardInfo")}
         </h2>
 
-        {message && (
-          <div
-            className={`p-3 rounded-lg mb-4 ${
-              message.type === "success"
-                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                : "bg-red-500/20 text-red-400 border border-red-500/30"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
+        {/* Toasts werden global angezeigt */}
 
         <div className="space-y-4">
           <div>
