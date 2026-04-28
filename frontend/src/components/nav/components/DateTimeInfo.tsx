@@ -95,10 +95,10 @@ const DateTimeInfo: React.FC<DateTimeInfoProps> = ({
 
   return (
     <div className="flex flex-col items-center w-full min-w-0">
-      <p className="text-sm font-semibold text-[var(--color-text)] tabular-nums truncate w-full text-center">
+      <p className="text-sm font-semibold text-[var(--color-text)] tabular-nums break-words w-full text-center">
         {currentTime}
       </p>
-      <p className="text-[10px] text-[var(--color-textSecondary)] truncate w-full text-center">
+      <p className="text-[10px] text-[var(--color-textSecondary)] break-words w-full text-center">
         {currentDate}
       </p>
     </div>

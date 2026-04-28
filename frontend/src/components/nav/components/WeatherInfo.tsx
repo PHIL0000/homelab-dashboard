@@ -189,10 +189,8 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ token, isCollapsed }) => {
 
   return (
     <div
-      className={`flex w-full min-w-0 ${
-        isCollapsed
-          ? "flex-col items-center gap-1"
-          : "items-center gap-2 justify-end"
+      className={`flex min-w-0 ${
+        isCollapsed ? "flex-col items-center gap-1" : "items-center gap-2"
       }`}
     >
       {/* Icon + Label */}
@@ -210,7 +208,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ token, isCollapsed }) => {
         <p className="text-sm font-semibold text-[var(--color-text)] truncate">
           {isWeatherLoading ? "..." : weatherTemperatureLabel}
         </p>
-        <p className="text-[10px] text-[var(--color-textSecondary)] break-words max-w-[70px]">
+        <p className="text-[10px] text-[var(--color-textSecondary)] break-all max-w-[70px]">
           {weatherInfo?.city?.trim() || t("weather.cityUnknown")}
         </p>
       </div>

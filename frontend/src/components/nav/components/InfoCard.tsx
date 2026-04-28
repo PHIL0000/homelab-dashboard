@@ -23,7 +23,8 @@ const InfoCard: React.FC<InfoCardProps> = ({
       <div
         className={`flex ${isCollapsed ? "flex-col items-center gap-2" : "items-center gap-2"} w-full min-w-0`}
       >
-        <div className="shrink-0">
+        {/* Uhrzeit: nur so breit wie nötig */}
+        <div className="shrink-0 min-w-0 flex justify-center">
           <DateTimeInfo
             timezone={timezone}
             timeFormat={timeFormat}
@@ -36,8 +37,9 @@ const InfoCard: React.FC<InfoCardProps> = ({
           <div className="w-px h-6 bg-[color-mix(in_srgb,var(--color-border)_72%,transparent)] shrink-0" />
         )}
 
-        <div className="flex-1 min-w-0">
-          <WeatherInfo token={token} isCollapsed={isCollapsed} /> {/* ← neu */}
+        {/* Wetter: nimmt restlichen Platz, Inhalt zentriert */}
+        <div className="shrink-0 min-w-0 flex justify-center">
+          <WeatherInfo token={token} isCollapsed={isCollapsed} />
         </div>
       </div>
     </Card>
