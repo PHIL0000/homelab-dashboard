@@ -1,5 +1,5 @@
 // App.tsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
 import Sidebar from "./components/nav/Sidebar";
@@ -20,13 +20,11 @@ import Services from "./components/pages/documentation/Services";
 import StorageItems from "./components/pages/documentation/StorageItems";
 import MarkdownDocs from "./components/pages/documentation/MarkdownDocs";
 import DocumentationMap from "./components/pages/documentation/Map";
-
 import { useAuth } from "./context/AuthContext";
 
-const App: React.FC = () => {
-  const [activeModal, setActiveModal] = useState<"settings" | "account" | null>(
-    null,
-  );
+
+function App() {
+  const [activeModal, setActiveModal] = useState<"settings" | "account" | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { isLoading, user } = useAuth();
@@ -34,7 +32,6 @@ const App: React.FC = () => {
   const isAuthRoute =
     location.pathname === "/login" || location.pathname === "/setup";
 
-  // Redirect unauthenticated users to login
   useEffect(() => {
     if (!isLoading && !user && !isAuthRoute) {
       navigate("/login");
