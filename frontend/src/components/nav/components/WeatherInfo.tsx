@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Cloud,
   Sun,
@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
+// ─── Typen ────────────────────────────────────────────────────────────────────
+
 interface SidebarWeatherInfo {
   city: string;
   icon: string | null;
@@ -24,10 +26,10 @@ interface WeatherInfoProps {
   isCollapsed?: boolean;
 }
 
+// ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
+
 const parseNumericValue = (value: unknown): number | null => {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
+  if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
@@ -44,36 +46,38 @@ const getWeatherPresentation = (
   const normalizedCondition = (condition || "").toLowerCase();
   const combined = `${normalizedIcon} ${normalizedCondition}`;
 
-  if (combined.includes("thunder")) {
+  if (combined.includes("thunder"))
     return { label: t("weather.thunder"), Icon: CloudLightning };
-  }
-  if (combined.includes("snow") || combined.includes("sleet")) {
+  if (combined.includes("snow") || combined.includes("sleet"))
     return { label: t("weather.snow"), Icon: CloudSnow };
-  }
-  if (combined.includes("drizzle")) {
+  if (combined.includes("drizzle"))
     return { label: t("weather.drizzle"), Icon: CloudDrizzle };
-  }
   if (
     combined.includes("rain") ||
     combined.includes("hail") ||
     combined.includes("shower")
-  ) {
+  )
     return { label: t("weather.rain"), Icon: CloudRain };
-  }
-  if (combined.includes("fog") || combined.includes("mist")) {
+  if (combined.includes("fog") || combined.includes("mist"))
     return { label: t("weather.fog"), Icon: CloudFog };
-  }
-  if (combined.includes("partly") || combined.includes("cloud-sun")) {
+  if (combined.includes("partly") || combined.includes("cloud-sun"))
     return { label: t("weather.partly"), Icon: CloudSun };
-  }
-  if (combined.includes("cloud") || combined.includes("overcast")) {
+  if (combined.includes("cloud") || combined.includes("overcast"))
     return { label: t("weather.cloud"), Icon: Cloud };
-  }
-  if (combined.includes("night") || normalizedIcon.includes("moon")) {
+  if (combined.includes("night") || normalizedIcon.includes("moon"))
     return { label: t("weather.clear"), Icon: CloudMoon };
-  }
   return { label: t("weather.sun"), Icon: Sun };
 };
+
+// ─── Konstanten ───────────────────────────────────────────────────────────────
+
+/** Wie oft das Wetter automatisch neu geladen wird (Standard: 30 Minuten) */
+const WEATHER_REFRESH_INTERVAL_MS = 30 * 60 * 1000;
+
+/** Custom-Event-Name, der von GeneralTab nach dem Speichern gefeuert wird */
+const WEATHER_UPDATED_EVENT = "weather-station-updated";
+
+// ─── Komponente ───────────────────────────────────────────────────────────────
 
 const WeatherInfo: React.FC<WeatherInfoProps> = ({ token, isCollapsed }) => {
   const { t } = useLanguage();
@@ -82,90 +86,92 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ token, isCollapsed }) => {
   );
   const [isWeatherLoading, setIsWeatherLoading] = useState(false);
 
+  /**
+   * loadWeather als stabile Referenz mit useCallback,
+   * damit sie sowohl im Interval als auch im Event-Listener genutzt werden kann.
+   */
+  const loadWeather = useCallback(async () => {
+    if (!token) {
+      setWeatherInfo(null);
+      return;
+    }
+
+    setIsWeatherLoading(true);
+
+    try {
+      // 1. Stationsdaten (Stadt + Koordinaten) aus der DB holen
+      const stationResponse = await fetch(
+        "http://localhost:3001/api/settings/weather-station",
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!stationResponse.ok)
+        throw new Error("Weather station settings unavailable");
+
+      const stationData = await stationResponse.json();
+      const latitude = parseNumericValue(stationData?.latitude);
+      const longitude = parseNumericValue(stationData?.longitude);
+
+      if (latitude === null || longitude === null) {
+        setWeatherInfo(null);
+        return;
+      }
+
+      // 2. Aktuelles Wetter über die Koordinaten abrufen
+      const currentWeatherResponse = await fetch(
+        `https://api.brightsky.dev/current_weather?lat=${latitude}&lon=${longitude}`,
+      );
+      if (!currentWeatherResponse.ok)
+        throw new Error("Current weather unavailable");
+
+      const currentWeatherData = await currentWeatherResponse.json();
+      const current = currentWeatherData?.weather ?? {};
+
+      setWeatherInfo({
+        city: String(stationData?.city || ""),
+        icon:
+          typeof current.icon === "string" && current.icon.trim().length > 0
+            ? current.icon
+            : null,
+        condition:
+          typeof current.condition === "string" &&
+          current.condition.trim().length > 0
+            ? current.condition
+            : null,
+        temperature: parseNumericValue(current.temperature),
+      });
+    } catch (error) {
+      console.error("Failed to load sidebar weather", error);
+      setWeatherInfo(null);
+    } finally {
+      setIsWeatherLoading(false);
+    }
+  }, [token]);
+
+  // ── Automatischer Reload alle 30 Minuten + initialer Load ──────────────────
   useEffect(() => {
     if (!token) {
       setWeatherInfo(null);
       return;
     }
 
-    let active = true;
-
-    const loadWeather = async () => {
-      if (active) {
-        setIsWeatherLoading(true);
-      }
-
-      try {
-        const stationResponse = await fetch(
-          "http://localhost:3001/api/settings/weather-station",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        if (!stationResponse.ok) {
-          throw new Error("Weather station settings unavailable");
-        }
-
-        const stationData = await stationResponse.json();
-        const latitude = parseNumericValue(stationData?.latitude);
-        const longitude = parseNumericValue(stationData?.longitude);
-
-        if (latitude === null || longitude === null) {
-          if (active) {
-            setWeatherInfo(null);
-          }
-          return;
-        }
-
-        const currentWeatherResponse = await fetch(
-          `https://api.brightsky.dev/current_weather?lat=${latitude}&lon=${longitude}`,
-        );
-
-        if (!currentWeatherResponse.ok) {
-          throw new Error("Current weather unavailable");
-        }
-
-        const currentWeatherData = await currentWeatherResponse.json();
-        const current = currentWeatherData?.weather ?? {};
-
-        if (active) {
-          setWeatherInfo({
-            city: String(stationData?.city || ""),
-            icon:
-              typeof current.icon === "string" && current.icon.trim().length > 0
-                ? current.icon
-                : null,
-            condition:
-              typeof current.condition === "string" &&
-              current.condition.trim().length > 0
-                ? current.condition
-                : null,
-            temperature: parseNumericValue(current.temperature),
-          });
-        }
-      } catch (error) {
-        console.error("Failed to load sidebar weather", error);
-        if (active) {
-          setWeatherInfo(null);
-        }
-      } finally {
-        if (active) {
-          setIsWeatherLoading(false);
-        }
-      }
-    };
-
     loadWeather();
-    const refreshTimer = window.setInterval(loadWeather, 10 * 60 * 1000);
+    const refreshTimer = window.setInterval(
+      loadWeather,
+      WEATHER_REFRESH_INTERVAL_MS,
+    );
 
-    return () => {
-      active = false;
-      window.clearInterval(refreshTimer);
-    };
-  }, [token]);
+    return () => window.clearInterval(refreshTimer);
+  }, [token, loadWeather]);
+
+  // ── Sofortiger Reload, wenn Settings gespeichert wurden ────────────────────
+  // GeneralTab feuert: window.dispatchEvent(new Event("weather-station-updated"))
+  useEffect(() => {
+    const handler = () => loadWeather();
+    window.addEventListener(WEATHER_UPDATED_EVENT, handler);
+    return () => window.removeEventListener(WEATHER_UPDATED_EVENT, handler);
+  }, [loadWeather]);
+
+  // ─── Render ──────────────────────────────────────────────────────────────────
 
   const weatherPresentation = getWeatherPresentation(
     t as (key: string) => string,
@@ -183,7 +189,11 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ token, isCollapsed }) => {
 
   return (
     <div
-      className={`flex w-full min-w-0 ${isCollapsed ? "flex-col items-center gap-1" : "items-center gap-2 justify-end"}`}
+      className={`flex w-full min-w-0 ${
+        isCollapsed
+          ? "flex-col items-center gap-1"
+          : "items-center gap-2 justify-end"
+      }`}
     >
       {/* Icon + Label */}
       <div className="flex flex-col items-center shrink-0">

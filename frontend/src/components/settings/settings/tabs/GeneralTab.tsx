@@ -1,111 +1,154 @@
-import { useEffect, useState } from 'react';
-import { Button, Input, Select, ListBox } from '@heroui/react';
-import { ChevronDown } from 'lucide-react';
+import { useCallback, useEffect, useState } from "react"; // *** NEU: useCallback hinzugefügt ***
+import { Button, Input, Select, ListBox } from "@heroui/react";
+import { ChevronDown } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Language } from "@/i18n/translations";
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from "@/context/AuthContext";
 
 const TIMEZONE_OPTIONS = [
-  'Europe/Berlin',
-  'UTC',
-  'Europe/London',
-  'America/New_York',
-  'America/Los_Angeles',
-  'Asia/Tokyo'
+  "Europe/Berlin",
+  "UTC",
+  "Europe/London",
+  "America/New_York",
+  "America/Los_Angeles",
+  "Asia/Tokyo",
 ];
 
-const DATE_FORMAT_OPTIONS = ['DD-MM-YYYY', 'MM-DD-YYYY', 'YYYY-MM-DD', 'DD.MM.YYYY'] as const;
-const TIME_FORMAT_OPTIONS = ['24h', '12h'] as const;
+const DATE_FORMAT_OPTIONS = [
+  "DD-MM-YYYY",
+  "MM-DD-YYYY",
+  "YYYY-MM-DD",
+  "DD.MM.YYYY",
+] as const;
+const TIME_FORMAT_OPTIONS = ["24h", "12h"] as const;
 
-type WeatherLookupField = 'city' | 'coordinates';
+type WeatherLookupField = "city" | "coordinates";
 
 export default function GeneralTab() {
   const { t, language, setLanguage } = useLanguage();
   const { user, token, updateUser } = useAuth();
-  const [dashboardName, setDashboardName] = useState('Homelab');
-  const [timezone, setTimezone] = useState('Europe/Berlin');
-  const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('24h');
-  const [dateFormat, setDateFormat] = useState<'DD-MM-YYYY' | 'MM-DD-YYYY' | 'YYYY-MM-DD' | 'DD.MM.YYYY'>('DD-MM-YYYY');
+  const [dashboardName, setDashboardName] = useState("Homelab");
+  const [timezone, setTimezone] = useState("Europe/Berlin");
+  const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("24h");
+  const [dateFormat, setDateFormat] = useState<
+    "DD-MM-YYYY" | "MM-DD-YYYY" | "YYYY-MM-DD" | "DD.MM.YYYY"
+  >("DD-MM-YYYY");
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const [weatherLocation, setWeatherLocation] = useState("");
   const [weatherLat, setWeatherLat] = useState("");
   const [weatherLon, setWeatherLon] = useState("");
-  const [lastEditedWeatherField, setLastEditedWeatherField] = useState<WeatherLookupField | null>(null);
+  const [lastEditedWeatherField, setLastEditedWeatherField] =
+    useState<WeatherLookupField | null>(null);
   const [isResolvingWeather, setIsResolvingWeather] = useState(false);
+
+  // *** NEU: fetchWeatherSettings als useCallback, damit handleSave sie im Fehlerfall aufrufen kann ***
+  const fetchWeatherSettings = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(
+        "http://localhost:3001/api/settings/weather-station",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data) {
+        setWeatherLocation(data.city || "");
+        setWeatherLat(
+          data.latitude !== null && data.latitude !== undefined
+            ? String(data.latitude)
+            : "",
+        );
+        setWeatherLon(
+          data.longitude !== null && data.longitude !== undefined
+            ? String(data.longitude)
+            : "",
+        );
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [token]);
 
   useEffect(() => {
     if (!user) return;
-    setDashboardName(user.dashboardName || 'Homelab');
-    setTimezone(user.timezone || 'Europe/Berlin');
-    setTimeFormat(user.timeFormat === '12h' ? '12h' : '24h');
+    setDashboardName(user.dashboardName || "Homelab");
+    setTimezone(user.timezone || "Europe/Berlin");
+    setTimeFormat(user.timeFormat === "12h" ? "12h" : "24h");
 
     const nextDateFormat = user.dateFormat;
-    if (nextDateFormat === 'MM-DD-YYYY' || nextDateFormat === 'YYYY-MM-DD' || nextDateFormat === 'DD.MM.YYYY' || nextDateFormat === 'DD-MM-YYYY') {
+    if (
+      nextDateFormat === "MM-DD-YYYY" ||
+      nextDateFormat === "YYYY-MM-DD" ||
+      nextDateFormat === "DD.MM.YYYY" ||
+      nextDateFormat === "DD-MM-YYYY"
+    ) {
       setDateFormat(nextDateFormat);
     } else {
-      setDateFormat('DD-MM-YYYY');
+      setDateFormat("DD-MM-YYYY");
     }
 
-    // Fetch weather station settings from backend
-    const fetchWeatherSettings = async () => {
-      try {
-        const res = await fetch('http://localhost:3001/api/settings/weather-station', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data) {
-          setWeatherLocation(data.city || "");
-          setWeatherLat(data.latitude !== null && data.latitude !== undefined ? String(data.latitude) : "");
-          setWeatherLon(data.longitude !== null && data.longitude !== undefined ? String(data.longitude) : "");
-        }
-      } catch (e) {
-        // ignore
-      }
-    };
     fetchWeatherSettings();
-  }, [user, token]);
+  }, [user, token, fetchWeatherSettings]);
 
   // Nominatim lookup helpers
   const nominatimForward = async (city: string) => {
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to resolve city');
+    if (!res.ok) throw new Error("Failed to resolve city");
     const data = await res.json();
-    if (!data || !data[0]) throw new Error('No result for city');
-    return { lat: data[0].lat, lon: data[0].lon, display_name: data[0].display_name };
+    if (!data || !data[0]) throw new Error("No result for city");
+    return {
+      lat: data[0].lat,
+      lon: data[0].lon,
+      display_name: data[0].display_name,
+    };
   };
 
   const nominatimReverse = async (lat: string, lon: string) => {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&format=json`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to resolve coordinates');
+    if (!res.ok) throw new Error("Failed to resolve coordinates");
     const data = await res.json();
-    if (!data || !data.address) throw new Error('No result for coordinates');
-    // Use city, town, or village
-    const city = data.address.city || data.address.town || data.address.village || data.display_name || '';
+    if (!data || !data.address) throw new Error("No result for coordinates");
+    const city =
+      data.address.city ||
+      data.address.town ||
+      data.address.village ||
+      data.display_name ||
+      "";
     return { city };
   };
 
-  // Live lookup effect
-
+  // Live lookup effect (Debounce beim Tippen)
   useEffect(() => {
     if (!lastEditedWeatherField) return;
     const controller = new AbortController();
     const timeout = setTimeout(async () => {
       try {
         setIsResolvingWeather(true);
-        if (lastEditedWeatherField === 'city' && weatherLocation.trim()) {
+        if (lastEditedWeatherField === "city" && weatherLocation.trim()) {
           const result = await nominatimForward(weatherLocation.trim());
           setWeatherLat(result.lat);
           setWeatherLon(result.lon);
-        } else if (lastEditedWeatherField === 'coordinates' && weatherLat.trim() && weatherLon.trim()) {
-          const result = await nominatimReverse(weatherLat.trim(), weatherLon.trim());
+        } else if (
+          lastEditedWeatherField === "coordinates" &&
+          weatherLat.trim() &&
+          weatherLon.trim()
+        ) {
+          const result = await nominatimReverse(
+            weatherLat.trim(),
+            weatherLon.trim(),
+          );
           setWeatherLocation(result.city);
         }
       } catch (error: any) {
-        // Optionally show error
+        // ignore – Fehler werden erst beim Save behandelt
       } finally {
         setIsResolvingWeather(false);
         setLastEditedWeatherField(null);
@@ -130,74 +173,132 @@ export default function GeneralTab() {
     setMessage(null);
 
     try {
-      // Save user settings
-      const response = await fetch(`http://localhost:3001/api/user-settings/${user.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+      // User Settings speichern
+      const response = await fetch(
+        `http://localhost:3001/api/user-settings/${user.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            dashboardName: dashboardName.trim() || "Homelab",
+            timezone,
+            timeFormat,
+            dateFormat,
+          }),
         },
-        body: JSON.stringify({
-          dashboardName: dashboardName.trim() || 'Homelab',
-          timezone,
-          timeFormat,
-          dateFormat
-        })
-      });
+      );
 
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || t('settings.saveError'));
-      }
-
+      if (!response.ok) throw new Error(data.error || t("settings.saveError"));
       updateUser(data);
 
-      // Save weather settings
+      // Weather Station speichern
       const city = weatherLocation.trim();
-      const latitude = weatherLat.trim() ? Number(weatherLat.trim()) : undefined;
-      const longitude = weatherLon.trim() ? Number(weatherLon.trim()) : undefined;
-      if (!city || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-        setMessage({ type: 'error', text: 'Please provide valid city, latitude, and longitude.' });
+      if (!city) {
+        setMessage({ type: "error", text: "Please enter a city name." });
         setIsSaving(false);
         return;
       }
-      const weatherResponse = await fetch('http://localhost:3001/api/settings/weather-station', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ city, latitude, longitude })
-      });
-      const weatherData = await weatherResponse.json();
-      if (!weatherResponse.ok) {
-        throw new Error(weatherData.error || t('settings.saveError'));
+
+      // *** NEU: Koordinaten beim Save immer frisch über Nominatim auflösen ***
+      // Verhindert, dass eine ungültige Stadt mit alten GPS-Daten gespeichert wird.
+      let resolvedLat: number;
+      let resolvedLon: number;
+      try {
+        const geoResult = await nominatimForward(city);
+        resolvedLat = Number(geoResult.lat);
+        resolvedLon = Number(geoResult.lon);
+        if (!Number.isFinite(resolvedLat) || !Number.isFinite(resolvedLon)) {
+          throw new Error("Invalid coordinates");
+        }
+      } catch {
+        // Stadt nicht gefunden → Fehler anzeigen und alte DB-Werte wiederherstellen
+        setMessage({
+          type: "error",
+          text: `City "${city}" could not be found. Please check the name and try again.`,
+        });
+        await fetchWeatherSettings(); // Alte Werte wiederherstellen
+        setIsSaving(false);
+        return;
       }
-      setWeatherLocation(weatherData.city || '');
-      setWeatherLat(weatherData.latitude !== null && weatherData.latitude !== undefined ? String(weatherData.latitude) : '');
-      setWeatherLon(weatherData.longitude !== null && weatherData.longitude !== undefined ? String(weatherData.longitude) : '');
-      setMessage({ type: 'success', text: t('settings.saveSuccess') });
+
+      // Felder im UI mit den aufgelösten Koordinaten aktualisieren
+      setWeatherLat(String(resolvedLat));
+      setWeatherLon(String(resolvedLon));
+
+      const weatherResponse = await fetch(
+        "http://localhost:3001/api/settings/weather-station",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            city,
+            latitude: resolvedLat,
+            longitude: resolvedLon,
+          }),
+        },
+      );
+      const weatherData = await weatherResponse.json();
+      if (!weatherResponse.ok)
+        throw new Error(weatherData.error || t("settings.saveError"));
+
+      setWeatherLocation(weatherData.city || "");
+      setWeatherLat(
+        weatherData.latitude !== null && weatherData.latitude !== undefined
+          ? String(weatherData.latitude)
+          : "",
+      );
+      setWeatherLon(
+        weatherData.longitude !== null && weatherData.longitude !== undefined
+          ? String(weatherData.longitude)
+          : "",
+      );
+
+      setMessage({ type: "success", text: t("settings.saveSuccess") });
+      // *** NEU: Wetter in der Sidebar sofort neu laden ***
+      window.dispatchEvent(new Event("weather-station-updated"));
       setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || t('settings.saveError') });
+      setMessage({
+        type: "error",
+        text: error.message || t("settings.saveError"),
+      });
     } finally {
       setIsSaving(false);
     }
   };
-  
+
   return (
     <div className="doc-theme-form grid grid-cols-1 gap-6 max-w-3xl">
       {/* Dashboard Info & Language */}
       <div className="p-6 rounded-lg border border-slate-700/50 bg-slate-900/50">
-        <h2 className="text-xl font-semibold mb-4 text-slate-100">{t('settings.dashboardInfo')}</h2>
+        <h2 className="text-xl font-semibold mb-4 text-slate-100">
+          {t("settings.dashboardInfo")}
+        </h2>
+
         {message && (
-          <div className={`p-3 rounded-lg mb-4 ${message.type === 'success' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+          <div
+            className={`p-3 rounded-lg mb-4 ${
+              message.type === "success"
+                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                : "bg-red-500/20 text-red-400 border border-red-500/30"
+            }`}
+          >
             {message.text}
           </div>
         )}
+
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.dashboardName')}</label>
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              {t("settings.dashboardName")}
+            </label>
             <Input
               type="text"
               value={dashboardName}
@@ -205,17 +306,30 @@ export default function GeneralTab() {
               className="w-full"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.language')}</label>
-            <Select selectedKey={language} onChange={(key) => { if (key != null) handleLanguageChange(String(key)); }} className="w-full">
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              {t("settings.language")}
+            </label>
+            <Select
+              selectedKey={language}
+              onSelectionChange={(key) => {
+                if (key != null) handleLanguageChange(String(key));
+              }}
+              className="w-full"
+            >
               <Select.Trigger className="w-full px-3 flex items-center justify-between">
                 <Select.Value />
                 <ChevronDown size={16} className="text-slate-400" />
               </Select.Trigger>
               <Select.Popover className="w-[var(--trigger-width)]">
                 <ListBox>
-                  <ListBox.Item id="en" className="pl-2">English</ListBox.Item>
-                  <ListBox.Item id="de" className="pl-2">Deutsch</ListBox.Item>
+                  <ListBox.Item id="en" className="pl-2">
+                    English
+                  </ListBox.Item>
+                  <ListBox.Item id="de" className="pl-2">
+                    Deutsch
+                  </ListBox.Item>
                 </ListBox>
               </Select.Popover>
             </Select>
@@ -225,11 +339,21 @@ export default function GeneralTab() {
 
       {/* Timezone, Date & Time Format */}
       <div className="p-6 rounded-lg border border-slate-700/50 bg-slate-900/50">
-        <h2 className="text-xl font-semibold mb-2 text-slate-100">{t('settings.timezoneDate')}</h2>
+        <h2 className="text-xl font-semibold mb-2 text-slate-100">
+          {t("settings.timezoneDate")}
+        </h2>
         <div className="space-y-4 mt-4">
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.timezone')}</label>
-            <Select selectedKey={timezone} onChange={(key) => { if (key != null) setTimezone(String(key)); }} className="w-full">
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              {t("settings.timezone")}
+            </label>
+            <Select
+              selectedKey={timezone}
+              onSelectionChange={(key) => {
+                if (key != null) setTimezone(String(key));
+              }}
+              className="w-full"
+            >
               <Select.Trigger className="w-full px-3 flex items-center justify-between">
                 <Select.Value />
                 <ChevronDown size={16} className="text-slate-400" />
@@ -237,16 +361,28 @@ export default function GeneralTab() {
               <Select.Popover className="w-[var(--trigger-width)]">
                 <ListBox>
                   {TIMEZONE_OPTIONS.map((zone) => (
-                    <ListBox.Item key={zone} id={zone} className="pl-2">{zone}</ListBox.Item>
+                    <ListBox.Item key={zone} id={zone} className="pl-2">
+                      {zone}
+                    </ListBox.Item>
                   ))}
                 </ListBox>
               </Select.Popover>
             </Select>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">Time Format</label>
-              <Select selectedKey={timeFormat} onChange={(key) => { if (key != null) setTimeFormat(String(key) === '12h' ? '12h' : '24h'); }} className="w-full">
+              <label className="block text-sm font-medium text-slate-400 mb-1">
+                Time Format
+              </label>
+              <Select
+                selectedKey={timeFormat}
+                onSelectionChange={(key) => {
+                  if (key != null)
+                    setTimeFormat(String(key) === "12h" ? "12h" : "24h");
+                }}
+                className="w-full"
+              >
                 <Select.Trigger className="w-full px-3 flex items-center justify-between">
                   <Select.Value />
                   <ChevronDown size={16} className="text-slate-400" />
@@ -254,21 +390,35 @@ export default function GeneralTab() {
                 <Select.Popover className="w-[var(--trigger-width)]">
                   <ListBox>
                     {TIME_FORMAT_OPTIONS.map((format) => (
-                      <ListBox.Item key={format} id={format} className="pl-2">{format}</ListBox.Item>
+                      <ListBox.Item key={format} id={format} className="pl-2">
+                        {format}
+                      </ListBox.Item>
                     ))}
                   </ListBox>
                 </Select.Popover>
               </Select>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">Date Format</label>
-              <Select selectedKey={dateFormat} onChange={(key) => {
-                if (key == null) return;
-                const value = String(key);
-                if (value === 'MM-DD-YYYY' || value === 'YYYY-MM-DD' || value === 'DD.MM.YYYY' || value === 'DD-MM-YYYY') {
-                  setDateFormat(value);
-                }
-              }} className="w-full">
+              <label className="block text-sm font-medium text-slate-400 mb-1">
+                Date Format
+              </label>
+              <Select
+                selectedKey={dateFormat}
+                onSelectionChange={(key) => {
+                  if (key == null) return;
+                  const value = String(key);
+                  if (
+                    value === "MM-DD-YYYY" ||
+                    value === "YYYY-MM-DD" ||
+                    value === "DD.MM.YYYY" ||
+                    value === "DD-MM-YYYY"
+                  ) {
+                    setDateFormat(value);
+                  }
+                }}
+                className="w-full"
+              >
                 <Select.Trigger className="w-full px-3 flex items-center justify-between">
                   <Select.Value />
                   <ChevronDown size={16} className="text-slate-400" />
@@ -276,7 +426,9 @@ export default function GeneralTab() {
                 <Select.Popover className="w-[var(--trigger-width)]">
                   <ListBox>
                     {DATE_FORMAT_OPTIONS.map((format) => (
-                      <ListBox.Item key={format} id={format} className="pl-2">{format}</ListBox.Item>
+                      <ListBox.Item key={format} id={format} className="pl-2">
+                        {format}
+                      </ListBox.Item>
                     ))}
                   </ListBox>
                 </Select.Popover>
@@ -288,57 +440,69 @@ export default function GeneralTab() {
 
       {/* Weather Settings */}
       <div className="p-6 rounded-lg border border-slate-700/50 bg-slate-900/50">
-        <h2 className="text-xl font-semibold mb-2 text-slate-100">{t('settings.weather')}</h2>
-        <p className="text-slate-400 mb-4">{t('settings.weather.desc')}</p>
+        <h2 className="text-xl font-semibold mb-2 text-slate-100">
+          {t("settings.weather")}
+        </h2>
+        <p className="text-slate-400 mb-4">{t("settings.weather.desc")}</p>
+
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.weather.location')}</label>
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              {t("settings.weather.location")}
+            </label>
             <Input
               type="text"
               value={weatherLocation}
               onChange={(e) => {
                 setWeatherLocation(e.target.value);
-                setLastEditedWeatherField('city');
+                setLastEditedWeatherField("city");
               }}
-              placeholder={t('settings.weather.placeholder.location')}
+              placeholder={t("settings.weather.placeholder.location")}
               className="w-full"
             />
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.weather.gps')} (Lat)</label>
+              <label className="block text-sm font-medium text-slate-400 mb-1">
+                {t("settings.weather.gps")} (Lat)
+              </label>
               <Input
                 type="text"
                 value={weatherLat}
                 onChange={(e) => {
                   setWeatherLat(e.target.value);
-                  setLastEditedWeatherField('coordinates');
+                  setLastEditedWeatherField("coordinates");
                 }}
                 placeholder="52.5200"
                 className="w-full"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">{t('settings.weather.gps')} (Lon)</label>
+              <label className="block text-sm font-medium text-slate-400 mb-1">
+                {t("settings.weather.gps")} (Lon)
+              </label>
               <Input
                 type="text"
                 value={weatherLon}
                 onChange={(e) => {
                   setWeatherLon(e.target.value);
-                  setLastEditedWeatherField('coordinates');
+                  setLastEditedWeatherField("coordinates");
                 }}
                 placeholder="13.4050"
                 className="w-full"
               />
             </div>
           </div>
+
           {isResolvingWeather && (
             <p className="text-xs text-blue-400 mt-1">Resolving location…</p>
           )}
         </div>
       </div>
 
-      {/* Save Button at the end */}
+      {/* Save Button */}
       <div className="flex justify-end">
         <Button
           type="button"
@@ -346,7 +510,7 @@ export default function GeneralTab() {
           onClick={handleSave}
           className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all disabled:opacity-50"
         >
-          {isSaving ? `${t('settings.save')}...` : t('settings.save')}
+          {isSaving ? `${t("settings.save")}...` : t("settings.save")}
         </Button>
       </div>
     </div>
