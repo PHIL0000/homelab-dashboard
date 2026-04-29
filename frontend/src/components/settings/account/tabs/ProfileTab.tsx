@@ -13,10 +13,6 @@ export default function ProfileTab() {
   const [lastName, setLastName] = useState(user?.lastName || "");
   const [email, setEmail] = useState(user?.email || "");
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -31,7 +27,6 @@ export default function ProfileTab() {
     if (!user || !token) return;
 
     setIsSaving(true);
-    setMessage(null);
     try {
       const response = await fetch(
         `http://localhost:3001/api/users/${user.id}`,
@@ -67,14 +62,6 @@ export default function ProfileTab() {
         <h2 className="text-xl font-semibold mb-2 text-slate-100">
           {t("account.profileInfo")}
         </h2>
-
-        {message && (
-          <div
-            className={`p-3 rounded-lg mb-4 ${message.type === "success" ? "bg-green-500/20 text-green-400 border border-green-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30"}`}
-          >
-            {message.text}
-          </div>
-        )}
 
         <div className="space-y-4 mt-4">
           <div>

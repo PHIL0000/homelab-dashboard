@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Button, Input, Card } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
+import { showError } from "@/toast";
 
 export default function Setup() {
   const [username, setUsername] = useState("");
@@ -8,7 +9,6 @@ export default function Setup() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
@@ -32,10 +32,10 @@ export default function Setup() {
       if (res.ok) {
         login(data.token, data.user);
       } else {
-        setError(data.error);
+        showError(data.error);
       }
     } catch (e) {
-      setError("Setup failed. Please check connection.");
+      showError("Setup failed. Please check connection.");
     } finally {
       setLoading(false);
     }
@@ -61,13 +61,6 @@ export default function Setup() {
 
         {/* Card */}
         <Card className="border border-purple-500/20 bg-slate-900/50 backdrop-blur-md shadow-2xl p-8">
-          {/* Error Alert */}
-          {error && (
-            <div className="mb-6 rounded-lg border border-red-500/50 bg-red-500/10 p-4">
-              <p className="text-sm font-medium text-red-400">⚠️ {error}</p>
-            </div>
-          )}
-
           {/* Form */}
           <form onSubmit={handleSetup} className="space-y-5">
             <div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { showError, showSuccess } from "../../../../toast";
 
 import type { PageSettingKey } from "./PageSettings/types";
 import {
@@ -127,10 +128,6 @@ export default function PagesTab({ selectedPageKey }: PagesTabProps) {
     Record<PageSettingKey, boolean>
   >(() => buildVisibilityMap(user?.pageVisibility));
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
 
   useEffect(() => {
     setPageVisibility(buildVisibilityMap(user?.pageVisibility));
@@ -151,7 +148,6 @@ export default function PagesTab({ selectedPageKey }: PagesTabProps) {
     if (!user || !token) return;
 
     setIsSaving(true);
-    setMessage(null);
 
     try {
       const response = await fetch(
@@ -172,13 +168,9 @@ export default function PagesTab({ selectedPageKey }: PagesTabProps) {
       }
 
       updateUser(data);
-      setMessage({ type: "success", text: t("settings.saveSuccess") });
-      setTimeout(() => setMessage(null), 2500);
+      showSuccess(t("settings.saveSuccess"));
     } catch (error: any) {
-      setMessage({
-        type: "error",
-        text: error.message || t("settings.saveError"),
-      });
+      showError(error.message || t("settings.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -215,18 +207,6 @@ export default function PagesTab({ selectedPageKey }: PagesTabProps) {
       <h1 className="text-2xl font-bold mb-2 text-slate-100">
         {selectedPageTitle}
       </h1>
-
-      {message && (
-        <div
-          className={`p-3 rounded-lg mb-4 ${
-            message.type === "success"
-              ? "bg-green-500/20 text-green-400 border border-green-500/30"
-              : "bg-red-500/20 text-red-400 border border-red-500/30"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
 
       <SelectedPageComponent
         visible={selectedPageVisible}

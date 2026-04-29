@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Button, Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
+import { showError, showSuccess } from '../../../toast';
 import AddStorage, { getStorageTypeLabel, type StorageFormValues } from './components/AddStorage';
 import EditStorage from './components/EditStorage';
 
@@ -141,7 +142,7 @@ export default function StorageItems() {
 
   const saveStorage = async (values: StorageFormValues) => {
     if (!token || !values.hardwareAssetId) {
-      alert('Please select a hardware node.');
+      showError('Please select a hardware node.');
       return;
     }
 
@@ -169,7 +170,7 @@ export default function StorageItems() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to save storage'}`);
+      showError(errorData.error || 'Failed to save storage');
       return;
     }
 
@@ -177,6 +178,7 @@ export default function StorageItems() {
     setStorageEditId(null);
     setEditingStorage(null);
     await fetchData();
+    showSuccess('Storage saved successfully.');
   };
 
   const deleteStorage = async () => {
@@ -190,7 +192,7 @@ export default function StorageItems() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to delete storage'}`);
+      showError(errorData.error || 'Failed to delete storage');
       return;
     }
 
@@ -198,6 +200,7 @@ export default function StorageItems() {
     setStorageEditId(null);
     setEditingStorage(null);
     await fetchData();
+    showSuccess('Storage deleted.');
   };
 
   return (

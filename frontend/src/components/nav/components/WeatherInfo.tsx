@@ -194,9 +194,9 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ token, isCollapsed }) => {
       }`}
     >
       {/* Icon + Label */}
-      <div className="flex flex-col items-center shrink-0">
+      <div className="flex flex-col items-center shrink-0 w-[60px]">
         <WeatherIcon size={16} className="text-[var(--color-primary)]" />
-        <p className="text-[10px] text-[var(--color-text)] font-medium text-center break-words max-w-[60px]">
+        <p className="text-[10px] text-[var(--color-text)] font-medium text-center break-words w-full">
           {isWeatherLoading ? t("weather.loading") : weatherDisplay.label}
         </p>
       </div>
@@ -208,7 +208,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ token, isCollapsed }) => {
         <p className="text-sm font-semibold text-[var(--color-text)] truncate">
           {isWeatherLoading ? "..." : weatherTemperatureLabel}
         </p>
-        <p className="text-[10px] text-[var(--color-textSecondary)] break-all max-w-[70px]">
+        <p className="text-[10px] text-[var(--color-textSecondary)] break-words">
           {weatherInfo?.city?.trim() || t("weather.cityUnknown")}
         </p>
       </div>

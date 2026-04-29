@@ -3,6 +3,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Card, Input, Select, ListBox } from "@heroui/react";
 import { Camera, ChevronDown } from "lucide-react";
+import { showError, showSuccess } from "../../../../toast";
 
 interface UserData {
   id: string;
@@ -21,7 +22,6 @@ export default function UsersTab() {
 
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newUsername, setNewUsername] = useState("");
@@ -52,7 +52,7 @@ export default function UsersTab() {
       const data = await res.json();
       setUsers(data);
     } catch (err: any) {
-      setError(err.message);
+      showError(err.message);
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,6 @@ export default function UsersTab() {
     if (!token) return;
     try {
       setIsAdding(true);
-      setError(null);
       const res = await fetch("http://localhost:3001/api/users", {
         method: "POST",
         headers: {
@@ -95,8 +94,9 @@ export default function UsersTab() {
       setNewEmail("");
       setNewPassword("");
       setNewRole("USER");
+      showSuccess("User created successfully!");
     } catch (err: any) {
-      setError(err.message);
+      showError(err.message);
     } finally {
       setIsAdding(false);
     }
@@ -107,7 +107,6 @@ export default function UsersTab() {
     if (!token || !editingUser) return;
     try {
       setIsUpdating(true);
-      setError(null);
       const res = await fetch(
         `http://localhost:3001/api/users/${editingUser.id}`,
         {
@@ -131,8 +130,9 @@ export default function UsersTab() {
 
       setUsers(users.map((u) => (u.id === editingUser.id ? data : u)));
       setEditingUser(null);
+      showSuccess("User updated successfully!");
     } catch (err: any) {
-      setError(err.message);
+      showError(err.message);
     } finally {
       setIsUpdating(false);
     }
@@ -150,8 +150,9 @@ export default function UsersTab() {
         throw new Error(data.error || "Failed to delete user");
       }
       setUsers(users.filter((u) => u.id !== id));
+      showSuccess("User deleted.");
     } catch (err: any) {
-      setError(err.message);
+      showError(err.message);
     }
   };
 
@@ -189,12 +190,6 @@ export default function UsersTab() {
           {showAddForm ? "Cancel" : "Add User"}
         </Button>
       </div>
-
-      {error && (
-        <div className="p-3 bg-red-500/20 text-red-400 rounded-lg mb-4">
-          {error}
-        </div>
-      )}
 
       {showAddForm && (
         <Card className="p-6 bg-slate-900/50 border border-slate-700/50 mb-6">

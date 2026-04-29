@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Button, Input, Card } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
+import { showError } from "@/toast";
 
 export default function Login() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
@@ -23,10 +23,10 @@ export default function Login() {
       if (res.ok) {
         login(data.token, data.user);
       } else {
-        setError(data.error || "Invalid credentials");
+        showError(data.error || "Invalid credentials");
       }
     } catch (e) {
-      setError("Login failed. Please check connection.");
+      showError("Login failed. Please check connection.");
     } finally {
       setLoading(false);
     }
@@ -69,13 +69,6 @@ export default function Login() {
               "0 24px 60px color-mix(in srgb, var(--color-glow) 28%, transparent)",
           }}
         >
-          {/* Error Alert */}
-          {error && (
-            <div className="mb-6 rounded-lg border border-red-500/50 bg-red-500/10 p-4">
-              <p className="text-sm font-medium text-red-400">⚠️ {error}</p>
-            </div>
-          )}
-
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-6">
             <div>

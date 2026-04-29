@@ -11,19 +11,14 @@ export default function SecurityTab() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
 
   const handleUpdatePassword = async () => {
     if (!currentPassword || !newPassword) {
-  showError("Please fill in both fields");
+      showError("Please fill in both fields");
       return;
     }
 
     setIsSaving(true);
-    setMessage(null);
     try {
       const response = await fetch(
         "http://localhost:3001/api/auth/change-password",
@@ -59,14 +54,6 @@ export default function SecurityTab() {
         <h2 className="text-xl font-semibold mb-2 text-slate-100">
           {t("account.changePassword")}
         </h2>
-
-        {message && (
-          <div
-            className={`p-3 rounded-lg mb-4 mt-2 ${message.type === "success" ? "bg-green-500/20 text-green-400 border border-green-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30"}`}
-          >
-            {message.text}
-          </div>
-        )}
 
         <div className="space-y-4 mt-4">
           <div>

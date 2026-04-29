@@ -4,6 +4,7 @@ import type { Theme } from "@/context/ThemeContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { showError, showSuccess } from "../../../../toast";
 
 const DEFAULT_OLED_RGB = { r: 126, g: 34, b: 206 };
 
@@ -57,10 +58,6 @@ export default function AppearanceTab() {
   const [rgb, setRgb] = useState(DEFAULT_OLED_RGB);
   const [hex, setHex] = useState(rgbToHex(DEFAULT_OLED_RGB));
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
 
   // Sync RGB and HEX when user changes
   useEffect(() => {
@@ -123,7 +120,6 @@ export default function AppearanceTab() {
     if (!user || !token) return;
 
     setIsSaving(true);
-    setMessage(null);
 
     try {
       const response = await fetch(
@@ -144,13 +140,9 @@ export default function AppearanceTab() {
       }
 
       updateUser(data);
-      setMessage({ type: "success", text: t("settings.saveSuccess") });
-      setTimeout(() => setMessage(null), 2500);
+      showSuccess(t("settings.saveSuccess"));
     } catch (error: any) {
-      setMessage({
-        type: "error",
-        text: error.message || t("settings.saveError"),
-      });
+      showError(error.message || t("settings.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -239,14 +231,6 @@ export default function AppearanceTab() {
             <h3 className="text-sm uppercase tracking-wide text-slate-300 mb-3">
               {t("settings.oledAccent")}
             </h3>
-
-            {message && (
-              <div
-                className={`p-3 rounded-lg mb-4 ${message.type === "success" ? "bg-green-500/20 text-green-400 border border-green-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30"}`}
-              >
-                {message.text}
-              </div>
-            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
               <div>
