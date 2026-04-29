@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "@heroui/react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -69,6 +69,18 @@ export default function Settings() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general");
+  const tabSaveRef = useRef<(() => Promise<void>) | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleGlobalSave = async () => {
+    if (!tabSaveRef.current || isSaving) return;
+    setIsSaving(true);
+    try {
+      await tabSaveRef.current();
+    } finally {
+      setIsSaving(false);
+    }
+  };
   const [pagesExpanded, setPagesExpanded] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {
@@ -237,26 +249,41 @@ export default function Settings() {
         </nav>
       </div>
 
-      <div className="flex-1 p-4 md:p-6 overflow-y-auto">
-        <div className="mb-5 pb-3 border-b border-slate-700/50">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="px-4 md:px-6 pt-4 md:pt-6 pb-3 border-b border-slate-700/50 shrink-0">
           <h1 className="text-2xl font-bold mb-1 text-text">
             {tabTitles[activeTab]}
           </h1>
           <p className="text-sm text-slate-400">{tabDescriptions[activeTab]}</p>
         </div>
 
-        <SettingsTabBoundary tab={activeTab}>
-          {activeTab === "general" && <GeneralTab />}
-          {activeTab === "pages" && (
-            <PagesTab selectedPageKey={selectedPageKey} />
-          )}
-          {activeTab === "appearance" && <AppearanceTab />}
-          {activeTab === "notifications" && <NotificationsTab />}
-          {activeTab === "users" && user?.role === "ADMIN" && <UsersTab />}
-          {activeTab === "advanced" && user?.role === "ADMIN" && (
-            <AdvancedTab />
-          )}
-        </SettingsTabBoundary>
+        <div className="flex-1 p-4 md:p-6 overflow-y-auto">
+          <SettingsTabBoundary tab={activeTab}>
+            {activeTab === "general" && <GeneralTab saveFnRef={tabSaveRef} />}
+            {activeTab === "pages" && (
+              <PagesTab selectedPageKey={selectedPageKey} />
+            )}
+            {activeTab === "appearance" && <AppearanceTab />}
+            {activeTab === "notifications" && <NotificationsTab />}
+            {activeTab === "users" && user?.role === "ADMIN" && <UsersTab />}
+            {activeTab === "advanced" && user?.role === "ADMIN" && (
+              <AdvancedTab />
+            )}
+          </SettingsTabBoundary>
+        </div>
+
+        {activeTab === "general" && (
+          <div className="shrink-0 px-4 md:px-6 py-3 border-t border-slate-700/50 bg-slate-900/80 backdrop-blur-sm flex justify-end">
+            <Button
+              type="button"
+              isDisabled={isSaving}
+              onClick={handleGlobalSave}
+              className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all disabled:opacity-50"
+            >
+              {isSaving ? `${t("settings.save")}...` : t("settings.save")}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

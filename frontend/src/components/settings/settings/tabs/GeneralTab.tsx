@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { showSuccess, showError } from '../../../../toast';
-import { Button, Input, Select, ListBox } from "@heroui/react";
+import { Input, Select, ListBox } from "@heroui/react";
 import { ChevronDown } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Language } from "@/i18n/translations";
@@ -25,17 +25,20 @@ const TIME_FORMAT_OPTIONS = ["24h", "12h"] as const;
 
 type WeatherLookupField = "city" | "coordinates";
 
-export default function GeneralTab() {
+type GeneralTabProps = {
+  saveFnRef?: React.RefObject<(() => Promise<void>) | null>;
+};
+
+export default function GeneralTab({ saveFnRef }: GeneralTabProps) {
   const { t, language, setLanguage } = useLanguage();
   const { user, token, updateUser } = useAuth();
+  const [pendingLanguage, setPendingLanguage] = useState<Language>(language);
   const [dashboardName, setDashboardName] = useState("Homelab");
   const [timezone, setTimezone] = useState("Europe/Berlin");
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("24h");
   const [dateFormat, setDateFormat] = useState<
     "DD-MM-YYYY" | "MM-DD-YYYY" | "YYYY-MM-DD" | "DD.MM.YYYY"
   >("DD-MM-YYYY");
-  const [isSaving, setIsSaving] = useState(false);
-  // Toasts werden global angezeigt, kein lokaler message-State mehr nötig
   const [weatherLocation, setWeatherLocation] = useState("");
   const [weatherLat, setWeatherLat] = useState("");
   const [weatherLon, setWeatherLon] = useState("");
@@ -160,18 +163,14 @@ export default function GeneralTab() {
 
   const handleLanguageChange = (value: string) => {
     if (value === "en" || value === "de") {
-      setLanguage(value as Language);
+      setPendingLanguage(value as Language);
     }
   };
 
   const handleSave = async () => {
     if (!user || !token) return;
 
-    setIsSaving(true);
-  // keine lokale Message mehr
-
     try {
-      // User Settings speichern
       const response = await fetch(
         `http://localhost:3001/api/user-settings/${user.id}`,
         {
@@ -193,16 +192,12 @@ export default function GeneralTab() {
       if (!response.ok) throw new Error(data.error || t("settings.saveError"));
       updateUser(data);
 
-      // Weather Station speichern
       const city = weatherLocation.trim();
       if (!city) {
-  showError("Please enter a city name.");
-        setIsSaving(false);
+        showError("Please enter a city name.");
         return;
       }
 
-      // *** NEU: Koordinaten beim Save immer frisch über Nominatim auflösen ***
-      // Verhindert, dass eine ungültige Stadt mit alten GPS-Daten gespeichert wird.
       let resolvedLat: number;
       let resolvedLon: number;
       try {
@@ -213,14 +208,11 @@ export default function GeneralTab() {
           throw new Error("Invalid coordinates");
         }
       } catch {
-        // Stadt nicht gefunden → Fehler anzeigen und alte DB-Werte wiederherstellen
         showError(`City "${city}" could not be found. Please check the name and try again.`);
-        await fetchWeatherSettings(); // Alte Werte wiederherstellen
-        setIsSaving(false);
+        await fetchWeatherSettings();
         return;
       }
 
-      // Felder im UI mit den aufgelösten Koordinaten aktualisieren
       setWeatherLat(String(resolvedLat));
       setWeatherLon(String(resolvedLon));
 
@@ -255,16 +247,25 @@ export default function GeneralTab() {
           : "",
       );
 
-  showSuccess(t("settings.saveSuccess"));
-      // *** NEU: Wetter in der Sidebar sofort neu laden ***
+      setLanguage(pendingLanguage);
+      showSuccess(t("settings.saveSuccess"));
       window.dispatchEvent(new Event("weather-station-updated"));
-  // kein Timeout nötig, Toast verschwindet automatisch
     } catch (error: any) {
       showError(error.message || t("settings.saveError"));
-    } finally {
-      setIsSaving(false);
     }
   };
+
+  const handleSaveRef = useRef(handleSave);
+  handleSaveRef.current = handleSave;
+
+  useEffect(() => {
+    if (saveFnRef) {
+      saveFnRef.current = () => handleSaveRef.current();
+      return () => {
+        saveFnRef.current = null;
+      };
+    }
+  }, [saveFnRef]);
 
   return (
     <div className="doc-theme-form grid grid-cols-1 gap-6 max-w-3xl">
@@ -294,7 +295,7 @@ export default function GeneralTab() {
               {t("settings.language")}
             </label>
             <Select
-              selectedKey={language}
+              selectedKey={pendingLanguage}
               onSelectionChange={(key) => {
                 if (key != null) handleLanguageChange(String(key));
               }}
@@ -484,17 +485,6 @@ export default function GeneralTab() {
         </div>
       </div>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          isDisabled={isSaving}
-          onClick={handleSave}
-          className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all disabled:opacity-50"
-        >
-          {isSaving ? `${t("settings.save")}...` : t("settings.save")}
-        </Button>
-      </div>
     </div>
   );
 }
