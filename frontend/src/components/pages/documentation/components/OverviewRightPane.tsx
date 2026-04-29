@@ -197,7 +197,7 @@ export default function OverviewRightPane({
                   >
                     {serviceSortDirection === 'asc' ? 'A-Z' : 'Z-A'}
                   </Button>
-                  <Button onClick={onAddDeployment} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add service</Button>
+                  <Button onClick={onAddDeployment} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168,_85,_247,_0.5)] transition-all" variant="primary">+ Add service</Button>
                 </div>
               </div>
               <div className="divide-y divide-border">
@@ -280,7 +280,7 @@ export default function OverviewRightPane({
                   >
                     {storageSortDirection === 'asc' ? 'A-Z' : 'Z-A'}
                   </Button>
-                  <Button onClick={onAddStorage} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add storage</Button>
+                  <Button onClick={onAddStorage} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168,_85,_247,_0.5)] transition-all" variant="primary">+ Add storage</Button>
                 </div>
               </div>
               <div className="divide-y divide-border">
@@ -337,7 +337,7 @@ export default function OverviewRightPane({
                   >
                     {markdownSortDirection === 'asc' ? 'A-Z' : 'Z-A'}
                   </Button>
-                  <Button onClick={onAddDoc} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add markdown</Button>
+                  <Button onClick={onAddDoc} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168,_85,_247,_0.5)] transition-all" variant="primary">+ Add markdown</Button>
                 </div>
               </div>
               <div className="divide-y divide-border">

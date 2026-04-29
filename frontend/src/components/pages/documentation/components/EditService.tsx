@@ -278,14 +278,14 @@ export default function EditService({
 					<div className="pt-4 border-t border-slate-700/50 flex items-center justify-between gap-2">
 						<div>
 							{onDelete && (
-								<Button type="button" onClick={onDelete} className="rounded-lg px-3 py-1.5 text-sm" variant="danger">
+								<Button type="button" onClick={onDelete} className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm text-red-300 hover:bg-red-500/20" variant="danger">
 									Delete
 								</Button>
 							)}
 						</div>
 						<div className="flex items-center gap-2">
 							<Button type="button" onClick={onClose} className="px-3 py-1.5 text-sm text-slate-400 hover:text-text !border-0 !border-transparent !ring-0 !shadow-none" variant="ghost">Cancel</Button>
-							<Button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-purple-600 text-white hover:bg-purple-600/90" variant="primary">Save Changes</Button>
+							<Button type="submit" className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168,_85,_247,_0.5)] transition-all" variant="primary">Save Changes</Button>
 						</div>
 					</div>
 				</form>

@@ -184,7 +184,7 @@ export default function UsersTab() {
             setShowAddForm(!showAddForm);
             setEditingUser(null);
           }}
-          className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all"
+          className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168,_85,_247,_0.5)] transition-all"
           variant="primary"
         >
           {showAddForm ? "Cancel" : "Add User"}
@@ -284,7 +284,7 @@ export default function UsersTab() {
             <Button
               isDisabled={isAdding}
               type="submit"
-              className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all disabled:opacity-50 mt-4"
+              className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168,_85,_247,_0.5)] transition-all disabled:opacity-50 mt-4"
               variant="primary"
             >
               {isAdding ? "Creating..." : "Create User"}
@@ -386,7 +386,7 @@ export default function UsersTab() {
             <Button
               isDisabled={isUpdating}
               type="submit"
-              className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all disabled:opacity-50 mt-4"
+              className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168,_85,_247,_0.5)] transition-all disabled:opacity-50 mt-4"
               variant="primary"
             >
               {isUpdating ? "Saving..." : "Save Changes"}
