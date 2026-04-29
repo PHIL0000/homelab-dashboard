@@ -264,6 +264,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
         isCollapsed={isCollapsed}
         username={user?.username}
         role={user?.role}
+        avatarUrl={user?.avatarUrl}
         accountLabel={t("nav.account")}
         settingsLabel={t("nav.settings")}
         onOpenModal={onOpenModal}

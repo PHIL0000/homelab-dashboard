@@ -6,6 +6,7 @@ interface SidebarFooterProps {
   isCollapsed: boolean;
   username?: string;
   role?: string;
+  avatarUrl?: string;
   accountLabel: string;
   settingsLabel: string;
   onOpenModal: (modal: "settings" | "account") => void;
@@ -15,11 +16,30 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({
   isCollapsed,
   username,
   role,
+  avatarUrl,
   accountLabel,
   settingsLabel,
   onOpenModal,
 }) => {
   const avatarLetter = username ? username.substring(0, 1).toUpperCase() : "U";
+
+  const AvatarDisplay = ({ size }: { size: "sm" | "md" }) => {
+    const dim = size === "sm" ? "w-8 h-8 text-xs" : "w-8 h-8 text-xs";
+    return avatarUrl ? (
+      <img
+        src={avatarUrl}
+        alt={username}
+        className={`${dim} rounded-full object-cover flex-shrink-0`}
+      />
+    ) : (
+      <div
+        className={`${dim} rounded-full flex items-center justify-center text-white font-bold flex-shrink-0`}
+        style={{ backgroundColor: "var(--color-primary)" }}
+      >
+        {avatarLetter}
+      </div>
+    );
+  };
 
   return (
     <div
@@ -33,20 +53,10 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({
         aria-label={accountLabel}
       >
         {isCollapsed ? (
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
-            style={{ backgroundColor: "var(--color-primary)" }}
-          >
-            {avatarLetter}
-          </div>
+          <AvatarDisplay size="sm" />
         ) : (
           <>
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-              style={{ backgroundColor: "var(--color-primary)" }}
-            >
-              {avatarLetter}
-            </div>
+            <AvatarDisplay size="sm" />
             <div className="flex-1 min-w-0 text-left pl-2">
               <p className="text-sm font-medium text-[var(--color-text)] truncate">
                 {username || "User"}
