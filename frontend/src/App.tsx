@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
 import Sidebar from "./components/nav/Sidebar";
-//import DashboardPage from "./components/pages/dashboard/Dashboard";
+import DashboardPage from "./components/pages/dashboard/Dashboard";
 //import CalendarPage from "./components/pages/calendar/Calendar";
 import HomeAssistantPage from "./components/pages/home-assistant/HomeAssistant";
 //import AiChatPage from "./components/pages/ai/Chat/AiChat";
@@ -94,7 +94,7 @@ function App() {
           <div className="max-w-[2000px] mx-auto h-full">
             <Routes>
               <Route path="/" element={<PlaceholderPage />} />
-              <Route path="/dashboard" element={<PlaceholderPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/calendar" element={<PlaceholderPage />} />
               <Route path="/home-assistant" element={<HomeAssistantPage />} />
               <Route path="/storage/nas" element={<PlaceholderPage />} />
