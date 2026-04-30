@@ -60,6 +60,12 @@ router.post('/', authenticate, async (req: any, res: any) => {
     if (!username || !password) {
       return res.status(400).json({ error: "Username and password are required" });
     }
+    if (username.length < 3) {
+      return res.status(400).json({ error: "Username must be at least 3 characters" });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
 
     const passwordHash = await bcrypt.hash(password, 10);
     const userRole = role === 'ADMIN' ? 'ADMIN' : 'USER';

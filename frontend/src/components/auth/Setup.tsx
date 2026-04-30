@@ -73,6 +73,7 @@ export default function Setup() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                minLength={3}
               />
             </div>
 
@@ -123,6 +124,7 @@ export default function Setup() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={8}
               />
             </div>
 

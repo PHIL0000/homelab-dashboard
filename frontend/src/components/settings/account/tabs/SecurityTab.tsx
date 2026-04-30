@@ -17,6 +17,10 @@ export default function SecurityTab() {
       showError("Please fill in both fields");
       return;
     }
+    if (newPassword.length < 8) {
+      showError("New password must be at least 8 characters");
+      return;
+    }
 
     setIsSaving(true);
     try {

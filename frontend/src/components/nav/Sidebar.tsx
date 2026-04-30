@@ -1,5 +1,5 @@
 // components/nav/Sidebar.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@heroui/react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
@@ -37,13 +37,31 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   const [openStorage, setOpenStorage] = useState(false);
   const [openDocs, setOpenDocs] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (window.innerWidth < 768) return true;
     const saved = localStorage.getItem("sidebarCollapsed");
     return saved === "true";
   });
+  const autoCollapsed = useRef(window.innerWidth < 768);
 
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", isCollapsed.toString());
   }, [isCollapsed]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsCollapsed((prev) => {
+          if (!prev) autoCollapsed.current = true;
+          return true;
+        });
+      } else if (autoCollapsed.current) {
+        autoCollapsed.current = false;
+        setIsCollapsed(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const dashboardTitle = user?.dashboardName?.trim() || "Homelab";
   const isActive = (path: string) => location.pathname === path;
@@ -142,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
               </p>
             </div>
             <Button
-              onPress={() => setIsCollapsed(true)}
+              onPress={() => { autoCollapsed.current = false; setIsCollapsed(true); }}
               className="p-2 rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
               aria-label={t("nav.sidebar.collapse")}
               isIconOnly
@@ -157,7 +175,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
         {isCollapsed && (
           <div className="flex justify-center mb-2">
             <Button
-              onPress={() => setIsCollapsed(false)}
+              onPress={() => { autoCollapsed.current = false; setIsCollapsed(false); }}
               className="p-2 rounded-lg text-[var(--color-textSecondary)] hover:text-[var(--color-text)] sidebar-theme-hover"
               aria-label={t("nav.sidebar.expand")}
               isIconOnly

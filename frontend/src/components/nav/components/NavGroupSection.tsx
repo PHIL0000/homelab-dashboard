@@ -41,6 +41,16 @@ const NavGroupSection: React.FC<NavGroupSectionProps> = ({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const flyoutRef = useRef<HTMLDivElement>(null);
 
+  const clampPosition = () => {
+    if (!buttonRef.current || !flyoutRef.current) return;
+    const buttonRect = buttonRef.current.getBoundingClientRect();
+    const flyoutHeight = flyoutRef.current.offsetHeight;
+    const margin = 8;
+    const ideal = buttonRect.top;
+    const max = window.innerHeight - flyoutHeight - margin;
+    setFlyoutTop(Math.max(margin, Math.min(ideal, max)));
+  };
+
   const handleCollapsedClick = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
@@ -48,6 +58,16 @@ const NavGroupSection: React.FC<NavGroupSectionProps> = ({
     }
     setFlyoutOpen((prev) => !prev);
   };
+
+  useEffect(() => {
+    if (!flyoutOpen) return;
+    const raf = requestAnimationFrame(clampPosition);
+    window.addEventListener("resize", clampPosition);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", clampPosition);
+    };
+  }, [flyoutOpen]);
 
   useEffect(() => {
     if (!flyoutOpen) return;

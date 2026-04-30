@@ -74,6 +74,12 @@ router.post('/setup', async (req, res) => {
     if (!username || !password) {
       return res.status(400).json({ error: "Username and password are required" });
     }
+    if (username.length < 3) {
+      return res.status(400).json({ error: "Username must be at least 3 characters" });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
 
     const passwordHash = await bcrypt.hash(password, 10);
     
@@ -167,6 +173,9 @@ router.post('/change-password', authenticate, async (req: any, res: any) => {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: "Current and new password are required" });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "New password must be at least 8 characters" });
     }
 
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });

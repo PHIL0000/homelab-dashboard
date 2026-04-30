@@ -206,6 +206,7 @@ export default function UsersTab() {
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
                   className="w-full"
+                  minLength={3}
                 />
               </div>
               <div>
@@ -251,6 +252,7 @@ export default function UsersTab() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full"
+                  minLength={8}
                 />
               </div>
               <div>
@@ -319,6 +321,7 @@ export default function UsersTab() {
                   value={editUsername}
                   onChange={(e) => setEditUsername(e.target.value)}
                   className="w-full"
+                  minLength={3}
                 />
               </div>
               <div>

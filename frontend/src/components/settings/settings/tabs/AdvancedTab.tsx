@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function AdvancedTab() {
   const { t } = useLanguage();
   const { token } = useAuth();
-  const [haDomain, setHaDomain] = useState("https://");
+  const [haDomain, setHaDomain] = useState("http://homeassistant.local:8123");
   const [isSaving, setIsSaving] = useState(false);
   // Toasts werden global angezeigt, kein lokaler message-State mehr nötig
 
