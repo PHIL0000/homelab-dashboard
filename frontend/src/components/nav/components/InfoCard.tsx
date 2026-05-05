@@ -38,7 +38,7 @@ const InfoCard: React.FC<InfoCardProps> = ({
         )}
 
         {/* Wetter: nimmt restlichen Platz, Inhalt zentriert */}
-        <div className="shrink-0 min-w-0 flex justify-center">
+        <div className="flex-1 min-w-0 overflow-hidden flex justify-center">
           <WeatherInfo token={token} isCollapsed={isCollapsed} />
         </div>
       </div>

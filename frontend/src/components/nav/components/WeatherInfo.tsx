@@ -208,7 +208,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ token, isCollapsed }) => {
         <p className="text-sm font-semibold text-[var(--color-text)] truncate">
           {isWeatherLoading ? "..." : weatherTemperatureLabel}
         </p>
-        <p className="text-[10px] text-[var(--color-textSecondary)] break-words">
+        <p className="text-[10px] text-[var(--color-textSecondary)] text-center break-words max-w-full">
           {weatherInfo?.city?.trim() || t("weather.cityUnknown")}
         </p>
       </div>
