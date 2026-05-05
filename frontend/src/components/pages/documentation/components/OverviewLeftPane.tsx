@@ -68,7 +68,7 @@ export default function OverviewLeftPane({
             >
               {nameSortDirection === 'asc' ? 'A-Z' : 'Z-A'}
             </Button>
-            <Button onClick={onAddHardware} className="text-sm px-3 py-2 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:shadow-[0_0_15px_color-mix(in_srgb,var(--color-glow)_50%,transparent)] transition-all" variant="primary">+ Add hardware</Button>
+            <Button onClick={onAddHardware} className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168,_85,_247,_0.5)] transition-all" variant="primary">+ Add hardware</Button>
           </div>
         </div>
         <div className="doc-theme-form grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-2">

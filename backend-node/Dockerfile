@@ -15,5 +15,5 @@ RUN npm run build
 
 EXPOSE 3001
 
-# Beim Starten: erst versuchen Migrationen anzuwenden, bei bestehendem Schema ohne Migrationshistorie auf db push zurückfallen, dann Server starten
-CMD ["sh", "-c", "npx prisma migrate deploy || npx prisma db push && npm run start"]
+# Beim Starten: Migrationen ausführen (mit --accept-data-loss), dann Server starten
+CMD ["sh", "-c", "if [ \"$(ls -A ./prisma/migrations 2>/dev/null | wc -l)\" -eq 0 ]; then npx prisma db push; else npx prisma migrate deploy; fi && npm run start"]

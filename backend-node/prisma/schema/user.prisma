@@ -5,14 +5,23 @@ model User {
   lastName      String?
   email         String?         @unique
   avatarUrl     String?
-  dashboardName String?         @default("Homelab")
-  timezone      String          @default("Europe/Berlin")
-  timeFormat    String          @default("24h")
-  dateFormat    String          @default("DD-MM-YYYY")
   passwordHash  String
   role          UserRole        @default(USER)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
   dashboards    UserDashboard[]
+  settings      UserSettings?
+}
+
+model UserSettings {
+  id             String   @id @default(uuid()) @db.Uuid
+  dashboardName  String?  @default("Homelab")
+  timezone       String   @default("Europe/Berlin")
+  timeFormat     String   @default("24h")
+  dateFormat     String   @default("DD-MM-YYYY")
+  pageVisibility Json?
+  oledAccentRgb  Json?
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String   @unique @db.Uuid
 }

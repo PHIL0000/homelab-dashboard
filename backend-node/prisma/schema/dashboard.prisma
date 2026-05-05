@@ -23,6 +23,8 @@ model UserDashboard {
   updatedAt   DateTime @updatedAt
 
   widgetLinks DashboardWidget[] // Explicit m:n connection for Widget -> Dashboard
+
+  @@unique([userId, page])
 }
 
 model DashboardWidget {

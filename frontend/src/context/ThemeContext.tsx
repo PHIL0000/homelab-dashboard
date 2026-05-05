@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export type Theme =
   | "midnight"
@@ -40,7 +41,8 @@ const themes: Record<Theme, ThemeConfig> = {
       primary: "#8b5cf6",
       secondary: "#a78bfa",
       accent: "#d8b4fe",
-      background: "#090514", /* Fast schwarz mit extrem leichtem Lila-Schimmer */
+      background:
+        "#090514" /* Fast schwarz mit extrem leichtem Lila-Schimmer */,
       content: "#110b1f",
       sidebar: "#0a0616",
       text: "#f8fafc",
@@ -56,12 +58,12 @@ const themes: Record<Theme, ThemeConfig> = {
     name: "oled",
     label: "OLED",
     colors: {
-      primary: "#581c87", /* Dunkles, kräftiges Lila */
-      secondary: "#3b0764", /* Noch dunkleres Lila */
+      primary: "#581c87" /* Dunkles, kräftiges Lila */,
+      secondary: "#3b0764" /* Noch dunkleres Lila */,
       accent: "#7e22ce",
-      background: "#000000", /* Absolut reines Schwarz */
-      content: "#0a0a0a", /* Sehr dunkles Grau für Cards */
-      sidebar: "#050505", /* Fast unsichtbar */
+      background: "#000000" /* Absolut reines Schwarz */,
+      content: "#0a0a0a" /* Sehr dunkles Grau für Cards */,
+      sidebar: "#050505" /* Fast unsichtbar */,
       text: "#fafafa",
       textSecondary: "#a1a1aa",
       border: "#3b3b45",
@@ -75,10 +77,10 @@ const themes: Record<Theme, ThemeConfig> = {
     name: "cyberpunk",
     label: "Cyberpunk",
     colors: {
-      primary: "#fce22a", /* Neon Yellow */
-      secondary: "#ff003c", /* Neon Pink */
-      accent: "#00f0ff", /* Neon Cyan */
-      background: "#050512", /* Tiefes Blau-Schwarz */
+      primary: "#fce22a" /* Neon Yellow */,
+      secondary: "#ff003c" /* Neon Pink */,
+      accent: "#00f0ff" /* Neon Cyan */,
+      background: "#050512" /* Tiefes Blau-Schwarz */,
       content: "#0e0d26",
       sidebar: "#090819",
       text: "#e0def4",
@@ -94,10 +96,10 @@ const themes: Record<Theme, ThemeConfig> = {
     name: "github",
     label: "GitHub",
     colors: {
-      primary: "#58a6ff", /* GH Blue */
-      secondary: "#238636", /* GH Green */
+      primary: "#58a6ff" /* GH Blue */,
+      secondary: "#238636" /* GH Green */,
       accent: "#8b949e",
-      background: "#0d1117", /* GH Dark Background */
+      background: "#0d1117" /* GH Dark Background */,
       content: "#161b22",
       sidebar: "#010409",
       text: "#c9d1d9",
@@ -113,10 +115,10 @@ const themes: Record<Theme, ThemeConfig> = {
     name: "japan",
     label: "Japan",
     colors: {
-      primary: "#f43f5e", /* Rose/Crimson */
-      secondary: "#fda4af", /* Sakura Pink */
+      primary: "#f43f5e" /* Rose/Crimson */,
+      secondary: "#fda4af" /* Sakura Pink */,
       accent: "#fb7185",
-      background: "#0f0505", /* Extrem dunkles Blutrot/Schwarz */
+      background: "#0f0505" /* Extrem dunkles Blutrot/Schwarz */,
       content: "#1a0f0f",
       sidebar: "#140909",
       text: "#fef2f2",
@@ -132,10 +134,10 @@ const themes: Record<Theme, ThemeConfig> = {
     name: "forest",
     label: "Forest",
     colors: {
-      primary: "#10b981", /* Emerald */
-      secondary: "#a3e635", /* Lime */
+      primary: "#10b981" /* Emerald */,
+      secondary: "#a3e635" /* Lime */,
       accent: "#4ade80",
-      background: "#020604", /* Nahezu komplett schwarzes Grün */
+      background: "#020604" /* Nahezu komplett schwarzes Grün */,
       content: "#061209",
       sidebar: "#030b06",
       text: "#f0fdf4",
@@ -234,9 +236,41 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const clampByte = (value: number) =>
+  Math.min(255, Math.max(0, Math.round(value)));
+
+const rgbToHex = (r: number, g: number, b: number) => {
+  return `#${[r, g, b]
+    .map((v) => clampByte(v).toString(16).padStart(2, "0"))
+    .join("")}`;
+};
+
+const scaleRgb = (rgb: { r: number; g: number; b: number }, factor: number) => {
+  return {
+    r: clampByte(rgb.r * factor),
+    g: clampByte(rgb.g * factor),
+    b: clampByte(rgb.b * factor),
+  };
+};
+
+const isRgbObject = (
+  value: unknown,
+): value is { r: number; g: number; b: number } => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const rgb = value as Record<string, unknown>;
+  return [rgb.r, rgb.g, rgb.b].every(
+    (entry) =>
+      Number.isInteger(entry) && Number(entry) >= 0 && Number(entry) <= 255,
+  );
+};
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { user } = useAuth();
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = localStorage.getItem("theme") as Theme;
     // Prüfen, ob das gespeicherte Theme noch existiert (sonst Fallback auf Midnight)
@@ -249,10 +283,46 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     localStorage.setItem("theme", theme);
     applyTheme(theme);
-  }, [theme]);
+  }, [theme, user?.oledAccentRgb]);
 
   const applyTheme = (selectedTheme: Theme) => {
-    const config = themes[selectedTheme] || themes["midnight"];
+    const baseConfig = themes[selectedTheme] || themes["midnight"];
+    const customOledRgb = isRgbObject(user?.oledAccentRgb)
+      ? user?.oledAccentRgb
+      : null;
+
+    let config: ThemeConfig = baseConfig;
+    if (selectedTheme === "oled" && customOledRgb) {
+      const secondaryRgb = scaleRgb(customOledRgb, 0.55);
+      const accentRgb = scaleRgb(customOledRgb, 1.15);
+      const borderRgb = scaleRgb(customOledRgb, 0.35);
+      const primaryHex = rgbToHex(
+        customOledRgb.r,
+        customOledRgb.g,
+        customOledRgb.b,
+      );
+      const secondaryHex = rgbToHex(
+        secondaryRgb.r,
+        secondaryRgb.g,
+        secondaryRgb.b,
+      );
+      const accentHex = rgbToHex(accentRgb.r, accentRgb.g, accentRgb.b);
+      const borderHex = rgbToHex(borderRgb.r, borderRgb.g, borderRgb.b);
+
+      config = {
+        ...baseConfig,
+        colors: {
+          ...baseConfig.colors,
+          primary: primaryHex,
+          secondary: secondaryHex,
+          accent: accentHex,
+          glow: accentHex,
+          border: borderHex,
+          gradientMid: secondaryHex,
+        },
+      };
+    }
+
     const html = document.documentElement;
     const body = document.body;
 

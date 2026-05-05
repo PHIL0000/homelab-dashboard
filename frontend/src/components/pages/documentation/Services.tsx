@@ -1,3 +1,4 @@
+import { showError } from '../../../toast';
 import { useMemo, useState, useEffect } from 'react';
 import { Button, Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
@@ -145,7 +146,7 @@ export default function Services() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to save service'}`);
+  showError(`Error: ${errorData.error || 'Failed to save service'}`);
       return;
     }
 
@@ -185,13 +186,13 @@ export default function Services() {
 
     if (!serviceRes.ok) {
       const errorData = await serviceRes.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to save service'}`);
+  showError(`Error: ${errorData.error || 'Failed to save service'}`);
       return;
     }
 
     if (values.deploymentId) {
       if (!values.hardwareAssetId) {
-        alert('Hardware selection is required for deployment updates');
+  showError('Hardware selection is required for deployment updates');
         return;
       }
 
@@ -207,7 +208,7 @@ export default function Services() {
 
       if (!deploymentRes.ok) {
         const deploymentError = await deploymentRes.json().catch(() => ({}));
-        alert(`Error: ${deploymentError.error || 'Failed to update deployment'}`);
+  showError(`Error: ${deploymentError.error || 'Failed to update deployment'}`);
         return;
       }
     }
@@ -230,7 +231,7 @@ export default function Services() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to delete service'}`);
+  showError(`Error: ${errorData.error || 'Failed to delete service'}`);
       return;
     }
 

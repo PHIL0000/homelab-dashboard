@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import { translations } from '../i18n/translations';
-import type { TranslationKey, Language } from '../i18n/translations';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import { translations } from "../i18n/translations";
+import type { TranslationKey, Language } from "../i18n/translations";
 
 interface LanguageContextType {
   language: Language;
@@ -9,16 +9,20 @@ interface LanguageContextType {
   t: (key: TranslationKey) => string;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined,
+);
 
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('language');
-    return (saved === 'de' || saved === 'en') ? saved as Language : 'en';
+    const saved = localStorage.getItem("language");
+    return saved === "de" || saved === "en" ? (saved as Language) : "en";
   });
 
   useEffect(() => {
-    localStorage.setItem('language', language);
+    localStorage.setItem("language", language);
   }, [language]);
 
   const t = (key: TranslationKey): string => {
@@ -35,7 +39,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    throw new Error("useLanguage must be used within a LanguageProvider");
   }
   return context;
 };

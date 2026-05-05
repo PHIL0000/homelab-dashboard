@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { showError } from '../../../toast';
 import { useAuth } from '@/context/AuthContext';
 import { type HardwareFormValues } from './components/AddHardware';
 import { type StorageFormValues } from './components/AddStorage';
@@ -7,7 +8,6 @@ import OverviewLeftPane from './components/OverviewLeftPane';
 import OverviewRightPane from './components/OverviewRightPane';
 import OverviewModals from './components/OverviewModals';
 import OverviewOverlays from './components/OverviewOverlays';
-
 const API_BASE = 'http://localhost:3001/api/infrastructure';
 const DEFAULT_HARDWARE_TYPE = 'SERVER';
 const DEFAULT_SOFTWARE_TYPE = 'DOCKER_CONTAINER';
@@ -260,7 +260,7 @@ export default function DocsOverview() {
     }
 
     const errorData = await response.json();
-    alert(`Error: ${errorData.error || 'Failed to save hardware'}`);
+  showError(`Error: ${errorData.error || 'Failed to save hardware'}`);
   };
 
   const deleteHardware = async () => {
@@ -316,7 +316,7 @@ export default function DocsOverview() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to delete hardware'}`);
+  showError(`Error: ${errorData.error || 'Failed to delete hardware'}`);
       return;
     }
 
@@ -360,12 +360,12 @@ export default function DocsOverview() {
 
     const targetHardwareId = selectedHardwareId;
     if (!targetHardwareId) {
-      alert('Hardware selection is required');
+  showError('Hardware selection is required');
       return;
     }
 
     if (!newServiceName.trim()) {
-      alert('Service name is required');
+  showError('Service name is required');
       return;
     }
 
@@ -384,7 +384,7 @@ export default function DocsOverview() {
 
     if (!createServiceRes.ok) {
       const createServiceError = await createServiceRes.json().catch(() => ({}));
-      alert(`Error: ${createServiceError.error || 'Failed to create service'}`);
+  showError(`Error: ${createServiceError.error || 'Failed to create service'}`);
       return;
     }
 
@@ -407,7 +407,7 @@ export default function DocsOverview() {
     }
 
     const errorData = await response.json();
-    alert(`Error: ${errorData.error || 'Failed to save deployment'}`);
+  showError(`Error: ${errorData.error || 'Failed to save deployment'}`);
   };
 
   const saveEditedService = async (values: {
@@ -439,13 +439,13 @@ export default function DocsOverview() {
 
     if (!updateServiceRes.ok) {
       const updateServiceError = await updateServiceRes.json().catch(() => ({}));
-      alert(`Error: ${updateServiceError.error || 'Failed to update service'}`);
+  showError(`Error: ${updateServiceError.error || 'Failed to update service'}`);
       return;
     }
 
     if (values.deploymentId) {
       if (!values.hardwareAssetId) {
-        alert('Hardware selection is required');
+  showError('Hardware selection is required');
         return;
       }
 
@@ -461,7 +461,7 @@ export default function DocsOverview() {
 
       if (!updateDeploymentRes.ok) {
         const updateDeploymentError = await updateDeploymentRes.json().catch(() => ({}));
-        alert(`Error: ${updateDeploymentError.error || 'Failed to update deployment'}`);
+  showError(`Error: ${updateDeploymentError.error || 'Failed to update deployment'}`);
         return;
       }
     }
@@ -514,7 +514,7 @@ export default function DocsOverview() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to delete service'}`);
+  showError(`Error: ${errorData.error || 'Failed to delete service'}`);
       return;
     }
 
@@ -571,7 +571,7 @@ export default function DocsOverview() {
     }
 
     const errorData = await response.json();
-    alert(`Error: ${errorData.error || 'Failed to save storage'}`);
+  showError(`Error: ${errorData.error || 'Failed to save storage'}`);
   };
 
   const deleteStorage = async () => {
@@ -602,7 +602,7 @@ export default function DocsOverview() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to delete storage'}`);
+  showError(`Error: ${errorData.error || 'Failed to delete storage'}`);
       return;
     }
 
@@ -629,7 +629,7 @@ export default function DocsOverview() {
 
     const normalizedTitle = ensureMarkdownFilename(values.title);
     if (!normalizedTitle) {
-      alert('Title is required');
+  showError('Title is required');
       return;
     }
 
@@ -655,7 +655,7 @@ export default function DocsOverview() {
     }
 
     const errorData = await response.json();
-    alert(`Error: ${errorData.error || 'Failed to save document'}`);
+  showError(`Error: ${errorData.error || 'Failed to save document'}`);
   };
 
   const deleteDoc = async () => {
@@ -709,7 +709,7 @@ export default function DocsOverview() {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      alert(`Error: ${errorData.error || 'Failed to delete document'}`);
+  showError(`Error: ${errorData.error || 'Failed to delete document'}`);
       return;
     }
 

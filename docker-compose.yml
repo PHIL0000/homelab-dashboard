@@ -12,6 +12,7 @@ services:
     restart: unless-stopped
 
   # Das Node.js + Prisma Backend
+  # Migrationen werden beim Start automatisch ausgeführt (siehe Backend-Dockerfile)
   backend:
     build:
       context: ./backend-node

@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface User {
   id: string;
@@ -11,8 +11,19 @@ interface User {
   avatarUrl?: string;
   dashboardName?: string;
   timezone?: string;
-  timeFormat?: '12h' | '24h' | string;
-  dateFormat?: 'DD-MM-YYYY' | 'MM-DD-YYYY' | 'YYYY-MM-DD' | 'DD.MM.YYYY' | string;
+  timeFormat?: "12h" | "24h" | string;
+  dateFormat?:
+    | "DD-MM-YYYY"
+    | "MM-DD-YYYY"
+    | "YYYY-MM-DD"
+    | "DD.MM.YYYY"
+    | string;
+  pageVisibility?: Record<string, boolean>;
+  oledAccentRgb?: {
+    r: number;
+    g: number;
+    b: number;
+  } | null;
   role: string;
 }
 
@@ -29,7 +40,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem("token"),
+  );
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -37,11 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initAuth = async () => {
       // Check setup status
       try {
-        const setupStatus = await fetch('http://localhost:3001/api/auth/setup-status');
+        const setupStatus = await fetch(
+          "http://localhost:3001/api/auth/setup-status",
+        );
         const setupData = await setupStatus.json();
-        
+
         if (setupData.needsSetup) {
-          navigate('/setup');
+          navigate("/setup");
           setIsLoading(false);
           return;
         }
@@ -49,25 +64,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Validate token if it exists
         if (token) {
           try {
-            const userRes = await fetch('http://localhost:3001/api/auth/me', {
-              headers: { Authorization: `Bearer ${token}` }
+            const userRes = await fetch("http://localhost:3001/api/auth/me", {
+              headers: { Authorization: `Bearer ${token}` },
             });
             if (userRes.ok) {
               const userData = await userRes.json();
               setUser(userData);
             } else {
               setToken(null);
-              localStorage.removeItem('token');
-              navigate('/login');
+              localStorage.removeItem("token");
+              navigate("/login");
             }
           } catch (e) {
             console.error("Auth validation failed", e);
           }
         } else {
-          navigate('/login');
+          navigate("/login");
         }
       } catch (error) {
-        console.error('Initial check failed', error);
+        console.error("Initial check failed", error);
       }
       setIsLoading(false);
     };
@@ -76,25 +91,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token, navigate]);
 
   const login = (newToken: string, newUser: User) => {
-    localStorage.setItem('token', newToken);
+    localStorage.setItem("token", newToken);
     setToken(newToken);
     setUser(newUser);
-    navigate('/');
+    navigate("/");
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setToken(null);
     setUser(null);
-    navigate('/login');
+    navigate("/login");
   };
 
   const updateUser = (updatedUser: User) => {
-    setUser((prev) => prev ? { ...prev, ...updatedUser } : updatedUser);
+    setUser((prev) => (prev ? { ...prev, ...updatedUser } : updatedUser));
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isLoading }}>
+    <AuthContext.Provider
+      value={{ user, token, login, logout, updateUser, isLoading }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -103,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
