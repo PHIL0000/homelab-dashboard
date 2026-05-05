@@ -20,6 +20,8 @@ services:
     container_name: homelab-backend
     ports:
       - "3001:3001"
+    cap_add:
+      - NET_RAW
     environment:
       # Wir überschreiben die DB-URL, damit sie auf den Postgres-Container zeigt (Hostname: postgres)
       - DATABASE_URL=postgresql://homelab:homelab_dev_password@postgres:5432/homelab?schema=public

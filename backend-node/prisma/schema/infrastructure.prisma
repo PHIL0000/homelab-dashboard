@@ -16,6 +16,7 @@ model HardwareAsset {
   location    String?
   icon        String?
   notes       String?
+  lastSeen    DateTime?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
