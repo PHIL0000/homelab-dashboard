@@ -5,6 +5,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { showError, showSuccess } from "../../../../toast";
+import { API_BASE } from '@/lib/api';
 
 const DEFAULT_OLED_RGB = { r: 126, g: 34, b: 206 };
 
@@ -123,7 +124,7 @@ export default function AppearanceTab() {
 
     try {
       const response = await fetch(
-        `http://localhost:3001/api/user-settings/${user.id}`,
+        `${API_BASE}/user-settings/${user.id}`,
         {
           method: "PUT",
           headers: {

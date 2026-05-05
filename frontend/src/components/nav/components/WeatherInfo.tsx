@@ -11,6 +11,7 @@ import {
   CloudMoon,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { API_BASE } from '@/lib/api';
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 
@@ -101,7 +102,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ token, isCollapsed }) => {
     try {
       // 1. Stationsdaten (Stadt + Koordinaten) aus der DB holen
       const stationResponse = await fetch(
-        "http://localhost:3001/api/settings/weather-station",
+        `${API_BASE}/settings/weather-station`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!stationResponse.ok)

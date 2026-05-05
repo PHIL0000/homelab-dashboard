@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button, Card, Input, Select, ListBox } from "@heroui/react";
 import { Camera, ChevronDown } from "lucide-react";
 import { showError, showSuccess } from "../../../../toast";
+import { API_BASE } from '@/lib/api';
 
 interface UserData {
   id: string;
@@ -45,7 +46,7 @@ export default function UsersTab() {
     if (!token) return;
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:3001/api/users", {
+      const res = await fetch(`${API_BASE}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch users");
@@ -67,7 +68,7 @@ export default function UsersTab() {
     if (!token) return;
     try {
       setIsAdding(true);
-      const res = await fetch("http://localhost:3001/api/users", {
+      const res = await fetch(`${API_BASE}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -108,7 +109,7 @@ export default function UsersTab() {
     try {
       setIsUpdating(true);
       const res = await fetch(
-        `http://localhost:3001/api/users/${editingUser.id}`,
+        `${API_BASE}/users/${editingUser.id}`,
         {
           method: "PUT",
           headers: {
@@ -141,7 +142,7 @@ export default function UsersTab() {
   const handleDeleteUser = async (id: string) => {
     if (!token || !window.confirm("Delete this user?")) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/users/${id}`, {
+      const res = await fetch(`${API_BASE}/users/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
+import { API_BASE as _apiBase } from '@/lib/api';
 
-const API_BASE = 'http://localhost:3001/api/infrastructure';
+const API_BASE = `${_apiBase}/infrastructure`;
 
 export default function DocumentationMap() {
   const { token } = useAuth();

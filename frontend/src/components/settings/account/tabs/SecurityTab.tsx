@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button, Card, Input } from "@heroui/react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE } from '@/lib/api';
 
 export default function SecurityTab() {
   const { t } = useLanguage();
@@ -25,7 +26,7 @@ export default function SecurityTab() {
     setIsSaving(true);
     try {
       const response = await fetch(
-        "http://localhost:3001/api/auth/change-password",
+        `${API_BASE}/auth/change-password`,
         {
           method: "POST",
           headers: {

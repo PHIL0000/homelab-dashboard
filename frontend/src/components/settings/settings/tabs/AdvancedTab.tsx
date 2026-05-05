@@ -3,6 +3,7 @@ import { showError, showSuccess } from '../../../../toast';
 import { Button, Input } from "@heroui/react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE } from '@/lib/api';
 
 export default function AdvancedTab() {
   const { t } = useLanguage();
@@ -14,7 +15,7 @@ export default function AdvancedTab() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch("http://localhost:3001/api/settings");
+        const res = await fetch(`${API_BASE}/settings`);
         if (res.ok) {
           const data = await res.json();
           if (data.haDomain) {
@@ -31,7 +32,7 @@ export default function AdvancedTab() {
   const saveHaDomain = async () => {
   setIsSaving(true);
     try {
-      const res = await fetch("http://localhost:3001/api/settings", {
+      const res = await fetch(`${API_BASE}/settings`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

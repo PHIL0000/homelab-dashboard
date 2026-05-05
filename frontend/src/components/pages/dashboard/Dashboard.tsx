@@ -13,10 +13,11 @@ import type {
   WidgetInstance,
   CardTypeData,
 } from "../../../widgets/types";
+import { API_BASE } from '../../../lib/api';
 
 const ResponsiveGrid = WidthProvider(Responsive);
 
-const API = "http://localhost:3001/api/dashboard";
+const API = `${API_BASE}/dashboard`;
 
 export default function Dashboard() {
   const { token } = useAuth();

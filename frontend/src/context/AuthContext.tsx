@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from '@/lib/api';
 
 interface User {
   id: string;
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check setup status
       try {
         const setupStatus = await fetch(
-          "http://localhost:3001/api/auth/setup-status",
+          `${API_BASE}/auth/setup-status`,
         );
         const setupData = await setupStatus.json();
 
@@ -64,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Validate token if it exists
         if (token) {
           try {
-            const userRes = await fetch("http://localhost:3001/api/auth/me", {
+            const userRes = await fetch(`${API_BASE}/auth/me`, {
               headers: { Authorization: `Bearer ${token}` },
             });
             if (userRes.ok) {

@@ -6,8 +6,9 @@ import ReactMarkdown from "react-markdown";
 import { ChevronDown } from "lucide-react";
 import AddMarkdown, { type MarkdownFormValues } from "./components/AddMarkdown";
 import EditMarkdown from "./components/EditMarkdown";
+import { API_BASE as _apiBase } from '@/lib/api';
 
-const API_BASE = "http://localhost:3001/api/infrastructure";
+const API_BASE = `${_apiBase}/infrastructure`;
 
 type DocItem = {
   id: string;

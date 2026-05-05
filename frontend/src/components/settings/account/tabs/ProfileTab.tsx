@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button, Card, Input, Avatar } from "@heroui/react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE } from '@/lib/api';
 
 export default function ProfileTab() {
   const { t } = useLanguage();
@@ -31,7 +32,7 @@ export default function ProfileTab() {
     setIsSaving(true);
     try {
       const response = await fetch(
-        `http://localhost:3001/api/users/${user.id}`,
+        `${API_BASE}/users/${user.id}`,
         {
           method: "PUT",
           headers: {
@@ -80,7 +81,7 @@ export default function ProfileTab() {
       });
 
       const response = await fetch(
-        `http://localhost:3001/api/users/${user.id}`,
+        `${API_BASE}/users/${user.id}`,
         {
           method: "PUT",
           headers: {
@@ -109,7 +110,7 @@ export default function ProfileTab() {
     setIsUploadingAvatar(true);
     try {
       const response = await fetch(
-        `http://localhost:3001/api/users/${user.id}`,
+        `${API_BASE}/users/${user.id}`,
         {
           method: "PUT",
           headers: {

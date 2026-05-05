@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Button, Input, Card } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
 import { showError } from "@/toast";
+import { API_BASE } from '@/lib/api';
 
 export default function Login() {
   const [identifier, setIdentifier] = useState("");
@@ -13,7 +14,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3001/api/auth/login", {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier, password }),
