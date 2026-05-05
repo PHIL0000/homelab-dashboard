@@ -4,8 +4,9 @@ import { useAuth } from '@/context/AuthContext';
 import { showError, showSuccess } from '../../../toast';
 import AddStorage, { getStorageTypeLabel, type StorageFormValues } from './components/AddStorage';
 import EditStorage from './components/EditStorage';
+import { API_BASE as _apiBase } from '@/lib/api';
 
-const API_BASE = 'http://localhost:3001/api/infrastructure';
+const API_BASE = `${_apiBase}/infrastructure`;
 const DEFAULT_STORAGE_TYPE = 'SSD';
 
 type StorageSortKey = 'name' | 'type' | 'makeModel' | 'size' | 'hardwareNode' | 'service';

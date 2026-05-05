@@ -8,7 +8,8 @@ import OverviewLeftPane from './components/OverviewLeftPane';
 import OverviewRightPane from './components/OverviewRightPane';
 import OverviewModals from './components/OverviewModals';
 import OverviewOverlays from './components/OverviewOverlays';
-const API_BASE = 'http://localhost:3001/api/infrastructure';
+import { API_BASE as _apiBase } from '@/lib/api';
+const API_BASE = `${_apiBase}/infrastructure`;
 const DEFAULT_HARDWARE_TYPE = 'SERVER';
 const DEFAULT_SOFTWARE_TYPE = 'DOCKER_CONTAINER';
 

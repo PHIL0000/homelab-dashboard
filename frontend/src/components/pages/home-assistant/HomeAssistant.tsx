@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ExternalLink, AlertTriangle, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
+import { API_BASE } from '@/lib/api';
 
 export default function HomeAssistant() {
   const [iframeError, setIframeError] = useState(false);
@@ -10,7 +11,7 @@ export default function HomeAssistant() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/settings');
+        const res = await fetch(`${API_BASE}/settings`);
         if (res.ok) {
           const data = await res.json();
           setHaDomain(data.haDomain || "");

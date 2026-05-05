@@ -6,8 +6,9 @@ import { useLanguage } from "@/context/LanguageContext";
 import { ChevronDown } from "lucide-react";
 import AddHardware, { type HardwareFormValues } from "./components/AddHardware";
 import EditHardware from "./components/EditHardware";
+import { API_BASE as _apiBase } from '@/lib/api';
 
-const API_BASE = "http://localhost:3001/api/infrastructure";
+const API_BASE = `${_apiBase}/infrastructure`;
 
 export default function Hardware() {
   const { t } = useLanguage();

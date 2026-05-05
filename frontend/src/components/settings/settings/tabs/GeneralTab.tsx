@@ -5,6 +5,7 @@ import { ChevronDown } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Language } from "@/i18n/translations";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE } from '@/lib/api';
 
 const TIMEZONE_OPTIONS = [
   "Europe/Berlin",
@@ -51,7 +52,7 @@ export default function GeneralTab({ saveFnRef }: GeneralTabProps) {
     if (!token) return;
     try {
       const res = await fetch(
-        "http://localhost:3001/api/settings/weather-station",
+        `${API_BASE}/settings/weather-station`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -172,7 +173,7 @@ export default function GeneralTab({ saveFnRef }: GeneralTabProps) {
 
     try {
       const response = await fetch(
-        `http://localhost:3001/api/user-settings/${user.id}`,
+        `${API_BASE}/user-settings/${user.id}`,
         {
           method: "PUT",
           headers: {
@@ -217,7 +218,7 @@ export default function GeneralTab({ saveFnRef }: GeneralTabProps) {
       setWeatherLon(String(resolvedLon));
 
       const weatherResponse = await fetch(
-        "http://localhost:3001/api/settings/weather-station",
+        `${API_BASE}/settings/weather-station`,
         {
           method: "POST",
           headers: {
