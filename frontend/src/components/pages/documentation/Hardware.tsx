@@ -54,6 +54,8 @@ export default function Hardware() {
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(fetchData, 60_000);
+    return () => clearInterval(interval);
   }, [token]);
 
   const saveHardware = async (values: HardwareFormValues) => {
@@ -289,14 +291,41 @@ export default function Hardware() {
               className="rounded-xl p-4 bg-slate-900/50 border border-slate-700/50 flex flex-col gap-2"
             >
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-xl font-bold text-purple-400">
-                  {hw.name}{" "}
-                  <span className="text-sm text-slate-400">({hw.type})</span>
-                </h3>
+                <div className="flex items-center gap-2 min-w-0">
+                  {hw.ip ? (
+                    <span
+                      title={
+                        hw.status === 'ONLINE'
+                          ? 'Online'
+                          : hw.status === 'MAINTENANCE'
+                          ? 'Maintenance'
+                          : hw.lastSeen
+                          ? `Offline · Last seen ${new Date(hw.lastSeen).toLocaleString()}`
+                          : 'Offline · Never seen'
+                      }
+                      className={`shrink-0 w-2.5 h-2.5 rounded-full ${
+                        hw.status === 'ONLINE'
+                          ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.7)]'
+                          : hw.status === 'MAINTENANCE'
+                          ? 'bg-yellow-400'
+                          : 'bg-red-500'
+                      }`}
+                    />
+                  ) : (
+                    <span
+                      title="No IP configured"
+                      className="shrink-0 w-2.5 h-2.5 rounded-full bg-slate-600"
+                    />
+                  )}
+                  <h3 className="text-xl font-bold text-purple-400 truncate">
+                    {hw.name}{" "}
+                    <span className="text-sm text-slate-400">({hw.type})</span>
+                  </h3>
+                </div>
                 <Button
                   type="button"
                   onClick={() => handleEditHardware(hw)}
-                  className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none"
+                  className="text-xs text-purple-400 hover:text-purple-400/80 !border-0 !border-transparent !ring-0 !shadow-none shrink-0"
                   variant="ghost"
                 >
                   Edit
@@ -304,6 +333,11 @@ export default function Hardware() {
               </div>
               <p className="text-sm text-slate-400">
                 {hw.ip || "-"} • {hw.os || "-"}
+                {hw.ip && hw.status === 'OFFLINE' && hw.lastSeen && (
+                  <span className="ml-2 text-xs text-slate-500">
+                    · Last seen {new Date(hw.lastSeen).toLocaleString()}
+                  </span>
+                )}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
                 <div className="p-3 border border-slate-700/50 rounded-lg bg-slate-800">

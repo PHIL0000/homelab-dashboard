@@ -7,6 +7,7 @@ import infrastructureRoutes from './routes/infrastructure';
 import settingsRoutes from './routes/settings';
 import weatherStationRoutes from './routes/weather_station';
 import dashboardRoutes from './routes/dashboard';
+import { startPingService } from './services/pingService';
 
 const app = express();
 const port = 3001; // Backend on 3001
@@ -25,4 +26,5 @@ app.use('/api/dashboard', dashboardRoutes);
 
 app.listen(port, () => {
   console.log(`Backend is running on http://localhost:${port}`);
+  startPingService();
 });
