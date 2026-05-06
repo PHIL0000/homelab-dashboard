@@ -156,6 +156,28 @@ router.post('/page/:page/widgets', authenticate, async (req: any, res: any) => {
   });
 });
 
+// PUT /widgets/:widgetId — update a widget's config
+router.put('/widgets/:widgetId', authenticate, async (req: any, res: any) => {
+  const { widgetId } = req.params;
+  const { config, customTitle } = req.body;
+  const userId = req.user.userId;
+
+  const link = await prisma.dashboardWidget.findFirst({
+    where: { widgetId, userDashboard: { userId } },
+  });
+  if (!link) return res.status(404).json({ error: 'Widget not found' });
+
+  const updated = await prisma.widget.update({
+    where: { id: widgetId },
+    data: {
+      ...(config !== undefined ? { config } : {}),
+      ...(customTitle !== undefined ? { customTitle } : {}),
+    },
+  });
+
+  res.json({ id: updated.id, config: updated.config, customTitle: updated.customTitle });
+});
+
 // DELETE /widgets/:widgetId — remove a widget from the dashboard
 router.delete('/widgets/:widgetId', authenticate, async (req: any, res: any) => {
   const { widgetId } = req.params;

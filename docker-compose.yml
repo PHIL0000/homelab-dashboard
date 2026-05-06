@@ -22,10 +22,12 @@ services:
       - "3001:3001"
     cap_add:
       - NET_RAW
+    env_file:
+      - ./backend-node/.env
     environment:
-      # Wir überschreiben die DB-URL, damit sie auf den Postgres-Container zeigt (Hostname: postgres)
+      # Override DATABASE_URL so it points to the postgres container, not localhost
       - DATABASE_URL=postgresql://homelab:homelab_dev_password@postgres:5432/homelab?schema=public
-      - JWT_SECRET=homelab_dev_change_this_secret
+      - TZ=Europe/Berlin
     depends_on:
       - postgres
     restart: unless-stopped
