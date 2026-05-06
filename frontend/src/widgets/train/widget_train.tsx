@@ -309,23 +309,19 @@ function TrainRow({ train }: { train: TrainEntry }) {
       }`}
     >
       {/* Zugnummer */}
-      <td className="py-1.5 px-2">
+      <td className="py-0.5 px-1.5">
         <span className="text-xs font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary whitespace-nowrap">
           {label || "—"}
         </span>
       </td>
       {/* Abfahrt */}
-      <td className="py-1.5 px-2 whitespace-nowrap">
+      <td className="py-0.5 px-1.5 whitespace-nowrap">
         <div className="flex items-center gap-1">
-          <span
-            className={`text-sm tabular-nums font-semibold ${
-              isDelayed ? "text-default-400 line-through" : ""
-            }`}
-          >
+          <span className={`text-xs tabular-nums font-semibold ${isDelayed ? "text-default-400 line-through" : ""}`}>
             {train.plannedDep ?? "—"}
           </span>
           {isDelayed && (
-            <span className="text-sm tabular-nums font-semibold text-orange-400">
+            <span className="text-xs tabular-nums font-semibold text-orange-400">
               {train.actualDep}
             </span>
           )}
@@ -333,18 +329,18 @@ function TrainRow({ train }: { train: TrainEntry }) {
         </div>
       </td>
       {/* Ziel */}
-      <td className="py-1.5 px-2 max-w-[120px]">
+      <td className="py-0.5 px-1.5 max-w-[120px]">
         <div className="flex items-center gap-1">
-          <ArrowRight size={11} className="text-default-300 shrink-0" />
+          <ArrowRight size={10} className="text-default-300 shrink-0" />
           <span className="text-xs text-default-500 truncate">
             {train.destination ?? "—"}
           </span>
         </div>
       </td>
       {/* Gleis */}
-      <td className="py-1.5 px-2 whitespace-nowrap">
+      <td className="py-0.5 px-1.5 whitespace-nowrap">
         <span className="text-xs text-default-400">
-          {train.platform ? `Gl. ${train.platform}` : "—"}
+          {train.platform ? `Gl.${train.platform}` : "—"}
         </span>
       </td>
     </tr>
@@ -478,7 +474,7 @@ function TrainWidget({
       />
 
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 pt-3 pb-2 border-b border-default-100">
+      <div className="flex items-center gap-2 px-3 pt-1.5 pb-1 border-b border-default-100">
         <Train size={14} className="text-primary shrink-0" />
         <span
           className="text-sm font-semibold truncate flex-1"
@@ -508,7 +504,7 @@ function TrainWidget({
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col px-4 py-2 overflow-hidden">
+      <div className="flex-1 flex flex-col px-3 pt-0.5 pb-0 overflow-hidden">
         {loading && trains.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <span className="text-default-300 text-xs animate-pulse">
@@ -537,18 +533,10 @@ function TrainWidget({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-default-200">
-                <th className="py-1 px-2 text-xs font-medium text-default-400 whitespace-nowrap">
-                  Zug
-                </th>
-                <th className="py-1 px-2 text-xs font-medium text-default-400 whitespace-nowrap">
-                  Abfahrt
-                </th>
-                <th className="py-1 px-2 text-xs font-medium text-default-400 whitespace-nowrap">
-                  Ziel
-                </th>
-                <th className="py-1 px-2 text-xs font-medium text-default-400 whitespace-nowrap">
-                  Gleis
-                </th>
+                <th className="pb-0.5 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Zug</th>
+                <th className="pb-0.5 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Abfahrt</th>
+                <th className="pb-0.5 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Ziel</th>
+                <th className="pb-0.5 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Gleis</th>
               </tr>
             </thead>
             <tbody>
