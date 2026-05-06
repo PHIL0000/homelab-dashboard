@@ -310,18 +310,18 @@ function TrainRow({ train }: { train: TrainEntry }) {
     >
       {/* Zugnummer */}
       <td className="py-1 px-1.5">
-        <span className="text-xs font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary whitespace-nowrap">
+        <span className="text-sm leading-4 font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary whitespace-nowrap">
           {label || "—"}
         </span>
       </td>
       {/* Abfahrt */}
-      <td className="py-0.5 px-1.5 whitespace-nowrap">
+      <td className="py-1 px-1.5 whitespace-nowrap">
         <div className="flex items-center gap-1">
-          <span className={`text-xs tabular-nums font-semibold ${isDelayed ? "text-default-400 line-through" : ""}`}>
+          <span className={`text-sm leading-4 tabular-nums font-semibold ${isDelayed ? "text-default-400 line-through" : ""}`}>
             {train.plannedDep ?? "—"}
           </span>
           {isDelayed && (
-            <span className="text-xs tabular-nums font-semibold text-orange-400">
+            <span className="text-sm leading-4 tabular-nums font-semibold text-orange-400">
               {train.actualDep}
             </span>
           )}
@@ -329,17 +329,17 @@ function TrainRow({ train }: { train: TrainEntry }) {
         </div>
       </td>
       {/* Ziel */}
-      <td className="py-0.5 px-1.5 max-w-[120px]">
+      <td className="py-1 px-1.5 max-w-[120px]">
         <div className="flex items-center gap-1">
-          <ArrowRight size={10} className="text-default-300 shrink-0" />
-          <span className="text-xs text-default-500 truncate">
+          <ArrowRight size={11} className="text-default-300 shrink-0" />
+          <span className="text-sm leading-4 text-default-500 truncate">
             {train.destination ?? "—"}
           </span>
         </div>
       </td>
       {/* Gleis */}
-      <td className="py-0.5 px-1.5 whitespace-nowrap">
-        <span className="text-xs text-default-400">
+      <td className="py-1 px-1.5 whitespace-nowrap">
+        <span className="text-sm leading-4 text-default-400">
           {train.platform ? `Gl.${train.platform}` : "—"}
         </span>
       </td>
