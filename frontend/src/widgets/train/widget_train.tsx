@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, Chip } from "@heroui/react";
-import { Train, ArrowRight, Clock, AlertTriangle, Search, X, Check, Settings } from "lucide-react";
+import {
+  Train,
+  ArrowRight,
+  Clock,
+  AlertTriangle,
+  Search,
+  X,
+  Check,
+  Settings,
+} from "lucide-react";
 import type { WidgetDefinition, WidgetComponentProps } from "../types";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -65,7 +74,10 @@ function StationSearchInput({
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -130,7 +142,11 @@ function StationSearchInput({
   const showDropdown = open && query.trim().length >= 2;
 
   return (
-    <div ref={wrapperRef} className="relative" onMouseDown={(e) => e.stopPropagation()}>
+    <div
+      ref={wrapperRef}
+      className="relative"
+      onMouseDown={(e) => e.stopPropagation()}
+    >
       <div className="flex items-center gap-1.5 rounded-xl border border-default-200 bg-default-50 px-3 py-2 focus-within:border-primary transition-colors">
         {value ? (
           <Check size={14} className="text-success shrink-0" />
@@ -150,7 +166,10 @@ function StationSearchInput({
         {(query || value) && (
           <button
             type="button"
-            onMouseDown={(e) => { e.preventDefault(); clear(); }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              clear();
+            }}
             className="text-default-300 hover:text-default-500 transition-colors"
           >
             <X size={12} />
@@ -163,13 +182,18 @@ function StationSearchInput({
           {searchError ? (
             <div className="px-3 py-2 text-xs text-red-500">{searchError}</div>
           ) : results.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-default-400">Keine Bahnhöfe gefunden</div>
+            <div className="px-3 py-2 text-xs text-default-400">
+              Keine Bahnhöfe gefunden
+            </div>
           ) : (
             results.map((s) => (
               <button
                 key={s.evaNo}
                 type="button"
-                onMouseDown={(e) => { e.preventDefault(); select(s); }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  select(s);
+                }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 transition-colors border-b border-default-100 last:border-0"
               >
                 <span className="font-medium">{s.name}</span>
@@ -201,14 +225,21 @@ function ConfigPanel({
   const [stationB, setStationB] = useState<Station | null>(current.stationB);
 
   return (
-    <div className="flex flex-col gap-2 p-3 h-full" onMouseDown={(e) => e.stopPropagation()}>
+    <div
+      className="flex flex-col gap-2 p-3 h-full"
+      onMouseDown={(e) => e.stopPropagation()}
+    >
       <div className="flex items-center gap-1.5">
         <Train size={14} className="text-primary" />
-        <span className="text-xs font-semibold">{t("widget.train.configure")}</span>
+        <span className="text-xs font-semibold">
+          {t("widget.train.configure")}
+        </span>
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-default-500">{t("widget.train.from")}</label>
+        <label className="text-xs text-default-500">
+          {t("widget.train.from")}
+        </label>
         <StationSearchInput
           value={stationA}
           onChange={setStationA}
@@ -218,14 +249,18 @@ function ConfigPanel({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-default-500">{t("widget.train.to")}</label>
+        <label className="text-xs text-default-500">
+          {t("widget.train.to")}
+        </label>
         <StationSearchInput
           value={stationB}
           onChange={setStationB}
           placeholder="z.B. München Hbf"
           token={token}
         />
-        <p className="text-xs text-default-400 leading-tight">{t("widget.train.toHint")}</p>
+        <p className="text-xs text-default-400 leading-tight">
+          {t("widget.train.toHint")}
+        </p>
       </div>
 
       <div className="flex gap-2 mt-auto">
@@ -244,7 +279,8 @@ function ConfigPanel({
           className="flex-1 text-xs py-1.5 rounded-xl font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
             background: "var(--color-primary)",
-            boxShadow: "0 0 0 2px color-mix(in srgb, var(--color-primary) 35%, transparent), 0 0 12px color-mix(in srgb, var(--color-primary) 30%, transparent)",
+            boxShadow:
+              "0 0 0 2px color-mix(in srgb, var(--color-primary) 35%, transparent), 0 0 12px color-mix(in srgb, var(--color-primary) 30%, transparent)",
           }}
         >
           {t("settings.save")}
@@ -259,66 +295,73 @@ function ConfigPanel({
 function DelayBadge({ minutes }: { minutes: number | null }) {
   if (minutes === null || minutes <= 0) return null;
   const color = minutes >= 10 ? "text-red-500" : "text-orange-400";
-  return (
-    <span className={`text-xs font-bold ${color}`}>+{minutes}'</span>
-  );
+  return <span className={`text-xs font-bold ${color}`}>+{minutes}'</span>;
 }
 
 // ─── Train Row ────────────────────────────────────────────────────────────────
-
 function TrainRow({ train }: { train: TrainEntry }) {
   const isDelayed = (train.delayMinutes ?? 0) > 0;
   const label = `${train.category} ${train.line || train.trainNo}`.trim();
-
   return (
-    <div
-      className={`flex items-center gap-2 py-1.5 border-b border-default-100 last:border-0 ${
-        train.cancelled ? "opacity-40 line-through" : ""
+    <tr
+      className={`border-b border-default-100 last:border-0 ${
+        train.cancelled ? "opacity-40" : ""
       }`}
     >
-      {/* Train type chip */}
-      <span className="shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary min-w-[48px] text-center">
-        {label || "—"}
-      </span>
-
-      {/* Departure time */}
-      <div className="flex items-center gap-1 shrink-0">
-        <span
-          className={`text-sm tabular-nums font-semibold ${
-            isDelayed ? "text-default-400 line-through" : ""
-          }`}
-        >
-          {train.plannedDep ?? "—"}
+      {/* Zugnummer */}
+      <td className="py-1.5 px-2">
+        <span className="text-xs font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary whitespace-nowrap">
+          {label || "—"}
         </span>
-        {isDelayed && (
-          <span className="text-sm tabular-nums font-semibold text-orange-400">
-            {train.actualDep}
+      </td>
+      {/* Abfahrt */}
+      <td className="py-1.5 px-2 whitespace-nowrap">
+        <div className="flex items-center gap-1">
+          <span
+            className={`text-sm tabular-nums font-semibold ${
+              isDelayed ? "text-default-400 line-through" : ""
+            }`}
+          >
+            {train.plannedDep ?? "—"}
           </span>
-        )}
-        <DelayBadge minutes={train.delayMinutes} />
-      </div>
-
-      {/* Destination */}
-      <div className="flex-1 flex items-center gap-1 min-w-0">
-        <ArrowRight size={11} className="text-default-300 shrink-0" />
-        <span className="text-xs text-default-500 truncate">
-          {train.destination ?? "—"}
+          {isDelayed && (
+            <span className="text-sm tabular-nums font-semibold text-orange-400">
+              {train.actualDep}
+            </span>
+          )}
+          <DelayBadge minutes={train.delayMinutes} />
+        </div>
+      </td>
+      {/* Ziel */}
+      <td className="py-1.5 px-2 max-w-[120px]">
+        <div className="flex items-center gap-1">
+          <ArrowRight size={11} className="text-default-300 shrink-0" />
+          <span className="text-xs text-default-500 truncate">
+            {train.destination ?? "—"}
+          </span>
+        </div>
+      </td>
+      {/* Gleis */}
+      <td className="py-1.5 px-2 whitespace-nowrap">
+        <span className="text-xs text-default-400">
+          {train.platform ? `Gl. ${train.platform}` : "—"}
         </span>
-      </div>
-
-      {/* Platform */}
-      {train.platform && (
-        <span className="shrink-0 text-xs text-default-400">Gl.{train.platform}</span>
-      )}
-    </div>
+      </td>
+    </tr>
   );
 }
 
 // ─── Main Widget ──────────────────────────────────────────────────────────────
 
-function TrainWidget({ widgetId, config: initialConfig, isEditing }: WidgetComponentProps) {
+function TrainWidget({
+  widgetId,
+  config: initialConfig,
+  isEditing,
+}: WidgetComponentProps) {
   const { token } = useAuth();
-  const [config, setConfig] = useState<TrainConfig>(() => parseConfig(initialConfig));
+  const [config, setConfig] = useState<TrainConfig>(() =>
+    parseConfig(initialConfig),
+  );
   const [showConfig, setShowConfig] = useState(false);
   const [trains, setTrains] = useState<TrainEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -359,7 +402,9 @@ function TrainWidget({ widgetId, config: initialConfig, isEditing }: WidgetCompo
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unbekannter Fehler" }));
+        const err = await res
+          .json()
+          .catch(() => ({ error: "Unbekannter Fehler" }));
         throw new Error(err.error ?? `HTTP ${res.status}`);
       }
       const data = await res.json();
@@ -398,7 +443,9 @@ function TrainWidget({ widgetId, config: initialConfig, isEditing }: WidgetCompo
     return (
       <Card className="h-full p-4 flex flex-col items-center justify-center gap-3">
         <Train size={32} className="text-default-300" />
-        <p className="text-sm text-default-400 text-center">Kein Bahnhof konfiguriert</p>
+        <p className="text-sm text-default-400 text-center">
+          Kein Bahnhof konfiguriert
+        </p>
         <button
           type="button"
           onClick={() => setShowConfig(true)}
@@ -433,7 +480,10 @@ function TrainWidget({ widgetId, config: initialConfig, isEditing }: WidgetCompo
       {/* Header */}
       <div className="flex items-center gap-2 px-4 pt-3 pb-2 border-b border-default-100">
         <Train size={14} className="text-primary shrink-0" />
-        <span className="text-sm font-semibold truncate flex-1" title={routeLabel}>
+        <span
+          className="text-sm font-semibold truncate flex-1"
+          title={routeLabel}
+        >
           {routeLabel}
         </span>
         <div className="flex items-center gap-1 shrink-0">
@@ -461,7 +511,9 @@ function TrainWidget({ widgetId, config: initialConfig, isEditing }: WidgetCompo
       <div className="flex-1 flex flex-col px-4 py-2 overflow-hidden">
         {loading && trains.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
-            <span className="text-default-300 text-xs animate-pulse">Wird geladen…</span>
+            <span className="text-default-300 text-xs animate-pulse">
+              Wird geladen…
+            </span>
           </div>
         ) : error ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-2">
@@ -482,11 +534,29 @@ function TrainWidget({ widgetId, config: initialConfig, isEditing }: WidgetCompo
             </p>
           </div>
         ) : (
-          <div className="flex flex-col divide-y divide-default-100">
-            {trains.map((t) => (
-              <TrainRow key={t.id} train={t} />
-            ))}
-          </div>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-default-200">
+                <th className="py-1 px-2 text-xs font-medium text-default-400 whitespace-nowrap">
+                  Zug
+                </th>
+                <th className="py-1 px-2 text-xs font-medium text-default-400 whitespace-nowrap">
+                  Abfahrt
+                </th>
+                <th className="py-1 px-2 text-xs font-medium text-default-400 whitespace-nowrap">
+                  Ziel
+                </th>
+                <th className="py-1 px-2 text-xs font-medium text-default-400 whitespace-nowrap">
+                  Gleis
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {trains.map((t) => (
+                <TrainRow key={t.id} train={t} />
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 
