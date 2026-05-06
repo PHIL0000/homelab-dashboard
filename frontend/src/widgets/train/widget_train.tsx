@@ -309,7 +309,7 @@ function TrainRow({ train }: { train: TrainEntry }) {
       }`}
     >
       {/* Zugnummer */}
-      <td className="py-0.5 px-1.5">
+      <td className="py-1 px-1.5">
         <span className="text-xs font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary whitespace-nowrap">
           {label || "—"}
         </span>
@@ -533,10 +533,10 @@ function TrainWidget({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-default-200">
-                <th className="pb-0.5 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Zug</th>
-                <th className="pb-0.5 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Abfahrt</th>
-                <th className="pb-0.5 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Ziel</th>
-                <th className="pb-0.5 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Gleis</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Zug</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Abfahrt</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Ziel</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Gleis</th>
               </tr>
             </thead>
             <tbody>
