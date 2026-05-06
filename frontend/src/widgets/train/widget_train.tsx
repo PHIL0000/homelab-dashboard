@@ -3,6 +3,7 @@ import { Card, Chip } from "@heroui/react";
 import { Train, ArrowRight, Clock, AlertTriangle, Search, X, Check, Settings } from "lucide-react";
 import type { WidgetDefinition, WidgetComponentProps } from "../types";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { API_BASE } from "@/lib/api";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -129,7 +130,7 @@ function StationSearchInput({
   const showDropdown = open && query.trim().length >= 2;
 
   return (
-    <div ref={wrapperRef} className="relative">
+    <div ref={wrapperRef} className="relative" onMouseDown={(e) => e.stopPropagation()}>
       <div className="flex items-center gap-1.5 rounded-xl border border-default-200 bg-default-50 px-3 py-2 focus-within:border-primary transition-colors">
         {value ? (
           <Check size={14} className="text-success shrink-0" />
@@ -195,18 +196,19 @@ function ConfigPanel({
   onSave: (c: TrainConfig) => void;
   onCancel: () => void;
 }) {
+  const { t } = useLanguage();
   const [stationA, setStationA] = useState<Station | null>(current.stationA);
   const [stationB, setStationB] = useState<Station | null>(current.stationB);
 
   return (
-    <div className="flex flex-col gap-3 p-4 h-full">
-      <div className="flex items-center gap-2">
-        <Train size={16} className="text-primary" />
-        <span className="text-sm font-semibold">Bahnhof konfigurieren</span>
+    <div className="flex flex-col gap-2 p-3 h-full" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-1.5">
+        <Train size={14} className="text-primary" />
+        <span className="text-xs font-semibold">{t("widget.train.configure")}</span>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-xs text-default-500 font-medium">Von (Abfahrtsbahnhof)*</label>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs text-default-500">{t("widget.train.from")}</label>
         <StationSearchInput
           value={stationA}
           onChange={setStationA}
@@ -215,36 +217,37 @@ function ConfigPanel({
         />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-xs text-default-500 font-medium">
-          Nach (Zielbahnhof) — optional
-        </label>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs text-default-500">{t("widget.train.to")}</label>
         <StationSearchInput
           value={stationB}
           onChange={setStationB}
           placeholder="z.B. München Hbf"
           token={token}
         />
-        <p className="text-xs text-default-400">
-          Leer lassen für alle Abfahrten an Bahnhof A.
-        </p>
+        <p className="text-xs text-default-400 leading-tight">{t("widget.train.toHint")}</p>
       </div>
 
-      <div className="flex gap-2 mt-auto pt-2">
+      <div className="flex gap-2 mt-auto">
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 text-sm py-2 rounded-xl border border-default-200 text-default-500 hover:bg-default-100 transition-colors"
+          className="flex-1 text-xs py-1.5 rounded-lg border border-default-200 text-default-500 hover:bg-default-100 transition-colors"
         >
-          Abbrechen
+          {t("common.cancel")}
         </button>
         <button
           type="button"
           disabled={!stationA}
           onClick={() => stationA && onSave({ stationA, stationB })}
-          className="flex-1 text-sm py-2 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          onMouseDown={(e) => e.stopPropagation()}
+          className="flex-1 text-xs py-1.5 rounded-xl font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: "var(--color-primary)",
+            boxShadow: "0 0 0 2px color-mix(in srgb, var(--color-primary) 35%, transparent), 0 0 12px color-mix(in srgb, var(--color-primary) 30%, transparent)",
+          }}
         >
-          Speichern
+          {t("settings.save")}
         </button>
       </div>
     </div>

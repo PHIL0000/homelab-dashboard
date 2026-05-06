@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Card, Chip } from "@heroui/react";
+import { Card } from "@heroui/react";
 import {
   Cloud,
   Sun,
@@ -59,7 +59,7 @@ interface WeatherData {
   humidity: number | null;
 }
 
-function WeatherWidget({ isEditing }: WidgetComponentProps) {
+function WeatherWidget(_props: WidgetComponentProps) {
   const { token } = useAuth();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -167,11 +167,6 @@ function WeatherWidget({ isEditing }: WidgetComponentProps) {
             {weather.city || "Unbekannt"}
           </span>
         </div>
-        {isEditing && (
-          <Chip size="sm" variant="soft" className="text-xs shrink-0">
-            Edit
-          </Chip>
-        )}
       </div>
 
       {/* Main: icon + temperature */}

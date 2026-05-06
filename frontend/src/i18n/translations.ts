@@ -132,6 +132,15 @@ export const translations = {
       "Verknüpfe dein Profil zur automatischen Anmeldung bei Home Assistant.",
     "account.connections.nc.desc":
       "Verknüpfe dein Profil für Dateizugriff und Synchronisation.",
+
+    // Common actions
+    "common.cancel": "Abbrechen",
+
+    // Widget - Train
+    "widget.train.configure": "Bahnhof konfigurieren",
+    "widget.train.from": "Von (Abfahrtsbahnhof)*",
+    "widget.train.to": "Nach (Zielbahnhof) — optional",
+    "widget.train.toHint": "Leer lassen für alle Abfahrten.",
   },
   en: {
     // Navigation / Sidebar
@@ -263,6 +272,15 @@ export const translations = {
       "Link your profile for automatic login to Home Assistant.",
     "account.connections.nc.desc":
       "Link your profile for file access and synchronization.",
+
+    // Common actions
+    "common.cancel": "Cancel",
+
+    // Widget - Train
+    "widget.train.configure": "Configure Station",
+    "widget.train.from": "From (Departure)*",
+    "widget.train.to": "To (Destination) — optional",
+    "widget.train.toHint": "Leave empty for all departures.",
   },
 };
 
