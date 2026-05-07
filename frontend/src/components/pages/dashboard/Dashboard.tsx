@@ -28,6 +28,11 @@ export default function Dashboard() {
   const [availableTypes, setAvailableTypes] = useState<CardTypeData[]>([]);
   const [loading, setLoading] = useState(true);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isEditingRef = useRef(false);
+
+  useEffect(() => {
+    isEditingRef.current = isEditing;
+  }, [isEditing]);
 
   const headers = useCallback(
     () => ({
@@ -97,7 +102,7 @@ export default function Dashboard() {
   const handleLayoutChange = useCallback(
     (newLayout: Layout[]) => {
       setLayout(newLayout);
-      saveLayout(newLayout);
+      if (isEditingRef.current) saveLayout(newLayout);
     },
     [saveLayout]
   );
@@ -206,49 +211,51 @@ export default function Dashboard() {
             </Button>
           </div>
         ) : (
-          <ResponsiveGrid
-            className="layout"
-            layouts={{ lg: layoutItems }}
-            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
-            cols={{ lg: 12, md: 10, sm: 6, xs: 4 }}
-            rowHeight={80}
-            isDraggable={isEditing}
-            isResizable={isEditing}
-            onLayoutChange={(currentLayout: Layout[]) => handleLayoutChange(currentLayout)}
-            margin={[12, 12]}
-          >
-            {widgets.map((widget) => {
-              const def = widgetRegistry.get(widget.cardTypeKey);
-              const Component = def?.component;
-              return (
-                <div key={widget.id} className="relative">
-                  {Component ? (
-                    <Component
-                      widgetId={widget.id}
-                      config={widget.config}
-                      isEditing={isEditing}
-                    />
-                  ) : (
-                    <Card className="h-full flex items-center justify-center p-4">
-                      <span className="text-default-400 text-sm">
-                        Unknown widget: {widget.cardTypeKey}
-                      </span>
-                    </Card>
-                  )}
-                  {isEditing && (
-                    <button
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onClick={() => removeWidget(widget.id)}
-                      className="absolute top-1 right-1 z-10 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center shadow-md hover:bg-red-600 transition-colors"
-                      title="Remove widget"
-                    >
-                      <X size={12} className="text-white" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </ResponsiveGrid>
+          <div className={isEditing ? "dashboard-editing" : ""}>
+            <ResponsiveGrid
+              className="layout"
+              layouts={{ lg: layoutItems }}
+              breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
+              cols={{ lg: 12, md: 10, sm: 6, xs: 4 }}
+              rowHeight={80}
+              isDraggable={isEditing}
+              isResizable={isEditing}
+              onLayoutChange={(currentLayout: Layout[]) => handleLayoutChange(currentLayout)}
+              margin={[12, 12]}
+            >
+              {widgets.map((widget) => {
+                const def = widgetRegistry.get(widget.cardTypeKey);
+                const Component = def?.component;
+                return (
+                  <div key={widget.id} className="relative" style={{ overflow: "visible" }}>
+                    {Component ? (
+                      <Component
+                        widgetId={widget.id}
+                        config={widget.config}
+                        isEditing={isEditing}
+                      />
+                    ) : (
+                      <Card className="h-full flex items-center justify-center p-4">
+                        <span className="text-default-400 text-sm">
+                          Unknown widget: {widget.cardTypeKey}
+                        </span>
+                      </Card>
+                    )}
+                    {isEditing && (
+                      <button
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={() => removeWidget(widget.id)}
+                        className="absolute -top-2 -right-2 z-20 w-5 h-5 rounded-full bg-danger flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                        title="Widget entfernen"
+                      >
+                        <X size={10} className="text-white" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </ResponsiveGrid>
+          </div>
         )}
       </div>
 

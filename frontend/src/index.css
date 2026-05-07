@@ -490,3 +490,39 @@ html.light {
   ) !important;
   color: var(--color-primary) !important;
 }
+
+/* ─── Dashboard Grid ──────────────────────────────────────── */
+
+/* Drag-Placeholder: lila statt rot */
+.react-grid-placeholder {
+  background: var(--color-primary) !important;
+  opacity: 0.13 !important;
+  border-radius: 14px !important;
+  border: 2px dashed color-mix(in srgb, var(--color-primary) 55%, transparent) !important;
+  transition: none !important;
+}
+
+/* Resize-Handle: standard SVG ausblenden */
+.react-resizable-handle {
+  background-image: none !important;
+}
+
+/* Resize-Handle Indikator: L-förmige Ecke */
+.dashboard-editing .react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 9px;
+  height: 9px;
+  border-bottom: 2.5px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+  border-right: 2.5px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+  border-radius: 0 0 3px 0;
+  pointer-events: none;
+}
+
+.dashboard-editing .react-grid-item:hover .react-resizable-handle::after {
+  border-color: var(--color-primary);
+  border-bottom-width: 2.5px;
+  border-right-width: 2.5px;
+}
