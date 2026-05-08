@@ -1,6 +1,6 @@
 // App.tsx
 import { useState, useEffect } from "react";
-import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
 import Sidebar from "./components/nav/Sidebar";
 import DashboardPage from "./components/pages/dashboard/Dashboard";
@@ -93,7 +93,7 @@ function App() {
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-content">
           <div className="max-w-[2000px] mx-auto h-full">
             <Routes>
-              <Route path="/" element={<PlaceholderPage />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/calendar" element={<PlaceholderPage />} />
               <Route path="/home-assistant" element={<HomeAssistantPage />} />
