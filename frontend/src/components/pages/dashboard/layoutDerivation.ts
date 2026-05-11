@@ -185,6 +185,10 @@ export function deriveResponsiveLayout(
 
   const occupied = new Set<string>();
   const result: Layout[] = [];
+  // Parallel zum Result: pro Item merken, ob es in eine NEUE Zeile
+  // umgebrochen ist (= derived.y > original.y). Nur umgebrochene Items
+  // sind Kandidaten für die Full-Width-Expansion im Pass weiter unten.
+  const wrappedFlags: boolean[] = [];
 
   for (const item of sorted) {
     const c = constraintsOf(item);
@@ -211,6 +215,43 @@ export function deriveResponsiveLayout(
       w,
       h,
     });
+    wrappedFlags.push(spot.y > item.y);
+  }
+
+  // ─── Expansion-Pass: Lücke links bei umgebrochenen, alleinigen Items ──
+  // Widgets, die in eine neue Zeile umgebrochen sind, würden sonst ihre
+  // Original-x-Position behalten — und damit links eine Lücke erzeugen,
+  // obwohl in dieser Zeile gar kein anderes Widget steht.
+  //
+  // Regeln:
+  //  - greift NUR bei umgebrochenen Items (wrappedFlags[i] === true)
+  //  - greift NUR, wenn das Item alleine in seinem y-Span ist
+  //    (kein anderes Item hat eine y-Überlappung)
+  //  - x → 0, w → maxCols (respektiert maxW-Constraint, falls vorhanden)
+  //  - h und y bleiben unverändert
+  //
+  // Wenn zwei Widgets gemeinsam in eine neue Zeile umbrechen und nebeneinander
+  // passen, bleibt jedes auf seiner gepackten Position — keine Expansion.
+  // Das persistierte baseLayout wird nicht angefasst (nur derived).
+  for (let i = 0; i < result.length; i++) {
+    if (!wrappedFlags[i]) continue;
+
+    const item = result[i];
+    const top = item.y;
+    const bottom = item.y + item.h;
+
+    const hasNeighborInRow = result.some((other, j) => {
+      if (j === i) return false;
+      return other.y < bottom && other.y + other.h > top;
+    });
+    if (hasNeighborInRow) continue;
+
+    const c = constraintsOf(item);
+    const minW = Math.max(1, c.minW ?? 1);
+    const maxW = Math.min(c.maxW ?? targetCols, targetCols);
+    const fullW = Math.min(maxW, Math.max(minW, targetCols));
+
+    result[i] = { ...item, x: 0, w: fullW };
   }
 
   return result;
