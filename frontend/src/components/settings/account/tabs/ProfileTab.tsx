@@ -1,9 +1,10 @@
-import { showError, showSuccess } from '../../../../toast';
 import { useState, useEffect, useRef } from "react";
-import { Button, Card, Input, Avatar } from "@heroui/react";
+import { Avatar, Button, Card, Input, Spinner } from "@heroui/react";
+import { Pencil } from "lucide-react";
+import { showError, showSuccess } from "@/toast";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
-import { API_BASE } from '@/lib/api';
+import { API_BASE } from "@/lib/api";
 
 export default function ProfileTab() {
   const { t } = useLanguage();
@@ -219,13 +220,11 @@ export default function ProfileTab() {
               </Avatar.Fallback>
             </Avatar>
             <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5V19a1 1 0 001 1h16a1 1 0 001-1v-2.5M16.5 3.5a2.121 2.121 0 013 3L7 19H4v-3L16.5 3.5z" />
-              </svg>
+              <Pencil className="w-6 h-6 text-white" />
             </div>
             {isUploadingAvatar && (
               <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <Spinner size="sm" className="text-white" />
               </div>
             )}
           </button>

@@ -1,11 +1,11 @@
-import AddHardware, { type HardwareFormValues } from './AddHardware';
-import AddService from './AddService';
-import AddStorage, { type StorageFormValues } from './AddStorage';
-import AddMarkdown, { type MarkdownFormValues } from './AddMarkdown';
-import EditHardware from './EditHardware';
-import EditService from './EditService';
-import EditStorage from './EditStorage';
-import EditMarkdown from './EditMarkdown';
+import AddHardware, { type HardwareFormValues } from "./AddHardware";
+import AddService from "./AddService";
+import AddStorage, { type StorageFormValues } from "./AddStorage";
+import AddMarkdown, { type MarkdownFormValues } from "./AddMarkdown";
+import EditHardware from "./EditHardware";
+import EditService from "./EditService";
+import EditStorage from "./EditStorage";
+import EditMarkdown from "./EditMarkdown";
 
 type OverviewModalsProps = {
   hardwareEditId: string | null;

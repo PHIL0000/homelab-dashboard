@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { showError, showSuccess } from '../../../../toast';
+import { showError, showSuccess } from "../../../../toast";
 import { Button, Input } from "@heroui/react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
-import { API_BASE } from '@/lib/api';
+import { API_BASE } from "@/lib/api";
 
 export default function AdvancedTab() {
   const { t } = useLanguage();

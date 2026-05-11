@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Button, Input, Card } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
 import { showError } from "@/toast";
-import { API_BASE } from '@/lib/api';
+import { API_BASE } from "@/lib/api";
 
 export default function Login() {
   const [identifier, setIdentifier] = useState("");

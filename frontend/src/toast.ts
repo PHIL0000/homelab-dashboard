@@ -1,5 +1,5 @@
 
-import { toast } from '@heroui/react';
+import { toast } from "@heroui/react";
 
 
 // Inline type for toast options (matches HeroUIToastOptions)

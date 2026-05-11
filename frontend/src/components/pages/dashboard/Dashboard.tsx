@@ -4,7 +4,7 @@ import "react-resizable/css/styles.css";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import type { Layout } from "react-grid-layout";
-import { Button, Card } from "@heroui/react";
+import { Button, Card, Modal, Spinner, useOverlayState } from "@heroui/react";
 import { LayoutGrid, Lock, Unlock, Plus, X } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { widgetRegistry, getWidgetDefinitions } from "../../../widgets/registry";
@@ -266,31 +266,16 @@ export default function Dashboard() {
     [headers]
   );
 
-  // ─── Render ────────────────────────────────────────────────────────────
+  const pickerState = useOverlayState({
+    isOpen: showPicker,
+    onOpenChange: (open) => setShowPicker(open),
+  });
+
   if (loading) {
     return (
       <div className="page-shell flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <svg
-            className="animate-spin h-8 w-8 text-primary"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
+          <Spinner size="lg" color="accent" />
           <span className="text-sm text-default-400">Loading dashboard…</span>
         </div>
       </div>
@@ -414,56 +399,52 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Widget picker */}
-      {showPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-background rounded-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto relative shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-[color-mix(in_srgb,var(--color-primary)_20%,transparent)]">
-            <div className="flex items-center justify-between p-6 pb-4">
-              <h2 className="text-lg font-semibold">Add Widget</h2>
-              <Button
-                onPress={() => setShowPicker(false)}
-                isIconOnly
-                variant="ghost"
-                size="sm"
-              >
-                <X size={18} />
-              </Button>
-            </div>
-            <div className="px-6 pb-6">
-              {availableTypes.length === 0 ? (
-                <p className="text-default-400 text-sm text-center py-8">
-                  No widgets registered yet.
-                </p>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {availableTypes.map((type) => {
-                    const localDef = widgetRegistry.get(type.key);
-                    return (
-                      <button
-                        key={type.id}
-                        onClick={() => addWidget(type.key)}
-                        className="text-left p-4 rounded-xl border border-default-200 hover:border-primary hover:bg-primary/5 transition-colors"
-                      >
-                        <p className="font-medium text-sm">{type.name}</p>
-                        {type.description && (
-                          <p className="text-xs text-default-400 mt-1 line-clamp-2">
-                            {type.description}
-                          </p>
-                        )}
-                        {localDef && (
-                          <p className="text-xs text-default-300 mt-2">
-                            {localDef.defaultW}×{localDef.defaultH} default size
-                          </p>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal state={pickerState}>
+        <Modal.Backdrop className="bg-black/60 backdrop-blur-sm">
+          <Modal.Container size="md" placement="center">
+            <Modal.Dialog className="bg-background rounded-3xl max-h-[80vh] overflow-y-auto shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-[color-mix(in_srgb,var(--color-primary)_20%,transparent)]">
+              <Modal.Header className="flex items-center justify-between p-6 pb-4">
+                <Modal.Heading className="text-lg font-semibold">
+                  Add Widget
+                </Modal.Heading>
+                <Modal.CloseTrigger aria-label="Close" />
+              </Modal.Header>
+              <Modal.Body className="px-6 pb-6">
+                {availableTypes.length === 0 ? (
+                  <p className="text-default-400 text-sm text-center py-8">
+                    No widgets registered yet.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {availableTypes.map((type) => {
+                      const localDef = widgetRegistry.get(type.key);
+                      return (
+                        <button
+                          key={type.id}
+                          onClick={() => addWidget(type.key)}
+                          className="text-left p-4 rounded-xl border border-default-200 hover:border-primary hover:bg-primary/5 transition-colors"
+                        >
+                          <p className="font-medium text-sm">{type.name}</p>
+                          {type.description && (
+                            <p className="text-xs text-default-400 mt-1 line-clamp-2">
+                              {type.description}
+                            </p>
+                          )}
+                          {localDef && (
+                            <p className="text-xs text-default-300 mt-2">
+                              {localDef.defaultW}×{localDef.defaultH} default size
+                            </p>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </Modal.Body>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
+      </Modal>
     </div>
   );
 }

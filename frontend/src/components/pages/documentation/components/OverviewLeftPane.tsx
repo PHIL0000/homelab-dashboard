@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Button, Card, Input, Select, ListBox } from '@heroui/react';
-import { ChevronDown } from 'lucide-react';
+import { useMemo, useState } from "react";
+import { Button, Card, Input, Select, ListBox } from "@heroui/react";
+import { ChevronDown } from "lucide-react";
 
 type OverviewLeftPaneProps = {
   hardware: any[];

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Button } from "@heroui/react";
+import { Alert, Button } from "@heroui/react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { ChevronDown } from "lucide-react";
@@ -55,9 +55,13 @@ class SettingsTabBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-4 rounded-lg border border-red-500/40 bg-red-500/10 text-red-300">
-          Dieser Settings-Tab konnte nicht geladen werden.
-        </div>
+        <Alert status="danger">
+          <Alert.Content>
+            <Alert.Description>
+              Dieser Settings-Tab konnte nicht geladen werden.
+            </Alert.Description>
+          </Alert.Content>
+        </Alert>
       );
     }
 

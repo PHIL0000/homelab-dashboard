@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button, Card, Input, Select, ListBox } from "@heroui/react";
 import { Camera, ChevronDown } from "lucide-react";
 import { showError, showSuccess } from "../../../../toast";
-import { API_BASE } from '@/lib/api';
+import { API_BASE } from "@/lib/api";
 
 interface UserData {
   id: string;
