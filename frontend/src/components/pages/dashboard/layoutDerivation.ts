@@ -289,36 +289,85 @@ export function appendWidgetToEnd(
 
 // ─── Rückprojektion: Edit in non-base-Breakpoint → base ────────────────────
 // Wenn der User in einem schmaleren Breakpoint editiert, müssen wir die
-// Änderung ins persistierte lg-Layout zurückübersetzen. Wir machen das
-// pro-Item (nur das Item, das der User explizit bewegt/resized hat).
+// Änderung ins persistierte lg-Layout zurückübersetzen.
 //
-// x und w werden mit dem Spalten-Verhältnis skaliert; y und h werden 1:1
-// übernommen (Zeilenhöhe ist breakpoint-unabhängig).
+// WICHTIG: w und h werden 1:1 übernommen — KEINE proportionale Skalierung.
+// Grund: deriveResponsiveLayout schrumpft nicht proportional (place-first,
+// shrink-last). Würden wir hier proportional zurückrechnen, entsteht beim
+// Roundtrip ein Drift, z. B.:
+//   - User setzt w=4 in md (10 cols)
+//   - alt:  w_base = round(4 * 12/10) = 5  ← falsch, Wert geändert
+//   - neu:  w_base = 4                    ← exakt erhalten
+//   - re-derive für md: effectiveWidth(4, target=10) = 4 → User sieht 4
+//
+// x wird ebenfalls 1:1 übernommen und nur an die base-Spaltenzahl geklemmt,
+// damit das Item nicht über den rechten Rand hinausragt.
 export function reprojectChangeToBase(
   changedItem: Layout,
-  fromCols: number,
+  _fromCols: number,
   toCols: number,
   constraints: WidgetConstraints
 ): { x: number; y: number; w: number; h: number } {
-  if (fromCols === toCols) {
-    return {
-      x: changedItem.x,
-      y: changedItem.y,
-      w: changedItem.w,
-      h: changedItem.h,
-    };
-  }
-
-  const ratio = toCols / fromCols;
   const minW = Math.max(1, constraints.minW ?? 1);
   const maxW = Math.min(constraints.maxW ?? toCols, toCols);
   const minH = Math.max(1, constraints.minH ?? 1);
 
-  const w = Math.min(maxW, Math.max(minW, Math.round(changedItem.w * ratio)));
-  const x = Math.max(0, Math.min(toCols - w, Math.round(changedItem.x * ratio)));
+  const w = Math.min(maxW, Math.max(minW, changedItem.w));
+  const x = Math.max(0, Math.min(toCols - w, changedItem.x));
   const h = Math.max(minH, changedItem.h);
+  const y = Math.max(0, changedItem.y);
 
-  return { x, y: Math.max(0, changedItem.y), w, h };
+  return { x, y, w, h };
+}
+
+// ─── Load-Validierung: nur korrupte Werte reparieren, NICHT normalisieren ──
+// Beim Laden wollen wir das gespeicherte Layout exakt so übernehmen, wie der
+// User es zuletzt eingestellt hat. Wir greifen NUR ein bei wirklich kaputten
+// Werten (NaN, null, undefined, nicht-numerisch, negativ für x/y, < 1 für
+// w/h). Keine Kollisionsauflösung, kein Compacten, kein Schrumpfen.
+export function validateAndLoadLayout(
+  rawLayout: unknown,
+  baseCols: number = BASE_COLS
+): Layout[] {
+  if (!Array.isArray(rawLayout)) return [];
+
+  const toPos = (v: unknown): number => {
+    const n = typeof v === "number" ? v : Number(v);
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.round(n));
+  };
+  const toSize = (v: unknown): number => {
+    const n = typeof v === "number" ? v : Number(v);
+    if (!Number.isFinite(n) || n < 1) return 1;
+    return Math.max(1, Math.round(n));
+  };
+  const toOptSize = (v: unknown): number | undefined => {
+    if (v === null || v === undefined) return undefined;
+    const n = typeof v === "number" ? v : Number(v);
+    if (!Number.isFinite(n) || n < 1) return undefined;
+    return Math.max(1, Math.round(n));
+  };
+
+  const out: Layout[] = [];
+  for (const raw of rawLayout) {
+    if (!raw || typeof raw !== "object") continue;
+    const r = raw as Record<string, unknown>;
+    if (typeof r.i !== "string" || r.i.length === 0) continue;
+
+    const w = Math.min(baseCols, toSize(r.w));
+    const x = Math.min(Math.max(0, baseCols - w), toPos(r.x));
+
+    out.push({
+      i: r.i,
+      x,
+      y: toPos(r.y),
+      w,
+      h: toSize(r.h),
+      minW: toOptSize(r.minW),
+      minH: toOptSize(r.minH),
+    });
+  }
+  return out;
 }
 
 // Convenience: erzeugt das vollständige Layouts-Objekt für RGL aus dem

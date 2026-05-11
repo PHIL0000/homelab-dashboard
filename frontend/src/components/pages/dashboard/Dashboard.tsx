@@ -23,7 +23,7 @@ import {
 import {
   appendWidgetToEnd,
   reprojectChangeToBase,
-  restoreDesktopLayout,
+  validateAndLoadLayout,
 } from "./layoutDerivation";
 
 const ResponsiveGrid = WidthProvider(Responsive);
@@ -124,9 +124,11 @@ export default function Dashboard() {
     if (!res.ok) return;
     const data: DashboardData | null = await res.json();
     if (data) {
-      // Beim Laden räumen wir das Basislayout einmal sauber auf — falls
-      // z. B. ein altes, korruptes Layout in der DB liegt.
-      setBaseLayout(restoreDesktopLayout(data.layout as Layout[]));
+      // Das persistierte Layout ist die einzige Quelle der Wahrheit. Wir
+      // setzen es UNVERÄNDERT — validateAndLoadLayout greift nur ein, wenn
+      // einzelne Felder korrupt sind (NaN, null, undefined, falscher Typ).
+      // Keine Kollisionsauflösung, kein Compacten, kein Schrumpfen.
+      setBaseLayout(validateAndLoadLayout(data.layout));
       setWidgets(data.widgets);
     }
   }, [headers]);
