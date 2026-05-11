@@ -1,7 +1,6 @@
-// App.tsx
 import { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@heroui/react";
+import { Modal, Spinner, useOverlayState } from "@heroui/react";
 import Sidebar from "./components/nav/Sidebar";
 import DashboardPage from "./components/pages/dashboard/Dashboard";
 //import CalendarPage from "./components/pages/calendar/Calendar";
@@ -22,9 +21,10 @@ import MarkdownDocs from "./components/pages/documentation/MarkdownDocs";
 import DocumentationMap from "./components/pages/documentation/Map";
 import { useAuth } from "./context/AuthContext";
 
+type ActiveModal = "settings" | "account" | null;
 
 function App() {
-  const [activeModal, setActiveModal] = useState<"settings" | "account" | null>(null);
+  const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { isLoading, user } = useAuth();
@@ -38,10 +38,19 @@ function App() {
     }
   }, [isLoading, user, isAuthRoute, navigate]);
 
+  const accountModalState = useOverlayState({
+    isOpen: activeModal === "account",
+    onOpenChange: (open) => !open && setActiveModal(null),
+  });
+  const settingsModalState = useOverlayState({
+    isOpen: activeModal === "settings",
+    onOpenChange: (open) => !open && setActiveModal(null),
+  });
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-text">
-        Loading...
+        <Spinner size="lg" color="accent" />
       </div>
     );
   }
@@ -59,26 +68,7 @@ function App() {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-text">
         <div className="flex flex-col items-center gap-3">
-          <svg
-            className="animate-spin h-8 w-8 text-primary"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
+          <Spinner size="lg" color="accent" />
           <span className="text-text-secondary">Redirecting…</span>
         </div>
       </div>
@@ -102,87 +92,46 @@ function App() {
               <Route path="/storage/gitlab" element={<PlaceholderPage />} />
               <Route path="/ai/chat" element={<PlaceholderPage />} />
               <Route path="/ai/image-gen" element={<PlaceholderPage />} />
-              <Route
-                path="/documentation/overview"
-                element={<DocsOverview />}
-              />
+              <Route path="/documentation/overview" element={<DocsOverview />} />
               <Route path="/documentation/hardware" element={<Hardware />} />
               <Route path="/documentation/services" element={<Services />} />
               <Route path="/documentation/storage" element={<StorageItems />} />
               <Route path="/documentation/docs" element={<MarkdownDocs />} />
               <Route path="/documentation/map" element={<DocumentationMap />} />
               <Route path="/performance" element={<PlaceholderPage />} />
-
-              {/* Placeholder für alle Seiten zuerst */}
               <Route path="*" element={<PlaceholderPage />} />
             </Routes>
           </div>
         </main>
 
-        {activeModal === "account" && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-background rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] flex flex-col">
-              <Button
-                onClick={() => setActiveModal(null)}
-                className="absolute top-6 right-6 p-2 rounded-full hover:bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] hover:text-primary transition-colors text-text-secondary z-10"
-                isIconOnly
-                variant="ghost"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </Button>
-              <div className="p-2 flex-grow">
-                <AccountPage />
-              </div>
-            </div>
-          </div>
-        )}
+        <Modal state={accountModalState}>
+          <Modal.Backdrop className="bg-black/60 backdrop-blur-sm">
+            <Modal.Container size="lg" placement="center">
+              <Modal.Dialog className="bg-background rounded-3xl border border-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] shadow-[0_0_50px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto">
+                <Modal.CloseTrigger className="absolute top-6 right-6 z-10" />
+                <Modal.Body className="p-2">
+                  <AccountPage />
+                </Modal.Body>
+              </Modal.Dialog>
+            </Modal.Container>
+          </Modal.Backdrop>
+        </Modal>
 
-        {activeModal === "settings" && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-background rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] flex flex-col">
-              <Button
-                onClick={() => setActiveModal(null)}
-                className="absolute top-6 right-6 p-2 rounded-full hover:bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] hover:text-primary transition-colors text-text-secondary z-10"
-                isIconOnly
-                variant="ghost"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </Button>
-              <div className="p-2 flex-grow">
-                <SettingsPage />
-              </div>
-            </div>
-          </div>
-        )}
+        <Modal state={settingsModalState}>
+          <Modal.Backdrop className="bg-black/60 backdrop-blur-sm">
+            <Modal.Container size="lg" placement="center">
+              <Modal.Dialog className="bg-background rounded-3xl border border-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] shadow-[0_0_50px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto">
+                <Modal.CloseTrigger className="absolute top-6 right-6 z-10" />
+                <Modal.Body className="p-2">
+                  <SettingsPage />
+                </Modal.Body>
+              </Modal.Dialog>
+            </Modal.Container>
+          </Modal.Backdrop>
+        </Modal>
       </div>
     </div>
   );
-};
+}
 
 export default App;

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { ExternalLink, AlertTriangle, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
-import { API_BASE } from '@/lib/api';
+import { Spinner } from "@heroui/react";
+import { API_BASE } from "@/lib/api";
 
 export default function HomeAssistant() {
   const [iframeError, setIframeError] = useState(false);
@@ -84,8 +85,8 @@ export default function HomeAssistant() {
               </div>
             </div>
           ) : (
-            <div className="animate-pulse flex flex-col items-center gap-2">
-              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex flex-col items-center gap-2">
+              <Spinner size="lg" color="accent" />
               <p className="text-sm">Loading Home Assistant...</p>
             </div>
           )}
