@@ -493,6 +493,25 @@ html.light {
 
 /* ─── Dashboard Grid ──────────────────────────────────────── */
 
+/* Container, dessen Breite die Breakpoints bestimmt. Wichtig: width:100%
+   nicht max-content — sonst messen wir den falschen Wert. */
+.dashboard-grid-container {
+  width: 100%;
+  min-width: 0;
+  container-type: inline-size;
+  container-name: dashboard;
+}
+
+/* Sanfter Übergang nur für absolute-Positionierung — KEINE width/height
+   transitions, sonst entsteht Layout-Jitter beim Resize. */
+.dashboard-grid-container .react-grid-item {
+  transition: transform 180ms ease, top 180ms ease, left 180ms ease;
+}
+.dashboard-grid-container .react-grid-item.react-draggable-dragging,
+.dashboard-grid-container .react-grid-item.resizing {
+  transition: none;
+}
+
 /* Drag-Placeholder: lila statt rot */
 .react-grid-placeholder {
   background: var(--color-primary) !important;
@@ -525,4 +544,128 @@ html.light {
   border-color: var(--color-primary);
   border-bottom-width: 2.5px;
   border-right-width: 2.5px;
+}
+
+/* ─── Widget-Shell ─────────────────────────────────────────────────────── */
+/* Jedes Widget bekommt eine Shell, die:
+   - die volle Grid-Zelle füllt,
+   - Overflow am Widget-Rand sauber abfängt,
+   - ein neuer Container-Query-Scope ist für Inhalts-Anpassungen. */
+.dashboard-widget-shell {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  container-type: inline-size;
+  container-name: widget;
+}
+
+.dashboard-widget-content {
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+/* Inhalte dürfen scrollen, wenn sie wirklich nicht passen — aber das
+   Widget selbst sprengt nie das Grid. */
+.dashboard-widget-content > * {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Lange Wörter / URLs nicht aus dem Widget brechen lassen. */
+.dashboard-widget-content {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Remove-Button */
+.widget-remove-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 20;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: var(--color-danger, #ef4444);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  transition: transform 120ms ease;
+}
+.widget-remove-btn:hover {
+  transform: scale(1.1);
+}
+
+/* ─── Container-Queries: Inhalts-Skalierung im Widget ──────────────────── */
+/* Typografie skaliert zwischen einer kleinen und einer großen Variante,
+   abhängig von der echten Widget-Breite — nicht von der Fensterbreite.
+   So bleiben kompakte Widgets auch im Desktop-Layout lesbar. */
+@container widget (max-width: 220px) {
+  .dashboard-widget-content {
+    font-size: 0.8125rem;
+  }
+  .dashboard-widget-content h1,
+  .dashboard-widget-content h2,
+  .dashboard-widget-content h3 {
+    font-size: clamp(0.875rem, 4cqi, 1.125rem);
+    line-height: 1.2;
+  }
+}
+
+@container widget (min-width: 221px) {
+  .dashboard-widget-content h1,
+  .dashboard-widget-content h2,
+  .dashboard-widget-content h3 {
+    font-size: clamp(1rem, 3.2cqi, 1.5rem);
+    line-height: 1.25;
+  }
+  .dashboard-widget-content .kpi,
+  .dashboard-widget-content [data-role="kpi"] {
+    font-size: clamp(1.25rem, 6cqi, 2.5rem);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Sehr schmale Widgets: Buttons & Inputs werden kompakter, Tabellen
+   bekommen einen horizontalen Scroll als letzten Ausweg. */
+@container widget (max-width: 260px) {
+  .dashboard-widget-content button,
+  .dashboard-widget-content [role="button"] {
+    padding-inline: 0.5rem;
+  }
+  .dashboard-widget-content table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+}
+
+/* Charts / Canvas / SVG sollen sich nicht über das Widget hinausstrecken. */
+.dashboard-widget-content :is(canvas, svg, img, video) {
+  max-width: 100%;
+  height: auto;
+}
+.dashboard-widget-content :is(canvas, svg) {
+  display: block;
+}
+
+/* Listen mit langen Items: einzelne Zeilen elidieren statt zu wrappen,
+   wenn der Platz wirklich knapp ist. */
+@container widget (max-width: 200px) {
+  .dashboard-widget-content .list-row,
+  .dashboard-widget-content [data-role="list-row"] {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }

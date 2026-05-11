@@ -1,7 +1,7 @@
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import type { Layout } from "react-grid-layout";
 import { Button, Card } from "@heroui/react";
@@ -12,27 +12,51 @@ import type {
   DashboardData,
   WidgetInstance,
   CardTypeData,
+  WidgetDefinition,
 } from "../../../widgets/types";
-import { API_BASE } from '../../../lib/api';
+import { API_BASE } from "../../../lib/api";
+import {
+  useResponsiveDashboardLayout,
+  BASE_BREAKPOINT,
+  BASE_COLS,
+} from "./useResponsiveDashboardLayout";
+import {
+  appendWidgetToEnd,
+  reprojectChangeToBase,
+  restoreDesktopLayout,
+} from "./layoutDerivation";
 
 const ResponsiveGrid = WidthProvider(Responsive);
-
 const API = `${API_BASE}/dashboard`;
+
+const ROW_HEIGHT = 80;
+const GRID_MARGIN: [number, number] = [12, 12];
+
+// Widget-Actions (Edit/Drag/Resize/Remove) sind grundsätzlich immer
+// verfügbar, sobald der Edit-Mode aktiv ist — UNABHÄNGIG vom Breakpoint.
+// Falls einmal ein extrem kleiner Sonderfall ausgeschlossen werden muss,
+// kann das hier zentral entschieden werden (z. B. containerWidth < 320).
+function shouldEnableWidgetActions(isEditing: boolean): boolean {
+  return isEditing;
+}
 
 export default function Dashboard() {
   const { token } = useAuth();
-  const [layout, setLayout] = useState<Layout[]>([]);
+
+  // ─── Persisted state (single source of truth) ──────────────────────────
+  // baseLayout ist das User-Layout für 'lg' (12 cols). Alle responsiven
+  // Layouts werden daraus deterministisch abgeleitet. baseLayout wird
+  // ausschließlich durch User-Aktionen im Edit-Mode mutiert — niemals
+  // durch Resize-Events.
+  const [baseLayout, setBaseLayout] = useState<Layout[]>([]);
   const [widgets, setWidgets] = useState<WidgetInstance[]>([]);
+
   const [isEditing, setIsEditing] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [availableTypes, setAvailableTypes] = useState<CardTypeData[]>([]);
   const [loading, setLoading] = useState(true);
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isEditingRef = useRef(false);
 
-  useEffect(() => {
-    isEditingRef.current = isEditing;
-  }, [isEditing]);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const headers = useCallback(
     () => ({
@@ -42,6 +66,40 @@ export default function Dashboard() {
     [token]
   );
 
+  // ─── Widget-Mapping (für Constraint-Lookups) ───────────────────────────
+  const widgetIdToKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const w of widgets) map.set(w.id, w.cardTypeKey);
+    return map;
+  }, [widgets]);
+
+  const registryGet = useCallback(
+    (key: string): WidgetDefinition | undefined => widgetRegistry.get(key),
+    []
+  );
+
+  // ─── Derived responsive layouts ────────────────────────────────────────
+  const {
+    layouts,
+    cols,
+    breakpoints,
+    currentBreakpoint,
+    currentCols,
+    containerRef,
+    onBreakpointChange,
+  } = useResponsiveDashboardLayout({
+    baseLayout,
+    widgetIdToKey,
+    registryGet,
+  });
+
+  // Edit / Drag / Resize sind in JEDEM Breakpoint erlaubt. Änderungen in
+  // einem kleineren Breakpoint werden auf das base-Layout (lg) zurück-
+  // projiziert, damit es die einzige Quelle der Wahrheit bleibt.
+  // (siehe shouldEnableWidgetActions weiter unten)
+  const canEdit = shouldEnableWidgetActions(isEditing);
+
+  // ─── API: Synchronisation ──────────────────────────────────────────────
   const syncWidgets = useCallback(async () => {
     const defs = getWidgetDefinitions().map((d) => ({
       key: d.key,
@@ -66,7 +124,9 @@ export default function Dashboard() {
     if (!res.ok) return;
     const data: DashboardData | null = await res.json();
     if (data) {
-      setLayout(data.layout as Layout[]);
+      // Beim Laden räumen wir das Basislayout einmal sauber auf — falls
+      // z. B. ein altes, korruptes Layout in der DB liegt.
+      setBaseLayout(restoreDesktopLayout(data.layout as Layout[]));
       setWidgets(data.widgets);
     }
   }, [headers]);
@@ -85,28 +145,80 @@ export default function Dashboard() {
     })();
   }, [syncWidgets, loadDashboard, loadWidgetTypes]);
 
-  const saveLayout = useCallback(
-    (newLayout: Layout[]) => {
+  // ─── Persistenz ────────────────────────────────────────────────────────
+  // Wir persistieren ausschließlich das Basislayout (lg). Debounce, damit
+  // Drag/Resize-Bursts nicht jeden Frame ans Backend gehen.
+  const persistBaseLayout = useCallback(
+    (next: Layout[]) => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(async () => {
         await fetch(`${API}/page/dashboard/layout`, {
           method: "PUT",
           headers: headers(),
-          body: JSON.stringify({ layout: newLayout }),
+          body: JSON.stringify({ layout: next }),
         });
       }, 800);
     },
     [headers]
   );
 
-  const handleLayoutChange = useCallback(
-    (newLayout: Layout[]) => {
-      setLayout(newLayout);
-      if (isEditingRef.current) saveLayout(newLayout);
+  // ─── User-Aktion: Drag/Resize abgeschlossen ────────────────────────────
+  // Diese Handler sind die einzige Stelle, an der das Basislayout mutiert
+  // wird. Sie feuern ausschließlich nach einer expliziten User-Aktion —
+  // niemals durch Resize/Breakpoint-Wechsel.
+  //
+  // Verhalten je Breakpoint:
+  //  - base (lg): vollständige 1:1-Übernahme des kompletten Layouts.
+  //  - md/sm/xs: NUR das geänderte Item wird via reprojectChangeToBase
+  //    auf 12 Spalten zurück übersetzt. Die übrigen Items im base bleiben
+  //    unangetastet, damit kein "Drift" durchs derive→reproject→derive
+  //    entsteht.
+  const commitUserLayoutChange = useCallback(
+    (newCurrentLayout: Layout[], _oldItem: Layout, newItem: Layout) => {
+      if (!canEdit || !newItem) return;
+
+      if (currentBreakpoint === BASE_BREAKPOINT) {
+        const cleaned = newCurrentLayout.map<Layout>((it) => ({
+          i: it.i,
+          x: it.x,
+          y: it.y,
+          w: it.w,
+          h: it.h,
+        }));
+        setBaseLayout(cleaned);
+        persistBaseLayout(cleaned);
+        return;
+      }
+
+      // Non-base: Rückprojektion für genau dieses Item.
+      const key = widgetIdToKey.get(newItem.i);
+      const def = key ? widgetRegistry.get(key) : undefined;
+      const projected = reprojectChangeToBase(
+        newItem,
+        currentCols,
+        BASE_COLS,
+        { minW: def?.minW, minH: def?.minH }
+      );
+
+      setBaseLayout((prev) => {
+        const next = prev.map((it) =>
+          it.i === newItem.i
+            ? { ...it, x: projected.x, y: projected.y, w: projected.w, h: projected.h }
+            : it
+        );
+        persistBaseLayout(next);
+        return next;
+      });
     },
-    [saveLayout]
+    [canEdit, currentBreakpoint, currentCols, widgetIdToKey, persistBaseLayout]
   );
 
+  // ─── Widget hinzufügen / entfernen ─────────────────────────────────────
+  // Neue Widgets werden IMMER unten rechts ans Layout angehängt — nicht
+  // dahin, wo das Backend sie evtl. mit y:Infinity vorschlägt. Die finale
+  // Position berechnet findBottomRightInsertionPosition aus dem aktuellen
+  // base-Layout: erst nach freiem Platz in der untersten Zeile rechts
+  // suchen, sonst neue Zeile darunter.
   const addWidget = useCallback(
     async (cardTypeKey: string) => {
       setShowPicker(false);
@@ -117,13 +229,27 @@ export default function Dashboard() {
       });
       if (!res.ok) return;
       const data = await res.json();
+
       setWidgets((prev) => [
         ...prev,
-        { id: data.id, cardTypeKey, customTitle: data.customTitle, config: data.config },
+        {
+          id: data.id,
+          cardTypeKey,
+          customTitle: data.customTitle,
+          config: data.config,
+        },
       ]);
-      setLayout((prev) => [...prev, data.layoutItem as Layout]);
+
+      // Append-Logik: backend-Position ignorieren, deterministisch
+      // unten rechts einfügen.
+      setBaseLayout((prev) => {
+        const incoming = data.layoutItem as Layout;
+        const next = appendWidgetToEnd(prev, incoming, BASE_COLS);
+        persistBaseLayout(next);
+        return next;
+      });
     },
-    [headers]
+    [headers, persistBaseLayout]
   );
 
   const removeWidget = useCallback(
@@ -133,36 +259,41 @@ export default function Dashboard() {
         headers: headers(),
       });
       setWidgets((prev) => prev.filter((w) => w.id !== widgetId));
-      setLayout((prev) => prev.filter((l) => l.i !== widgetId));
+      setBaseLayout((prev) => prev.filter((l) => l.i !== widgetId));
     },
     [headers]
   );
 
+  // ─── Render ────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="page-shell flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          <svg
+            className="animate-spin h-8 w-8 text-primary"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
           </svg>
           <span className="text-sm text-default-400">Loading dashboard…</span>
         </div>
       </div>
     );
   }
-
-  const layoutItems = widgets.map((w) => {
-    const def = widgetRegistry.get(w.cardTypeKey);
-    const item = layout.find((l) => l.i === w.id) ?? {
-      i: w.id,
-      x: 0,
-      y: 0,
-      w: def?.defaultW ?? 3,
-      h: def?.defaultH ?? 3,
-    };
-    return { ...item, minW: def?.minW, minH: def?.minH };
-  });
 
   return (
     <div className="page-shell">
@@ -196,7 +327,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto px-4 pb-4">
+      <div className="dashboard-scroll-area flex-1 overflow-auto px-4 pb-4">
         {widgets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 gap-4 text-default-400">
             <LayoutGrid size={48} className="opacity-30" />
@@ -204,48 +335,70 @@ export default function Dashboard() {
             <Button
               size="sm"
               variant="outline"
-              onPress={() => { setIsEditing(true); setShowPicker(true); }}
+              onPress={() => {
+                setIsEditing(true);
+                setShowPicker(true);
+              }}
             >
               <Plus size={16} />
               Add your first widget
             </Button>
           </div>
         ) : (
-          <div className={isEditing ? "dashboard-editing" : ""}>
+          <div
+            ref={containerRef as (el: HTMLDivElement | null) => void}
+            className={`dashboard-grid-container ${canEdit ? "dashboard-editing" : ""}`}
+            data-breakpoint={currentBreakpoint}
+          >
             <ResponsiveGrid
               className="layout"
-              layouts={{ lg: layoutItems }}
-              breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
-              cols={{ lg: 12, md: 10, sm: 6, xs: 4 }}
-              rowHeight={80}
-              isDraggable={isEditing}
-              isResizable={isEditing}
-              onLayoutChange={(currentLayout: Layout[]) => handleLayoutChange(currentLayout)}
-              margin={[12, 12]}
+              layouts={layouts}
+              breakpoints={breakpoints}
+              cols={cols}
+              rowHeight={ROW_HEIGHT}
+              margin={GRID_MARGIN}
+              isDraggable={canEdit}
+              isResizable={canEdit}
+              compactType="vertical"
+              preventCollision={false}
+              // Wichtig: KEIN onLayoutChange für Persistenz. RGL feuert das
+              // auch bei Resize/Breakpoint-Wechsel — würden wir hier setzen,
+              // überschreiben wir das User-Layout mit einer Ableitung.
+              onBreakpointChange={onBreakpointChange}
+              onDragStop={(layout, oldItem, newItem) =>
+                commitUserLayoutChange(layout, oldItem, newItem)
+              }
+              onResizeStop={(layout, oldItem, newItem) =>
+                commitUserLayoutChange(layout, oldItem, newItem)
+              }
+              // useCSSTransforms ist default true — gut für Performance.
+              draggableCancel=".widget-no-drag"
             >
               {widgets.map((widget) => {
                 const def = widgetRegistry.get(widget.cardTypeKey);
                 const Component = def?.component;
                 return (
-                  <div key={widget.id} className="relative" style={{ overflow: "visible" }}>
-                    {Component ? (
-                      <Component
-                        widgetId={widget.id}
-                        config={widget.config}
-                        isEditing={isEditing}
-                      />
-                    ) : (
-                      <Card className="h-full flex items-center justify-center p-4">
-                        <span className="text-default-400 text-sm">
-                          Unknown widget: {widget.cardTypeKey}
-                        </span>
-                      </Card>
-                    )}
-                    {isEditing && (
+                  <div key={widget.id} className="dashboard-widget-shell">
+                    <div className="dashboard-widget-content">
+                      {Component ? (
+                        <Component
+                          widgetId={widget.id}
+                          config={widget.config}
+                          isEditing={canEdit}
+                        />
+                      ) : (
+                        <Card className="h-full flex items-center justify-center p-4">
+                          <span className="text-default-400 text-sm">
+                            Unknown widget: {widget.cardTypeKey}
+                          </span>
+                        </Card>
+                      )}
+                    </div>
+                    {canEdit && (
                       <button
                         onMouseDown={(e) => e.stopPropagation()}
                         onClick={() => removeWidget(widget.id)}
-                        className="absolute -top-2 -right-2 z-20 w-5 h-5 rounded-full bg-danger flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                        className="widget-remove-btn widget-no-drag"
                         title="Widget entfernen"
                       >
                         <X size={10} className="text-white" />
