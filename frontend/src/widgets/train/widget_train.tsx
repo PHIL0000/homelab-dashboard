@@ -301,35 +301,53 @@ function DelayBadge({ minutes }: { minutes: number | null }) {
 // ─── Train Row ────────────────────────────────────────────────────────────────
 function TrainRow({ train }: { train: TrainEntry }) {
   const isDelayed = (train.delayMinutes ?? 0) > 0;
+  const isCancelled = train.cancelled;
   const label = `${train.category} ${train.line || train.trainNo}`.trim();
   return (
-    <tr
-      className={`border-b border-default-100 last:border-0 ${
-        train.cancelled ? "opacity-40" : ""
-      }`}
-    >
+    <tr className="border-b border-default-100 last:border-0">
       {/* Zugnummer */}
       <td className="py-1 px-1.5">
-        <span className="text-sm leading-4 font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary whitespace-nowrap">
+        <span
+          className={`text-sm leading-4 font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap ${
+            isCancelled
+              ? "bg-default-100 text-default-400 line-through"
+              : "bg-primary/10 text-primary"
+          }`}
+        >
           {label || "—"}
         </span>
       </td>
       {/* Abfahrt */}
       <td className="py-1 px-1.5 whitespace-nowrap">
-        <div className="flex items-center gap-1">
-          <span className={`text-sm leading-4 tabular-nums font-semibold ${isDelayed ? "text-default-400 line-through" : ""}`}>
-            {train.plannedDep ?? "—"}
-          </span>
-          {isDelayed && (
-            <span className="text-sm leading-4 tabular-nums font-semibold text-orange-400">
-              {train.actualDep}
+        {isCancelled ? (
+          <div className="flex items-center gap-1.5">
+            <Chip size="sm" color="danger" variant="soft" className="text-xs">
+              Ausfall
+            </Chip>
+            <span className="text-sm leading-4 tabular-nums text-default-400 line-through">
+              {train.plannedDep ?? "—"}
             </span>
-          )}
-          <DelayBadge minutes={train.delayMinutes} />
-        </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            <span
+              className={`text-sm leading-4 tabular-nums font-semibold ${
+                isDelayed ? "text-default-400 line-through" : ""
+              }`}
+            >
+              {train.plannedDep ?? "—"}
+            </span>
+            {isDelayed && (
+              <span className="text-sm leading-4 tabular-nums font-semibold text-orange-400">
+                {train.actualDep}
+              </span>
+            )}
+            <DelayBadge minutes={train.delayMinutes} />
+          </div>
+        )}
       </td>
       {/* Ziel */}
-      <td className="py-1 px-1.5 max-w-[120px]">
+      <td className={`py-1 px-1.5 max-w-[120px] ${isCancelled ? "opacity-60" : ""}`}>
         <div className="flex items-center gap-1">
           <ArrowRight size={11} className="text-default-300 shrink-0" />
           <span className="text-sm leading-4 text-default-500 truncate">
@@ -338,7 +356,7 @@ function TrainRow({ train }: { train: TrainEntry }) {
         </div>
       </td>
       {/* Gleis */}
-      <td className="py-1 px-1.5 whitespace-nowrap">
+      <td className={`py-1 px-1.5 whitespace-nowrap ${isCancelled ? "opacity-60" : ""}`}>
         <span className="text-sm leading-4 text-default-400">
           {train.platform ? `Gl.${train.platform}` : "—"}
         </span>
@@ -548,14 +566,6 @@ function TrainWidget({
         )}
       </div>
 
-      {/* Cancelled indicator */}
-      {trains.some((t) => t.cancelled) && (
-        <div className="px-4 pb-2 flex items-center gap-1">
-          <Chip size="sm" color="danger" variant="soft" className="text-xs">
-            Ausfall
-          </Chip>
-        </div>
-      )}
     </Card>
   );
 }
