@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@heroui/react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, LogOut } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -70,45 +70,49 @@ export default function Account() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Tab Dropdown */}
         <div className="md:hidden relative px-4 pt-16 shrink-0">
-          <button
-            onClick={() => setMobileNavOpen((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-100"
-          >
-            <span className="font-medium">{tabTitles[activeTab]}</span>
-            <ChevronDown
-              size={16}
-              className={`transition-transform ${mobileNavOpen ? "rotate-180" : ""}`}
-            />
-          </button>
-          {mobileNavOpen && (
-            <div className="absolute top-[calc(100%-4px)] left-4 right-4 z-50 mt-1 rounded-lg bg-slate-800 border border-slate-700/50 shadow-xl overflow-hidden">
-              {(
-                [
-                  { id: "profile" as const, label: t("account.profile") },
-                  { id: "security" as const, label: t("account.security") },
-                  { id: "connections" as const, label: t("account.connections") },
-                ]
-              ).map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); setMobileNavOpen(false); }}
-                  className={`w-full text-left px-4 py-2.5 text-sm transition-all ${
-                    activeTab === tab.id
-                      ? "bg-[color-mix(in_srgb,var(--color-primary)_24%,transparent)] text-white font-medium"
-                      : "text-slate-400 hover:text-slate-100 hover:bg-slate-700/30"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
               <button
-                onClick={() => { logout(); setMobileNavOpen(false); }}
-                className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all border-t border-slate-700/50 mt-1"
+                onClick={() => setMobileNavOpen((v) => !v)}
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-100"
               >
-                {t("account.logout")}
+                <span className="font-medium">{tabTitles[activeTab]}</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${mobileNavOpen ? "rotate-180" : ""}`}
+                />
               </button>
+              {mobileNavOpen && (
+                <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 rounded-lg bg-slate-800 border border-slate-700/50 shadow-xl overflow-hidden">
+                  {(
+                    [
+                      { id: "profile" as const, label: t("account.profile") },
+                      { id: "security" as const, label: t("account.security") },
+                      { id: "connections" as const, label: t("account.connections") },
+                    ]
+                  ).map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); setMobileNavOpen(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-all ${
+                        activeTab === tab.id
+                          ? "bg-[color-mix(in_srgb,var(--color-primary)_24%,transparent)] text-white font-medium"
+                          : "text-slate-400 hover:text-slate-100 hover:bg-slate-700/30"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+            <button
+              onClick={() => logout()}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all text-sm font-medium"
+            >
+              <LogOut size={15} />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 p-4 md:p-6 overflow-y-auto">
