@@ -288,7 +288,6 @@ export default function Dashboard() {
           <LayoutGrid size={20} className="text-primary" />
           <div>
             <h1 className="page-title">Dashboard</h1>
-            <p className="page-subtitle">Your personal widget board</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

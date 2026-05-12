@@ -299,7 +299,70 @@ function DelayBadge({ minutes }: { minutes: number | null }) {
   return <span className={`text-xs font-bold ${color}`}>+{minutes}'</span>;
 }
 
-// ─── Train Row ────────────────────────────────────────────────────────────────
+// ─── Train Card (narrow layout) ───────────────────────────────────────────────
+
+function TrainCard({ train }: { train: TrainEntry }) {
+  const { t } = useLanguage();
+  const isDelayed = (train.delayMinutes ?? 0) > 0;
+  const isCancelled = train.cancelled;
+  const label = `${train.category} ${train.line || train.trainNo}`.trim();
+  return (
+    <div className={`py-1.5 border-b border-default-100 last:border-0 ${isCancelled ? "opacity-70" : ""}`}>
+      <div className="flex items-center gap-1.5">
+        <span
+          className={`text-xs font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shrink-0 ${
+            isCancelled
+              ? "bg-default-100 text-default-400 line-through"
+              : "bg-primary/10 text-primary"
+          }`}
+        >
+          {label || "—"}
+        </span>
+        <div className="flex items-center gap-1 flex-1 min-w-0">
+          <ArrowRight size={10} className="text-default-300 shrink-0" />
+          <span className="text-xs text-default-500 truncate">{train.destination ?? "—"}</span>
+        </div>
+        {train.platform && (
+          <span className="text-xs text-default-400 shrink-0">
+            {t("widget.train.platformPrefix")}{train.platform}
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-1 mt-0.5 pl-0.5">
+        {isCancelled ? (
+          <>
+            <Chip size="sm" color="danger" variant="soft" className="text-xs">
+              {t("widget.train.cancelled")}
+            </Chip>
+            <span className="text-xs tabular-nums text-default-400 line-through">
+              {train.plannedDep ?? "—"}
+            </span>
+          </>
+        ) : (
+          <>
+            <Clock size={10} className="text-default-300 shrink-0" />
+            <span
+              className={`text-xs tabular-nums font-semibold ${
+                isDelayed ? "text-default-400 line-through" : ""
+              }`}
+            >
+              {train.plannedDep ?? "—"}
+            </span>
+            {isDelayed && (
+              <span className="text-xs tabular-nums font-semibold text-orange-400">
+                {train.actualDep}
+              </span>
+            )}
+            <DelayBadge minutes={train.delayMinutes} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Train Row (wide table layout) ───────────────────────────────────────────
+
 function TrainRow({ train }: { train: TrainEntry }) {
   const { t } = useLanguage();
   const isDelayed = (train.delayMinutes ?? 0) > 0;
@@ -307,10 +370,9 @@ function TrainRow({ train }: { train: TrainEntry }) {
   const label = `${train.category} ${train.line || train.trainNo}`.trim();
   return (
     <tr className="border-b border-default-100 last:border-0">
-      {/* Zugnummer */}
       <td className="py-1 px-1.5">
         <span
-          className={`text-sm leading-4 font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap ${
+          className={`text-sm leading-4 font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap inline-block ${
             isCancelled
               ? "bg-default-100 text-default-400 line-through"
               : "bg-primary/10 text-primary"
@@ -319,10 +381,9 @@ function TrainRow({ train }: { train: TrainEntry }) {
           {label || "—"}
         </span>
       </td>
-      {/* Abfahrt */}
-      <td className="py-1 px-1.5 whitespace-nowrap">
+      <td className="py-1 px-1.5">
         {isCancelled ? (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 flex-wrap">
             <Chip size="sm" color="danger" variant="soft" className="text-xs">
               {t("widget.train.cancelled")}
             </Chip>
@@ -331,7 +392,7 @@ function TrainRow({ train }: { train: TrainEntry }) {
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
             <span
               className={`text-sm leading-4 tabular-nums font-semibold ${
                 isDelayed ? "text-default-400 line-through" : ""
@@ -348,17 +409,15 @@ function TrainRow({ train }: { train: TrainEntry }) {
           </div>
         )}
       </td>
-      {/* Ziel */}
-      <td className={`py-1 px-1.5 max-w-[120px] ${isCancelled ? "opacity-60" : ""}`}>
-        <div className="flex items-center gap-1">
+      <td className={`py-1 px-1.5 ${isCancelled ? "opacity-60" : ""}`}>
+        <div className="flex items-center gap-1 min-w-0">
           <ArrowRight size={11} className="text-default-300 shrink-0" />
-          <span className="text-sm leading-4 text-default-500 truncate">
+          <span className="text-sm leading-4 text-default-500 truncate min-w-0">
             {train.destination ?? "—"}
           </span>
         </div>
       </td>
-      {/* Gleis */}
-      <td className={`py-1 px-1.5 whitespace-nowrap ${isCancelled ? "opacity-60" : ""}`}>
+      <td className={`py-1 px-1.5 ${isCancelled ? "opacity-60" : ""}`}>
         <span className="text-sm leading-4 text-default-400">
           {train.platform ? `${t("widget.train.platformPrefix")}${train.platform}` : "—"}
         </span>
@@ -384,6 +443,18 @@ function TrainWidget({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isNarrow, setIsNarrow] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setIsNarrow(entry.contentRect.width < 340);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Keep local config in sync if parent rerenders (e.g. after hot reload)
   const configRef = useRef(config);
@@ -526,7 +597,7 @@ function TrainWidget({
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col px-3 pt-0.5 pb-0 overflow-hidden">
+      <div ref={contentRef} className="flex-1 flex flex-col px-3 pt-0.5 pb-0 overflow-hidden">
         {loading && trains.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <span className="text-default-300 text-xs animate-pulse">
@@ -551,19 +622,31 @@ function TrainWidget({
               {t("widget.train.noTrains")}
             </p>
           </div>
+        ) : isNarrow ? (
+          <div className="flex flex-col overflow-y-auto">
+            {trains.map((train) => (
+              <TrainCard key={train.id} train={train} />
+            ))}
+          </div>
         ) : (
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse table-fixed">
+            <colgroup>
+              <col className="w-[22%]" />
+              <col className="w-[30%]" />
+              <col className="w-[33%]" />
+              <col className="w-[15%]" />
+            </colgroup>
             <thead>
               <tr className="border-b border-default-200">
-                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">{t("widget.train.colTrain")}</th>
-                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">{t("widget.train.colDeparture")}</th>
-                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">{t("widget.train.colDestination")}</th>
-                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">{t("widget.train.colPlatform")}</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 truncate">{t("widget.train.colTrain")}</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 truncate">{t("widget.train.colDeparture")}</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 truncate">{t("widget.train.colDestination")}</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 truncate">{t("widget.train.colPlatform")}</th>
               </tr>
             </thead>
             <tbody>
-              {trains.map((t) => (
-                <TrainRow key={t.id} train={t} />
+              {trains.map((train) => (
+                <TrainRow key={train.id} train={train} />
               ))}
             </tbody>
           </table>

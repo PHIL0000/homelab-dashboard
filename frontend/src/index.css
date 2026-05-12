@@ -636,17 +636,11 @@ html.light {
   }
 }
 
-/* Sehr schmale Widgets: Buttons & Inputs werden kompakter, Tabellen
-   bekommen einen horizontalen Scroll als letzten Ausweg. */
+/* Sehr schmale Widgets: Buttons & Inputs werden kompakter. */
 @container widget (max-width: 260px) {
   .dashboard-widget-content button,
   .dashboard-widget-content [role="button"] {
     padding-inline: 0.5rem;
-  }
-  .dashboard-widget-content table {
-    display: block;
-    overflow-x: auto;
-    max-width: 100%;
   }
 }
 
