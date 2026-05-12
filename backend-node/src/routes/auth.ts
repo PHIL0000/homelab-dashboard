@@ -7,6 +7,7 @@ import {
   isMailConfigured,
   sendPasswordResetEmail,
   sendVerificationEmail,
+  verifyMailConnection,
 } from '../services/mail';
 
 declare global {
@@ -101,6 +102,33 @@ router.get('/setup-status', async (req, res) => {
 // Tell the frontend whether email-based flows are available
 router.get('/mail-status', async (_req, res) => {
   res.json({ enabled: isMailConfigured() });
+});
+
+// Diagnostic: verify SMTP connection + creds, and optionally send a test mail.
+// Use during setup to surface auth/TLS/DNS issues with the actual server error.
+// Example: POST /api/auth/mail-test { "to": "you@example.com" }
+router.post('/mail-test', async (req, res) => {
+  try {
+    if (!isMailConfigured()) {
+      return res.status(503).json({ error: 'SMTP is not configured on the server.' });
+    }
+    await verifyMailConnection();
+    const to = (req.body?.to || '').toString().trim();
+    if (to && EMAIL_RE.test(to)) {
+      await sendVerificationEmail(to, '000000', OTP_TTL_MINUTES);
+      return res.json({ ok: true, verified: true, sentTo: to });
+    }
+    res.json({ ok: true, verified: true });
+  } catch (err: any) {
+    console.error('mail-test failed:', err);
+    res.status(500).json({
+      error: err?.message || 'SMTP test failed',
+      code: err?.code,
+      command: err?.command,
+      responseCode: err?.responseCode,
+      response: err?.response,
+    });
+  }
 });
 
 // Send a fresh OTP to the given email. Overwrites any previous pending code.

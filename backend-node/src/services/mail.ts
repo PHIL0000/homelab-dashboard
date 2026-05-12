@@ -17,6 +17,7 @@ const buildConfigKey = () =>
     envStr('SMTP_PASS'),
     envStr('SMTP_SECURE'),
     envStr('SMTP_FROM'),
+    envStr('SMTP_TLS_REJECT_UNAUTHORIZED'),
   ].join('|');
 
 export const isMailConfigured = (): boolean =>
@@ -37,16 +38,20 @@ const getTransporter = (): Transporter => {
   const secure = secureEnv === 'true' || secureEnv === '1' || port === 465;
   const user = envStr('SMTP_USER');
 
+  // Default: full cert validation. Only opt-out via env if the user knowingly
+  // wants to accept self-signed certs (some homelab SMTP relays).
+  const rejectUnauthorized =
+    envStr('SMTP_TLS_REJECT_UNAUTHORIZED').toLowerCase() !== 'false';
+
   cachedTransporter = nodemailer.createTransport({
     host: envStr('SMTP_HOST'),
     port,
     secure,
     auth: user ? { user, pass: envStr('SMTP_PASS') } : undefined,
-    debug: true,
-    tls: {
-      ciphers: 'SSLv3',
-      rejectUnauthorized: false, // Allow self-signed certs; adjust as needed for your security requirements.
-    },
+    requireTLS: !secure, // For STARTTLS ports (587), force STARTTLS upgrade.
+    tls: { rejectUnauthorized },
+    logger: envStr('SMTP_DEBUG') === 'true',
+    debug: envStr('SMTP_DEBUG') === 'true',
   });
   lastConfigKey = configKey;
   return cachedTransporter;
@@ -66,42 +71,58 @@ const renderCodeEmail = (heading: string, intro: string, code: string, minutes: 
   </div>
 `;
 
-export const sendVerificationEmail = async (
-  email: string,
+const sendCodeMail = async (
+  to: string,
+  subject: string,
+  heading: string,
+  intro: string,
   code: string,
   minutes: number
 ): Promise<void> => {
   const transporter = getTransporter();
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from: envStr('SMTP_FROM'),
-    to: email,
-    subject: `Your ${dashboardName()} verification code`,
-    text: `Your verification code is ${code}. It expires in ${minutes} minutes.`,
-    html: renderCodeEmail(
-      'Verify your email',
-      `Use the code below to finish setting up your ${dashboardName()} account.`,
-      code,
-      minutes
-    ),
+    to,
+    subject,
+    text: `${heading}\n\nYour code is ${code}. It expires in ${minutes} minutes.`,
+    html: renderCodeEmail(heading, intro, code, minutes),
   });
+  // nodemailer returns the SMTP response and any rejected recipients.
+  // Log them so debugging "mail looks sent but never arrived" is possible
+  // from the backend container logs.
+  console.log(
+    `[mail] sent to=${to} messageId=${info.messageId} response=${info.response} accepted=${JSON.stringify(
+      info.accepted
+    )} rejected=${JSON.stringify(info.rejected)}`
+  );
+  if (info.rejected && info.rejected.length > 0) {
+    throw new Error(`Mail server rejected recipient(s): ${info.rejected.join(', ')}`);
+  }
 };
 
-export const sendPasswordResetEmail = async (
-  email: string,
-  code: string,
-  minutes: number
-): Promise<void> => {
+export const sendVerificationEmail = (email: string, code: string, minutes: number) =>
+  sendCodeMail(
+    email,
+    `Your ${dashboardName()} verification code`,
+    'Verify your email',
+    `Use the code below to finish setting up your ${dashboardName()} account.`,
+    code,
+    minutes
+  );
+
+export const sendPasswordResetEmail = (email: string, code: string, minutes: number) =>
+  sendCodeMail(
+    email,
+    `Your ${dashboardName()} password reset code`,
+    'Reset your password',
+    `We received a request to reset the password for your ${dashboardName()} account.`,
+    code,
+    minutes
+  );
+
+// Diagnostic helper: verify the SMTP connection + credentials without sending.
+// Useful for a /api/auth/mail-test endpoint or one-off scripts.
+export const verifyMailConnection = async (): Promise<void> => {
   const transporter = getTransporter();
-  await transporter.sendMail({
-    from: envStr('SMTP_FROM'),
-    to: email,
-    subject: `Your ${dashboardName()} password reset code`,
-    text: `Your password reset code is ${code}. It expires in ${minutes} minutes.`,
-    html: renderCodeEmail(
-      'Reset your password',
-      `We received a request to reset the password for your ${dashboardName()} account.`,
-      code,
-      minutes
-    ),
-  });
+  await transporter.verify();
 };

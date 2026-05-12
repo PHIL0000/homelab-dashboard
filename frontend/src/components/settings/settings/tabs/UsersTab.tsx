@@ -5,7 +5,7 @@ import { Button, Card, Input, Select, ListBox } from "@heroui/react";
 import { Camera, ChevronDown } from "lucide-react";
 import { showError, showSuccess } from "../../../../toast";
 import { API_BASE } from "@/lib/api";
-import EmailVerification, { isEmailFormatValid } from "@/components/auth/EmailVerification";
+import { useEmailVerification, isEmailFormatValid } from "@/components/auth/EmailVerification";
 
 interface UserData {
   id: string;
@@ -34,6 +34,7 @@ export default function UsersTab() {
   const [newRole, setNewRole] = useState("USER");
   const [newEmailToken, setNewEmailToken] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const newEmailVerification = useEmailVerification(newEmail, setNewEmailToken);
 
   // Edit State
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
@@ -45,6 +46,7 @@ export default function UsersTab() {
   const [editEmailOriginal, setEditEmailOriginal] = useState("");
   const [editEmailToken, setEditEmailToken] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const editEmailVerification = useEmailVerification(editEmail, setEditEmailToken);
 
   const newEmailEntered = newEmail.trim().length > 0;
   const newEmailBlocksSubmit =
@@ -243,18 +245,18 @@ export default function UsersTab() {
                 <label className="block text-sm font-medium text-slate-400 mb-1">
                   Email
                 </label>
-                <Input
-                  type="email"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  className="w-full"
-                />
-                <div className="mt-2">
-                  <EmailVerification
-                    email={newEmail}
-                    onTokenChange={setNewEmailToken}
+                <div className="flex gap-2 items-stretch">
+                  <Input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    className="flex-1"
                   />
+                  {newEmailVerification.sendButton}
                 </div>
+                {newEmailVerification.otpBlock && (
+                  <div className="mt-2">{newEmailVerification.otpBlock}</div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1">
@@ -364,19 +366,17 @@ export default function UsersTab() {
                 <label className="block text-sm font-medium text-slate-400 mb-1">
                   Email
                 </label>
-                <Input
-                  type="email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  className="w-full"
-                />
-                {editEmailChanged && editEmailEntered && (
-                  <div className="mt-2">
-                    <EmailVerification
-                      email={editEmail}
-                      onTokenChange={setEditEmailToken}
-                    />
-                  </div>
+                <div className="flex gap-2 items-stretch">
+                  <Input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="flex-1"
+                  />
+                  {editEmailChanged && editEmailEntered && editEmailVerification.sendButton}
+                </div>
+                {editEmailChanged && editEmailEntered && editEmailVerification.otpBlock && (
+                  <div className="mt-2">{editEmailVerification.otpBlock}</div>
                 )}
               </div>
               <div>

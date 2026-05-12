@@ -3,7 +3,7 @@ import { Button, Input, Card } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
 import { showError } from "@/toast";
 import { API_BASE } from "@/lib/api";
-import EmailVerification, { isEmailFormatValid } from "./EmailVerification";
+import { useEmailVerification, isEmailFormatValid } from "./EmailVerification";
 
 export default function Setup() {
   const [username, setUsername] = useState("");
@@ -13,6 +13,7 @@ export default function Setup() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailVerificationToken, setEmailVerificationToken] = useState<string | null>(null);
+  const verification = useEmailVerification(email, setEmailVerificationToken);
   const { login } = useAuth();
 
   const emailEntered = email.trim().length > 0;
@@ -117,18 +118,18 @@ export default function Setup() {
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Email
                 </label>
-                <Input
-                  type="email"
-                  placeholder="admin@homelab.local"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full"
-                />
+                <div className="flex gap-2 items-stretch">
+                  <Input
+                    type="email"
+                    placeholder="admin@homelab.local"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1"
+                  />
+                  {verification.sendButton}
+                </div>
               </div>
-              <EmailVerification
-                email={email}
-                onTokenChange={setEmailVerificationToken}
-              />
+              {verification.otpBlock}
             </div>
 
             <div>

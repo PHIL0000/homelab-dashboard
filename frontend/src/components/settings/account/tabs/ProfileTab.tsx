@@ -5,7 +5,7 @@ import { showError, showSuccess } from "@/toast";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { API_BASE } from "@/lib/api";
-import EmailVerification, { isEmailFormatValid } from "@/components/auth/EmailVerification";
+import { useEmailVerification, isEmailFormatValid } from "@/components/auth/EmailVerification";
 
 export default function ProfileTab() {
   const { t } = useLanguage();
@@ -19,6 +19,7 @@ export default function ProfileTab() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const emailVerification = useEmailVerification(email, setEmailToken);
 
   const originalEmail = (user?.email || "").trim().toLowerCase();
   const currentEmail = email.trim().toLowerCase();
@@ -197,19 +198,17 @@ export default function ProfileTab() {
             <label className="block text-sm font-medium text-slate-400 mb-1">
               {t("account.email")}
             </label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full"
-            />
-            {emailChanged && emailEntered && (
-              <div className="mt-2">
-                <EmailVerification
-                  email={email}
-                  onTokenChange={setEmailToken}
-                />
-              </div>
+            <div className="flex gap-2 items-stretch">
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1"
+              />
+              {emailChanged && emailEntered && emailVerification.sendButton}
+            </div>
+            {emailChanged && emailEntered && emailVerification.otpBlock && (
+              <div className="mt-2">{emailVerification.otpBlock}</div>
             )}
           </div>
           <Button
