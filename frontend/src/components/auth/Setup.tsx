@@ -3,6 +3,7 @@ import { Button, Input, Card } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
 import { showError } from "@/toast";
 import { API_BASE } from "@/lib/api";
+import EmailVerification, { isEmailFormatValid } from "./EmailVerification";
 
 export default function Setup() {
   const [username, setUsername] = useState("");
@@ -11,10 +12,16 @@ export default function Setup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailVerificationToken, setEmailVerificationToken] = useState<string | null>(null);
   const { login } = useAuth();
+
+  const emailEntered = email.trim().length > 0;
+  const emailValidFormat = isEmailFormatValid(email);
+  const emailBlocksSubmit = emailEntered && (!emailValidFormat || !emailVerificationToken);
 
   const handleSetup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (emailBlocksSubmit) return;
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/auth/setup`, {
@@ -24,8 +31,9 @@ export default function Setup() {
           username,
           firstName,
           lastName,
-          email,
+          email: emailEntered ? email : undefined,
           password,
+          emailVerificationToken: emailEntered ? emailVerificationToken : undefined,
         }),
       });
       const data = await res.json();
@@ -75,6 +83,7 @@ export default function Setup() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 minLength={3}
+                className="w-full"
               />
             </div>
 
@@ -103,15 +112,22 @@ export default function Setup() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Email
-              </label>
-              <Input
-                type="email"
-                placeholder="admin@homelab.local"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Email
+                </label>
+                <Input
+                  type="email"
+                  placeholder="admin@homelab.local"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <EmailVerification
+                email={email}
+                onTokenChange={setEmailVerificationToken}
               />
             </div>
 
@@ -126,6 +142,7 @@ export default function Setup() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
+                className="w-full"
               />
             </div>
 
@@ -133,7 +150,7 @@ export default function Setup() {
               fullWidth
               size="lg"
               type="submit"
-              isDisabled={loading}
+              isDisabled={loading || emailBlocksSubmit}
               className="mt-8 bg-gradient-to-r from-purple-600 to-pink-600 font-semibold text-white text-base shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 transition-all"
             >
               {loading ? "Creating Account..." : "Create Admin Account"}
