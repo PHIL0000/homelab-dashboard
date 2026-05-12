@@ -7,6 +7,7 @@ import type { Layout } from "react-grid-layout";
 import { Button, Card, Modal, Spinner, useOverlayState } from "@heroui/react";
 import { LayoutGrid, Lock, Unlock, Plus, X } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
+import { useLanguage } from "../../../context/LanguageContext";
 import { widgetRegistry, getWidgetDefinitions } from "../../../widgets/registry";
 import type {
   DashboardData,
@@ -42,6 +43,7 @@ function shouldEnableWidgetActions(isEditing: boolean): boolean {
 
 export default function Dashboard() {
   const { token } = useAuth();
+  const { t } = useLanguage();
 
   // ─── Persisted state (single source of truth) ──────────────────────────
   // baseLayout ist das User-Layout für 'lg' (12 cols). Alle responsiven
@@ -418,16 +420,22 @@ export default function Dashboard() {
                   <div className="grid grid-cols-2 gap-3">
                     {availableTypes.map((type) => {
                       const localDef = widgetRegistry.get(type.key);
+                      const displayName = localDef?.nameKey
+                        ? t(localDef.nameKey)
+                        : type.name;
+                      const displayDescription = localDef?.descriptionKey
+                        ? t(localDef.descriptionKey)
+                        : type.description;
                       return (
                         <button
                           key={type.id}
                           onClick={() => addWidget(type.key)}
                           className="text-left p-4 rounded-xl border border-default-200 hover:border-primary hover:bg-primary/5 transition-colors"
                         >
-                          <p className="font-medium text-sm">{type.name}</p>
-                          {type.description && (
+                          <p className="font-medium text-sm">{displayName}</p>
+                          {displayDescription && (
                             <p className="text-xs text-default-400 mt-1 line-clamp-2">
-                              {type.description}
+                              {displayDescription}
                             </p>
                           )}
                           {localDef && (

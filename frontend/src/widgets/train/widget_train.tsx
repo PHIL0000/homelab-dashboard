@@ -64,6 +64,7 @@ function StationSearchInput({
   placeholder: string;
   token: string;
 }) {
+  const { t } = useLanguage();
   const [query, setQuery] = useState(value?.name ?? "");
   const [results, setResults] = useState<Station[]>([]);
   const [open, setOpen] = useState(false);
@@ -106,14 +107,14 @@ function StationSearchInput({
         setResults(stations.slice(0, 8));
         setOpen(true);
       } catch (e) {
-        setSearchError(e instanceof Error ? e.message : "Suchfehler");
+        setSearchError(e instanceof Error ? e.message : t("widget.train.searchError"));
         setResults([]);
         setOpen(true); // open dropdown to show the error
       } finally {
         setLoading(false);
       }
     },
-    [token],
+    [token, t],
   );
 
   const handleInput = (val: string) => {
@@ -183,7 +184,7 @@ function StationSearchInput({
             <div className="px-3 py-2 text-xs text-red-500">{searchError}</div>
           ) : results.length === 0 ? (
             <div className="px-3 py-2 text-xs text-default-400">
-              Keine Bahnhöfe gefunden
+              {t("widget.train.noStations")}
             </div>
           ) : (
             results.map((s) => (
@@ -243,7 +244,7 @@ function ConfigPanel({
         <StationSearchInput
           value={stationA}
           onChange={setStationA}
-          placeholder="z.B. Stuttgart Hbf"
+          placeholder={t("widget.train.placeholderFrom")}
           token={token}
         />
       </div>
@@ -255,7 +256,7 @@ function ConfigPanel({
         <StationSearchInput
           value={stationB}
           onChange={setStationB}
-          placeholder="z.B. München Hbf"
+          placeholder={t("widget.train.placeholderTo")}
           token={token}
         />
         <p className="text-xs text-default-400 leading-tight">
@@ -300,6 +301,7 @@ function DelayBadge({ minutes }: { minutes: number | null }) {
 
 // ─── Train Row ────────────────────────────────────────────────────────────────
 function TrainRow({ train }: { train: TrainEntry }) {
+  const { t } = useLanguage();
   const isDelayed = (train.delayMinutes ?? 0) > 0;
   const isCancelled = train.cancelled;
   const label = `${train.category} ${train.line || train.trainNo}`.trim();
@@ -322,7 +324,7 @@ function TrainRow({ train }: { train: TrainEntry }) {
         {isCancelled ? (
           <div className="flex items-center gap-1.5">
             <Chip size="sm" color="danger" variant="soft" className="text-xs">
-              Ausfall
+              {t("widget.train.cancelled")}
             </Chip>
             <span className="text-sm leading-4 tabular-nums text-default-400 line-through">
               {train.plannedDep ?? "—"}
@@ -358,7 +360,7 @@ function TrainRow({ train }: { train: TrainEntry }) {
       {/* Gleis */}
       <td className={`py-1 px-1.5 whitespace-nowrap ${isCancelled ? "opacity-60" : ""}`}>
         <span className="text-sm leading-4 text-default-400">
-          {train.platform ? `Gl.${train.platform}` : "—"}
+          {train.platform ? `${t("widget.train.platformPrefix")}${train.platform}` : "—"}
         </span>
       </td>
     </tr>
@@ -373,6 +375,7 @@ function TrainWidget({
   isEditing,
 }: WidgetComponentProps) {
   const { token } = useAuth();
+  const { t } = useLanguage();
   const [config, setConfig] = useState<TrainConfig>(() =>
     parseConfig(initialConfig),
   );
@@ -418,18 +421,18 @@ function TrainWidget({
       if (!res.ok) {
         const err = await res
           .json()
-          .catch(() => ({ error: "Unbekannter Fehler" }));
+          .catch(() => ({ error: t("common.unknownError") }));
         throw new Error(err.error ?? `HTTP ${res.status}`);
       }
       const data = await res.json();
       setTrains(data.trains ?? []);
       setLastUpdated(new Date());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Fehler beim Laden");
+      setError(e instanceof Error ? e.message : t("widget.train.loadError"));
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   // Auto-refresh every 60 seconds
   useEffect(() => {
@@ -458,14 +461,14 @@ function TrainWidget({
       <Card className="h-full p-4 flex flex-col items-center justify-center gap-3">
         <Train size={32} className="text-default-300" />
         <p className="text-sm text-default-400 text-center">
-          Kein Bahnhof konfiguriert
+          {t("widget.train.notConfigured")}
         </p>
         <button
           type="button"
           onClick={() => setShowConfig(true)}
           className="text-xs px-3 py-1.5 rounded-lg border border-default-200 text-default-500 hover:bg-default-100 transition-colors"
         >
-          Konfigurieren
+          {t("widget.train.configureButton")}
         </button>
       </Card>
     );
@@ -513,7 +516,7 @@ function TrainWidget({
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => setShowConfig(true)}
               className="ml-1 text-default-400 hover:text-primary transition-colors"
-              title="Bahnhof ändern"
+              title={t("widget.train.changeStation")}
             >
               <Settings size={13} />
             </button>
@@ -526,7 +529,7 @@ function TrainWidget({
         {loading && trains.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <span className="text-default-300 text-xs animate-pulse">
-              Wird geladen…
+              {t("common.loading")}
             </span>
           </div>
         ) : error ? (
@@ -538,23 +541,23 @@ function TrainWidget({
               onClick={fetchTimetable}
               className="text-xs text-primary hover:underline"
             >
-              Erneut versuchen
+              {t("common.retry")}
             </button>
           </div>
         ) : trains.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-xs text-default-400 text-center">
-              Keine Züge in den nächsten Stunden
+              {t("widget.train.noTrains")}
             </p>
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-default-200">
-                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Zug</th>
-                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Abfahrt</th>
-                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Ziel</th>
-                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">Gleis</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">{t("widget.train.colTrain")}</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">{t("widget.train.colDeparture")}</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">{t("widget.train.colDestination")}</th>
+                <th className="py-1 px-1.5 text-xs font-medium text-default-400 whitespace-nowrap">{t("widget.train.colPlatform")}</th>
               </tr>
             </thead>
             <tbody>
@@ -574,9 +577,11 @@ function TrainWidget({
 
 export const widgetDef: WidgetDefinition = {
   key: "transport.db-timetable",
-  name: "DB Fahrplan",
+  name: "DB Timetable",
   description:
-    "Zeigt die nächsten 5 Abfahrten an einem Bahnhof oder auf einer Strecke, inkl. Verspätungen.",
+    "Shows the next 5 departures at a station or on a route, including delays.",
+  nameKey: "widget.train.name",
+  descriptionKey: "widget.train.description",
   icon: "Train",
   defaultW: 4,
   defaultH: 4,

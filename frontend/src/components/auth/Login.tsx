@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { Button, Input, Card } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { showError } from "@/toast";
 import { API_BASE } from "@/lib/api";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 
 export default function Login() {
+  const { t } = useLanguage();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,10 +28,10 @@ export default function Login() {
       if (res.ok) {
         login(data.token, data.user);
       } else {
-        showError(data.error || "Invalid credentials");
+        showError(data.error || t("auth.login.invalidCredentials"));
       }
     } catch (e) {
-      showError("Login failed. Please check connection.");
+      showError(t("auth.login.connError"));
     } finally {
       setLoading(false);
     }
@@ -76,11 +78,11 @@ export default function Login() {
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-[var(--color-textSecondary)] mb-2">
-                Username or Email
+                {t("auth.login.identifier")}
               </label>
               <Input
                 type="text"
-                placeholder="you@example.com"
+                placeholder={t("auth.login.identifierPlaceholder")}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
@@ -91,19 +93,19 @@ export default function Login() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-[var(--color-textSecondary)]">
-                  Password
+                  {t("auth.login.password")}
                 </label>
                 <button
                   type="button"
                   onClick={() => setForgotOpen(true)}
                   className="text-xs text-[var(--color-primary)] hover:underline"
                 >
-                  Forgot password?
+                  {t("auth.login.forgot")}
                 </button>
               </div>
               <Input
                 type="password"
-                placeholder="••••••••"
+                placeholder={t("auth.login.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -124,7 +126,7 @@ export default function Login() {
                   "0 0 24px color-mix(in srgb, var(--color-glow) 52%, transparent)",
               }}
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? t("auth.login.signingIn") : t("auth.login.signIn")}
             </Button>
           </form>
 
@@ -135,7 +137,7 @@ export default function Login() {
                 "color-mix(in srgb, var(--color-border) 72%, transparent)",
             }}
           >
-            🔐 Not Protected
+            {t("auth.login.notProtected")}
           </div>
         </Card>
       </div>

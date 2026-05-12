@@ -120,8 +120,10 @@ function ClockWidget({ config }: WidgetComponentProps) {
 
 export const widgetDef: WidgetDefinition = {
   key: "time.clock",
-  name: "Uhr & Datum",
-  description: "Zeigt die aktuelle Uhrzeit und das Datum an.",
+  name: "Clock & Date",
+  description: "Shows the current time and date.",
+  nameKey: "widget.clock.name",
+  descriptionKey: "widget.clock.description",
   icon: "Clock",
   defaultW: 3,
   defaultH: 3,
