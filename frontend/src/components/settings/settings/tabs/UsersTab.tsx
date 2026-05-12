@@ -446,23 +446,71 @@ export default function UsersTab() {
         <div className="text-slate-400">Loading users...</div>
       ) : (
         <Card className="bg-slate-900/50 border border-slate-700/50 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          {/* Card layout for narrow windows */}
+          <div className="md:hidden divide-y divide-border">
+            {users.map((u) => (
+              <div key={u.id} className="px-4 py-3 flex items-center gap-3 hover:bg-slate-800/50 transition-colors">
+                <div className="w-9 h-9 rounded-full bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-text flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {u.avatarUrl ? (
+                    <img src={u.avatarUrl} alt={u.username} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="font-bold text-sm">{u.username.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-text font-medium truncate">{u.username}</span>
+                    <span className={`px-2 py-0.5 text-xs rounded-full flex-shrink-0 ${u.role === "ADMIN" ? "bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-text" : "bg-green-500/20 text-green-400"}`}>
+                      {u.role}
+                    </span>
+                  </div>
+                  {(u.firstName || u.lastName) && (
+                    <p className="text-sm text-slate-400 truncate">
+                      {[u.firstName, u.lastName].filter(Boolean).join(" ")}
+                    </p>
+                  )}
+                  {u.email && <p className="text-sm text-slate-400 truncate">{u.email}</p>}
+                </div>
+                <div className="flex flex-col gap-1 flex-shrink-0">
+                  <Button
+                    onClick={() => startEditing(u)}
+                    className="text-purple-400 hover:text-purple-300 hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] px-3 py-1 rounded transition-colors text-sm !border-0 !border-transparent !ring-0 !shadow-none"
+                    variant="ghost"
+                  >
+                    Edit
+                  </Button>
+                  {currentUser?.id !== u.id.toString() && (
+                    <Button
+                      onClick={() => handleDeleteUser(u.id)}
+                      className="text-red-400 hover:text-red-500 hover:bg-red-500/10 px-3 py-1 rounded transition-colors text-sm !border-0 !border-transparent !ring-0 !shadow-none"
+                      variant="ghost"
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Table layout for wider windows */}
+          <div className="hidden md:block">
+            <table className="w-full text-left table-fixed">
               <thead>
                 <tr className="bg-slate-800 border-b border-slate-700/50">
-                  <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                  <th className="px-6 py-4 text-sm font-medium text-slate-400 w-[24%]">
                     User
                   </th>
-                  <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                  <th className="px-6 py-4 text-sm font-medium text-slate-400 w-[18%]">
                     Name
                   </th>
-                  <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                  <th className="px-6 py-4 text-sm font-medium text-slate-400 w-[22%]">
                     Email
                   </th>
-                  <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                  <th className="px-6 py-4 text-sm font-medium text-slate-400 w-[12%]">
                     Role
                   </th>
-                  <th className="px-6 py-4 text-sm font-medium text-slate-400 text-right">
+                  <th className="px-6 py-4 text-sm font-medium text-slate-400 text-right w-[24%]">
                     Actions
                   </th>
                 </tr>
@@ -473,8 +521,8 @@ export default function UsersTab() {
                     key={u.id}
                     className="hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                    <td className="px-6 py-4 max-w-0">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] text-text flex items-center justify-center overflow-hidden flex-shrink-0">
                           {u.avatarUrl ? (
                             <img
@@ -488,17 +536,18 @@ export default function UsersTab() {
                             </span>
                           )}
                         </div>
-                        <span className="text-text font-medium">
+                        <span className="text-text font-medium truncate">
                           {u.username}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-400">
-                      {[u.firstName, u.lastName].filter(Boolean).join(" ") ||
-                        "-"}
+                    <td className="px-6 py-4 text-slate-400 max-w-0">
+                      <span className="block truncate">
+                        {[u.firstName, u.lastName].filter(Boolean).join(" ") || "-"}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-400">
-                      {u.email || "-"}
+                    <td className="px-6 py-4 text-slate-400 max-w-0">
+                      <span className="block truncate">{u.email || "-"}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span
@@ -507,11 +556,11 @@ export default function UsersTab() {
                         {u.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       <div className="flex justify-end gap-2">
                         <Button
                           onClick={() => startEditing(u)}
-                          className="text-text-secondary hover:text-text hover:bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] px-3 py-1 rounded transition-colors text-sm !border-0 !border-transparent !ring-0 !shadow-none"
+                          className="text-purple-400 hover:text-purple-300 hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] px-3 py-1 rounded transition-colors text-sm !border-0 !border-transparent !ring-0 !shadow-none"
                           variant="ghost"
                         >
                           Edit
