@@ -4,6 +4,7 @@ model User {
   firstName     String?
   lastName      String?
   email         String?         @unique
+  emailVerified Boolean         @default(false)
   avatarUrl     String?
   passwordHash  String
   role          UserRole        @default(USER)
@@ -12,6 +13,33 @@ model User {
 
   dashboards    UserDashboard[]
   settings      UserSettings?
+  passwordResets PasswordReset[]
+}
+
+// OTP for verifying a freshly entered email address (not tied to a user yet).
+// Same email may have only one active row at a time; new requests overwrite.
+model EmailVerification {
+  id          String   @id @default(uuid()) @db.Uuid
+  email       String   @unique
+  codeHash    String
+  expiresAt   DateTime
+  attempts    Int      @default(0)
+  verifiedAt  DateTime?
+  consumeToken String? @unique
+  createdAt   DateTime @default(now())
+}
+
+// OTP for resetting a user's password. Tied to a user via userId.
+model PasswordReset {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash    String
+  expiresAt   DateTime
+  attempts    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
 }
 
 model UserSettings {

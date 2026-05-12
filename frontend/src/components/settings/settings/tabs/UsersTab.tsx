@@ -5,6 +5,7 @@ import { Button, Card, Input, Select, ListBox } from "@heroui/react";
 import { Camera, ChevronDown } from "lucide-react";
 import { showError, showSuccess } from "../../../../toast";
 import { API_BASE } from "@/lib/api";
+import { useEmailVerification, isEmailFormatValid } from "@/components/auth/EmailVerification";
 
 interface UserData {
   id: string;
@@ -31,7 +32,9 @@ export default function UsersTab() {
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState("USER");
+  const [newEmailToken, setNewEmailToken] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const newEmailVerification = useEmailVerification(newEmail, setNewEmailToken);
 
   // Edit State
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
@@ -40,7 +43,22 @@ export default function UsersTab() {
   const [editLastName, setEditLastName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editAvatarUrl, setEditAvatarUrl] = useState("");
+  const [editEmailOriginal, setEditEmailOriginal] = useState("");
+  const [editEmailToken, setEditEmailToken] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const editEmailVerification = useEmailVerification(editEmail, setEditEmailToken);
+
+  const newEmailEntered = newEmail.trim().length > 0;
+  const newEmailBlocksSubmit =
+    newEmailEntered && (!isEmailFormatValid(newEmail) || !newEmailToken);
+
+  const editEmailChanged =
+    editEmail.trim().toLowerCase() !== editEmailOriginal.trim().toLowerCase();
+  const editEmailEntered = editEmail.trim().length > 0;
+  const editEmailBlocksSubmit =
+    editEmailChanged &&
+    editEmailEntered &&
+    (!isEmailFormatValid(editEmail) || !editEmailToken);
 
   const fetchUsers = async () => {
     if (!token) return;
@@ -66,6 +84,7 @@ export default function UsersTab() {
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
+    if (newEmailBlocksSubmit) return;
     try {
       setIsAdding(true);
       const res = await fetch(`${API_BASE}/users`, {
@@ -78,9 +97,10 @@ export default function UsersTab() {
           username: newUsername,
           firstName: newFirstName,
           lastName: newLastName,
-          email: newEmail,
+          email: newEmailEntered ? newEmail : undefined,
           password: newPassword,
           role: newRole,
+          emailVerificationToken: newEmailEntered ? newEmailToken : undefined,
         }),
       });
 
@@ -95,6 +115,7 @@ export default function UsersTab() {
       setNewEmail("");
       setNewPassword("");
       setNewRole("USER");
+      setNewEmailToken(null);
       showSuccess("User created successfully!");
     } catch (err: any) {
       showError(err.message);
@@ -106,6 +127,7 @@ export default function UsersTab() {
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token || !editingUser) return;
+    if (editEmailBlocksSubmit) return;
     try {
       setIsUpdating(true);
       const res = await fetch(
@@ -122,6 +144,9 @@ export default function UsersTab() {
             lastName: editLastName,
             email: editEmail,
             avatarUrl: editAvatarUrl,
+            ...(editEmailChanged && editEmailEntered
+              ? { emailVerificationToken: editEmailToken }
+              : {}),
           }),
         },
       );
@@ -131,6 +156,8 @@ export default function UsersTab() {
 
       setUsers(users.map((u) => (u.id === editingUser.id ? data : u)));
       setEditingUser(null);
+      setEditEmailToken(null);
+      setEditEmailOriginal("");
       showSuccess("User updated successfully!");
     } catch (err: any) {
       showError(err.message);
@@ -163,12 +190,16 @@ export default function UsersTab() {
     setEditFirstName(user.firstName || "");
     setEditLastName(user.lastName || "");
     setEditEmail(user.email || "");
+    setEditEmailOriginal(user.email || "");
+    setEditEmailToken(null);
     setEditAvatarUrl(user.avatarUrl || "");
     setShowAddForm(false);
   };
 
   const cancelEditing = () => {
     setEditingUser(null);
+    setEditEmailToken(null);
+    setEditEmailOriginal("");
   };
 
   return (
@@ -197,7 +228,7 @@ export default function UsersTab() {
           <h4 className="text-lg font-bold text-text mb-4">Create New User</h4>
           <form onSubmit={handleAddUser} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-400 mb-1">
                   Username *
                 </label>
@@ -210,16 +241,22 @@ export default function UsersTab() {
                   minLength={3}
                 />
               </div>
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-400 mb-1">
                   Email
                 </label>
-                <Input
-                  type="email"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  className="w-full"
-                />
+                <div className="flex gap-2 items-stretch">
+                  <Input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    className="flex-1"
+                  />
+                  {newEmailVerification.sendButton}
+                </div>
+                {newEmailVerification.otpBlock && (
+                  <div className="mt-2">{newEmailVerification.otpBlock}</div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1">
@@ -285,7 +322,7 @@ export default function UsersTab() {
               </div>
             </div>
             <Button
-              isDisabled={isAdding}
+              isDisabled={isAdding || newEmailBlocksSubmit}
               type="submit"
               className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168,_85,_247,_0.5)] transition-all disabled:opacity-50 mt-4"
               variant="primary"
@@ -312,7 +349,7 @@ export default function UsersTab() {
           </div>
           <form onSubmit={handleUpdateUser} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-400 mb-1">
                   Username *
                 </label>
@@ -325,16 +362,22 @@ export default function UsersTab() {
                   minLength={3}
                 />
               </div>
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-400 mb-1">
                   Email
                 </label>
-                <Input
-                  type="email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  className="w-full"
-                />
+                <div className="flex gap-2 items-stretch">
+                  <Input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="flex-1"
+                  />
+                  {editEmailChanged && editEmailEntered && editEmailVerification.sendButton}
+                </div>
+                {editEmailChanged && editEmailEntered && editEmailVerification.otpBlock && (
+                  <div className="mt-2">{editEmailVerification.otpBlock}</div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1">
@@ -388,7 +431,7 @@ export default function UsersTab() {
               </div>
             </div>
             <Button
-              isDisabled={isUpdating}
+              isDisabled={isUpdating || editEmailBlocksSubmit}
               type="submit"
               className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168,_85,_247,_0.5)] transition-all disabled:opacity-50 mt-4"
               variant="primary"

@@ -105,7 +105,7 @@ function App() {
         </main>
 
         <Modal state={accountModalState}>
-          <Modal.Backdrop className="bg-black/60 backdrop-blur-sm">
+          <Modal.Backdrop className="bg-black/60 backdrop-blur-sm" isDismissable={false}>
             <Modal.Container placement="center">
               <Modal.Dialog className="!max-w-4xl !w-[calc(100vw-2rem)] bg-background rounded-3xl border border-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] shadow-[0_0_50px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto">
                 <Modal.CloseTrigger className="absolute top-6 right-6 z-10" />
@@ -118,7 +118,7 @@ function App() {
         </Modal>
 
         <Modal state={settingsModalState}>
-          <Modal.Backdrop className="bg-black/60 backdrop-blur-sm">
+          <Modal.Backdrop className="bg-black/60 backdrop-blur-sm" isDismissable={false}>
             <Modal.Container placement="center">
               <Modal.Dialog className="!max-w-4xl !w-[calc(100vw-2rem)] bg-background rounded-3xl border border-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] shadow-[0_0_50px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto">
                 <Modal.CloseTrigger className="absolute top-6 right-6 z-10" />

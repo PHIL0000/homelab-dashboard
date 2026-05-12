@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/routes/auth.ts","./src/routes/dashboard.ts","./src/routes/db_timetable.ts","./src/routes/infrastructure.ts","./src/routes/settings.ts","./src/routes/user_settings.ts","./src/routes/users.ts","./src/routes/weather_station.ts","./src/services/mail.ts","./src/services/pingservice.ts"],"version":"6.0.2"}

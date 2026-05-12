@@ -1,10 +1,13 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { authenticate } from './auth';
+import { authenticate, consumeEmailVerification } from './auth';
 
 const router = Router();
 const prisma: any = new PrismaClient();
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 const defaultSettings = {
   dashboardName: 'Homelab',
@@ -21,6 +24,7 @@ const toPublicUser = (user: any) => ({
   firstName: user.firstName,
   lastName: user.lastName,
   email: user.email,
+  emailVerified: user.emailVerified,
   avatarUrl: user.avatarUrl,
   role: user.role,
   createdAt: user.createdAt,
@@ -55,8 +59,8 @@ router.post('/', authenticate, async (req: any, res: any) => {
     if (req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: "Forbidden: Admins only" });
     }
-    const { username, firstName, lastName, email, password, role } = req.body;
-    
+    const { username, firstName, lastName, email, password, role, emailVerificationToken } = req.body;
+
     if (!username || !password) {
       return res.status(400).json({ error: "Username and password are required" });
     }
@@ -67,9 +71,26 @@ router.post('/', authenticate, async (req: any, res: any) => {
       return res.status(400).json({ error: "Password must be at least 8 characters" });
     }
 
+    let emailVerified = false;
+    let normalizedEmail: string | null = null;
+    if (email) {
+      if (!EMAIL_RE.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+      }
+      normalizedEmail = normalizeEmail(email);
+      if (!emailVerificationToken) {
+        return res.status(400).json({ error: 'Email must be verified before account creation' });
+      }
+      const ok = await consumeEmailVerification(normalizedEmail, emailVerificationToken);
+      if (!ok) {
+        return res.status(400).json({ error: 'Email verification token is invalid or expired' });
+      }
+      emailVerified = true;
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
     const userRole = role === 'ADMIN' ? 'ADMIN' : 'USER';
-    
+
     // Check if avatarUrl was provided in the body
     const { avatarUrl } = req.body;
 
@@ -78,7 +99,8 @@ router.post('/', authenticate, async (req: any, res: any) => {
         username,
         firstName: firstName || null,
         lastName: lastName || null,
-        email: email || null,
+        email: normalizedEmail,
+        emailVerified,
         passwordHash,
         role: userRole,
         avatarUrl: avatarUrl || null,
@@ -105,7 +127,8 @@ router.put('/:id', authenticate, async (req: any, res: any) => {
       firstName,
       lastName,
       email,
-      avatarUrl
+      avatarUrl,
+      emailVerificationToken
     } = req.body;
 
     const settingsFields = ['dashboardName', 'timezone', 'timeFormat', 'dateFormat', 'pageVisibility', 'oledAccentRgb'];
@@ -115,10 +138,38 @@ router.put('/:id', authenticate, async (req: any, res: any) => {
         error: 'Settings fields moved to /api/user-settings/:id. Update profile data via /api/users/:id only.'
       });
     }
-    
+
     // Only allow if user is updating themselves, or if the requester is an ADMIN
     if (req.user.userId !== targetUserId && req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: "Forbidden: You do not have permission to modify this user" });
+    }
+
+    // If the email is changing, require a fresh OTP verification for the new value.
+    let emailUpdate: { email: string | null; emailVerified: boolean } | null = null;
+    if (email !== undefined) {
+      const existing = await prisma.user.findUnique({ where: { id: targetUserId } });
+      if (!existing) return res.status(404).json({ error: 'User not found' });
+
+      const normalizedNew = email ? normalizeEmail(email) : null;
+      const currentEmail = existing.email ? normalizeEmail(existing.email) : null;
+
+      if (normalizedNew !== currentEmail) {
+        if (normalizedNew === null) {
+          emailUpdate = { email: null, emailVerified: false };
+        } else {
+          if (!EMAIL_RE.test(normalizedNew)) {
+            return res.status(400).json({ error: 'Invalid email format' });
+          }
+          if (!emailVerificationToken) {
+            return res.status(400).json({ error: 'Email must be verified before it can be changed' });
+          }
+          const ok = await consumeEmailVerification(normalizedNew, emailVerificationToken);
+          if (!ok) {
+            return res.status(400).json({ error: 'Email verification token is invalid or expired' });
+          }
+          emailUpdate = { email: normalizedNew, emailVerified: true };
+        }
+      }
     }
 
     const updatedUser = await prisma.user.update({
@@ -127,7 +178,7 @@ router.put('/:id', authenticate, async (req: any, res: any) => {
         ...(username !== undefined && { username }),
         ...(firstName !== undefined && { firstName }),
         ...(lastName !== undefined && { lastName }),
-        ...(email !== undefined && { email }),
+        ...(emailUpdate !== null && emailUpdate),
         ...(avatarUrl !== undefined && { avatarUrl })
       },
       include: { settings: true }

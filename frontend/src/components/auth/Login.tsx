@@ -3,11 +3,13 @@ import { Button, Input, Card } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
 import { showError } from "@/toast";
 import { API_BASE } from "@/lib/api";
+import ForgotPasswordModal from "./ForgotPasswordModal";
 
 export default function Login() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
   const { login } = useAuth();
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
@@ -87,9 +89,18 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--color-textSecondary)] mb-2">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-[var(--color-textSecondary)]">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setForgotOpen(true)}
+                  className="text-xs text-[var(--color-primary)] hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <Input
                 type="password"
                 placeholder="••••••••"
@@ -128,6 +139,12 @@ export default function Login() {
           </div>
         </Card>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={forgotOpen}
+        onOpenChange={setForgotOpen}
+        initialIdentifier={identifier}
+      />
     </div>
   );
 }
