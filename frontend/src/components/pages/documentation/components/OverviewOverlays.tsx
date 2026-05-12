@@ -1,5 +1,5 @@
-import DeleteWarning from './DeleteWarning';
-import DocPreviewModal from './DocPreviewModal';
+import DeleteWarning from "./DeleteWarning";
+import DocPreviewModal from "./DocPreviewModal";
 
 type OverviewOverlaysProps = {
   pendingHardwareDelete: {

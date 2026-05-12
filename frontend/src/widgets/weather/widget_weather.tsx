@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { WidgetDefinition, WidgetComponentProps } from "../types";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { API_BASE } from "@/lib/api";
 
 const getWeatherIcon = (icon?: string | null, condition?: string | null) => {
@@ -61,6 +62,7 @@ interface WeatherData {
 
 function WeatherWidget(_props: WidgetComponentProps) {
   const { token } = useAuth();
+  const { t } = useLanguage();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +123,7 @@ function WeatherWidget(_props: WidgetComponentProps) {
     return (
       <Card className="h-full p-4 flex items-center justify-center">
         <span className="text-default-400 text-sm animate-pulse">
-          Wetter wird geladen...
+          {t("weather.loading")}
         </span>
       </Card>
     );
@@ -132,10 +134,10 @@ function WeatherWidget(_props: WidgetComponentProps) {
       <Card className="h-full p-4 flex flex-col items-center justify-center gap-2">
         <Cloud size={32} className="text-default-300" />
         <p className="text-default-400 text-sm text-center">
-          {error || "Keine Wetterdaten"}
+          {error || t("weather.unknown")}
         </p>
         <p className="text-default-300 text-xs text-center">
-          Wetterstation in den Einstellungen konfigurieren
+          {t("widget.weather.configureHint")}
         </p>
       </Card>
     );
@@ -164,7 +166,7 @@ function WeatherWidget(_props: WidgetComponentProps) {
         <div className="flex items-center gap-1.5 min-w-0">
           <MapPin size={12} className="text-default-400 shrink-0" />
           <span className="text-sm font-medium text-default-600 truncate">
-            {weather.city || "Unbekannt"}
+            {weather.city || t("weather.cityUnknown")}
           </span>
         </div>
       </div>
@@ -218,12 +220,14 @@ function WeatherWidget(_props: WidgetComponentProps) {
 
 export const widgetDef: WidgetDefinition = {
   key: "weather.current",
-  name: "Aktuelles Wetter",
+  name: "Current Weather",
   description:
-    "Zeigt Temperatur, Wetterbedingungen, Wind und Luftfeuchtigkeit an.",
+    "Shows temperature, weather conditions, wind, and humidity.",
+  nameKey: "widget.weather.name",
+  descriptionKey: "widget.weather.description",
   icon: "Cloud",
-  defaultW: 3,
-  defaultH: 3,
+  defaultW: 2,
+  defaultH: 2,
   minW: 2,
   minH: 2,
   defaultConfig: {},

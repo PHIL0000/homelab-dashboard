@@ -1,20 +1,30 @@
 import { useState, type FormEvent } from "react";
 import { Button, Input, Card } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { showError } from "@/toast";
-import { API_BASE } from '@/lib/api';
+import { API_BASE } from "@/lib/api";
+import { useEmailVerification, isEmailFormatValid } from "./EmailVerification";
 
 export default function Setup() {
+  const { t } = useLanguage();
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailVerificationToken, setEmailVerificationToken] = useState<string | null>(null);
+  const verification = useEmailVerification(email, setEmailVerificationToken);
   const { login } = useAuth();
+
+  const emailEntered = email.trim().length > 0;
+  const emailValidFormat = isEmailFormatValid(email);
+  const emailBlocksSubmit = emailEntered && (!emailValidFormat || !emailVerificationToken);
 
   const handleSetup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (emailBlocksSubmit) return;
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/auth/setup`, {
@@ -24,8 +34,9 @@ export default function Setup() {
           username,
           firstName,
           lastName,
-          email,
+          email: emailEntered ? email : undefined,
           password,
+          emailVerificationToken: emailEntered ? emailVerificationToken : undefined,
         }),
       });
       const data = await res.json();
@@ -36,7 +47,7 @@ export default function Setup() {
         showError(data.error);
       }
     } catch (e) {
-      showError("Setup failed. Please check connection.");
+      showError(t("auth.setup.connError"));
     } finally {
       setLoading(false);
     }
@@ -53,9 +64,9 @@ export default function Setup() {
             </div>
           </div>
           <div>
-            <h1 className="text-4xl font-bold text-white">Welcome!</h1>
+            <h1 className="text-4xl font-bold text-white">{t("auth.setup.welcome")}</h1>
             <p className="mt-2 text-slate-400">
-              Let's set up your admin account
+              {t("auth.setup.subtitle")}
             </p>
           </div>
         </div>
@@ -66,66 +77,75 @@ export default function Setup() {
           <form onSubmit={handleSetup} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Username *
+                {t("auth.setup.usernameLabel")}
               </label>
               <Input
                 type="text"
-                placeholder="admin"
+                placeholder={t("auth.setup.usernamePlaceholder")}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 minLength={3}
+                className="w-full"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  First Name
+                  {t("auth.setup.firstName")}
                 </label>
                 <Input
                   type="text"
-                  placeholder="John"
+                  placeholder={t("auth.setup.firstNamePlaceholder")}
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Last Name
+                  {t("auth.setup.lastName")}
                 </label>
                 <Input
                   type="text"
-                  placeholder="Doe"
+                  placeholder={t("auth.setup.lastNamePlaceholder")}
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Email
-              </label>
-              <Input
-                type="email"
-                placeholder="admin@homelab.local"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  {t("auth.setup.email")}
+                </label>
+                <div className="flex gap-2 items-stretch">
+                  <Input
+                    type="email"
+                    placeholder={t("auth.setup.emailPlaceholder")}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1"
+                  />
+                  {verification.sendButton}
+                </div>
+              </div>
+              {verification.otpBlock}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Password *
+                {t("auth.setup.passwordLabel")}
               </label>
               <Input
                 type="password"
-                placeholder="••••••••"
+                placeholder={t("auth.login.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
+                className="w-full"
               />
             </div>
 
@@ -133,15 +153,15 @@ export default function Setup() {
               fullWidth
               size="lg"
               type="submit"
-              isDisabled={loading}
+              isDisabled={loading || emailBlocksSubmit}
               className="mt-8 bg-gradient-to-r from-purple-600 to-pink-600 font-semibold text-white text-base shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 transition-all"
             >
-              {loading ? "Creating Account..." : "Create Admin Account"}
+              {loading ? t("auth.setup.creating") : t("auth.setup.createAccount")}
             </Button>
           </form>
 
           <div className="mt-6 border-t border-slate-700/50 pt-6 text-center text-xs text-slate-500">
-            🔐 Your account will be the system administrator
+            {t("auth.setup.adminNotice")}
           </div>
         </Card>
       </div>

@@ -19,6 +19,13 @@ router.get('/', async (req, res) => {
       });
     }
 
+    if (settings.haDomain === 'https://homeassistant.local:8123') {
+      settings = await prisma.instanceSettings.update({
+        where: { id: 1 },
+        data: { haDomain: 'http://homeassistant.local:8123' },
+      });
+    }
+
     res.json(settings);
   } catch (error) {
     console.error('Error fetching settings:', error);
@@ -38,7 +45,7 @@ router.put('/', async (req, res) => {
       },
       create: {
         id: 1,
-        haDomain: haDomain ?? 'https://homeassistant.local:8123',
+        haDomain: haDomain ?? 'http://homeassistant.local:8123',
       },
     });
 

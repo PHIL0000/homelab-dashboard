@@ -11,7 +11,7 @@ import {
   CloudMoon,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { API_BASE } from '@/lib/api';
+import { API_BASE } from "@/lib/api";
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 

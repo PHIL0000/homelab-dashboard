@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Button, Card } from '@heroui/react';
-import { getStorageInterfaceLabel, getStorageTypeLabel } from './AddStorage';
+import { useMemo, useState } from "react";
+import { Button, Card } from "@heroui/react";
+import { getStorageInterfaceLabel, getStorageTypeLabel } from "./AddStorage";
 
 const SOFTWARE_TYPE_LABELS: Record<string, string> = {
   DOCKER_CONTAINER: 'Docker Container',

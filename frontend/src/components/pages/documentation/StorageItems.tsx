@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Button, Card } from '@heroui/react';
-import { useAuth } from '@/context/AuthContext';
-import { showError, showSuccess } from '../../../toast';
-import AddStorage, { getStorageTypeLabel, type StorageFormValues } from './components/AddStorage';
-import EditStorage from './components/EditStorage';
-import { API_BASE as _apiBase } from '@/lib/api';
+import { useState, useEffect, useMemo } from "react";
+import { Button, Card } from "@heroui/react";
+import { useAuth } from "@/context/AuthContext";
+import { showError, showSuccess } from "../../../toast";
+import AddStorage, { getStorageTypeLabel, type StorageFormValues } from "./components/AddStorage";
+import EditStorage from "./components/EditStorage";
+import { API_BASE as _apiBase } from "@/lib/api";
 
 const API_BASE = `${_apiBase}/infrastructure`;
 const DEFAULT_STORAGE_TYPE = 'SSD';

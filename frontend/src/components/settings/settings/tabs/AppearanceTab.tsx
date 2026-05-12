@@ -5,7 +5,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { showError, showSuccess } from "../../../../toast";
-import { API_BASE } from '@/lib/api';
+import { API_BASE } from "@/lib/api";
 
 const DEFAULT_OLED_RGB = { r: 126, g: 34, b: 206 };
 

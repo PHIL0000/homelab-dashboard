@@ -1,9 +1,11 @@
-import { showError, showSuccess } from '../../../../toast';
 import { useState, useEffect, useRef } from "react";
-import { Button, Card, Input, Avatar } from "@heroui/react";
+import { Avatar, Button, Card, Input, Spinner } from "@heroui/react";
+import { Pencil } from "lucide-react";
+import { showError, showSuccess } from "@/toast";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
-import { API_BASE } from '@/lib/api';
+import { API_BASE } from "@/lib/api";
+import { useEmailVerification, isEmailFormatValid } from "@/components/auth/EmailVerification";
 
 export default function ProfileTab() {
   const { t } = useLanguage();
@@ -13,9 +15,18 @@ export default function ProfileTab() {
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [lastName, setLastName] = useState(user?.lastName || "");
   const [email, setEmail] = useState(user?.email || "");
+  const [emailToken, setEmailToken] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const emailVerification = useEmailVerification(email, setEmailToken);
+
+  const originalEmail = (user?.email || "").trim().toLowerCase();
+  const currentEmail = email.trim().toLowerCase();
+  const emailChanged = currentEmail !== originalEmail;
+  const emailEntered = currentEmail.length > 0;
+  const emailBlocksSubmit =
+    emailChanged && emailEntered && (!isEmailFormatValid(email) || !emailToken);
 
   useEffect(() => {
     if (user) {
@@ -23,11 +34,13 @@ export default function ProfileTab() {
       setFirstName(user.firstName || "");
       setLastName(user.lastName || "");
       setEmail(user.email || "");
+      setEmailToken(null);
     }
   }, [user]);
 
   const handleSave = async () => {
     if (!user || !token) return;
+    if (emailBlocksSubmit) return;
 
     setIsSaving(true);
     try {
@@ -39,7 +52,13 @@ export default function ProfileTab() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ username, firstName, lastName, email }),
+          body: JSON.stringify({
+            username,
+            firstName,
+            lastName,
+            email,
+            ...(emailChanged && emailEntered ? { emailVerificationToken: emailToken } : {}),
+          }),
         },
       );
 
@@ -50,6 +69,7 @@ export default function ProfileTab() {
       }
 
       updateUser(data);
+      setEmailToken(null);
       showSuccess("Profile updated successfully!");
     } catch (error: any) {
       showError(error.message);
@@ -178,16 +198,22 @@ export default function ProfileTab() {
             <label className="block text-sm font-medium text-slate-400 mb-1">
               {t("account.email")}
             </label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full"
-            />
+            <div className="flex gap-2 items-stretch">
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1"
+              />
+              {emailChanged && emailEntered && emailVerification.sendButton}
+            </div>
+            {emailChanged && emailEntered && emailVerification.otpBlock && (
+              <div className="mt-2">{emailVerification.otpBlock}</div>
+            )}
           </div>
           <Button
             onClick={handleSave}
-            isDisabled={isSaving}
+            isDisabled={isSaving || emailBlocksSubmit}
             className="text-sm px-3 py-2 rounded-lg bg-purple-600 text-white font-medium hover:shadow-[0_0_15px_rgba(168,_85,_247,_0.5)] transition-all disabled:opacity-50"
           >
             {isSaving ? "Saving..." : t("account.saveChanges")}
@@ -219,13 +245,11 @@ export default function ProfileTab() {
               </Avatar.Fallback>
             </Avatar>
             <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5V19a1 1 0 001 1h16a1 1 0 001-1v-2.5M16.5 3.5a2.121 2.121 0 013 3L7 19H4v-3L16.5 3.5z" />
-              </svg>
+              <Pencil className="w-6 h-6 text-white" />
             </div>
             {isUploadingAvatar && (
               <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <Spinner size="sm" className="text-white" />
               </div>
             )}
           </button>

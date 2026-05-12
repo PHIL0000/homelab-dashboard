@@ -1,9 +1,9 @@
-import { showError, showSuccess } from '../../../../toast';
+import { showError, showSuccess } from "../../../../toast";
 import { useState } from "react";
 import { Button, Card, Input } from "@heroui/react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
-import { API_BASE } from '@/lib/api';
+import { API_BASE } from "@/lib/api";
 
 export default function SecurityTab() {
   const { t } = useLanguage();

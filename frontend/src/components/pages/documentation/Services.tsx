@@ -1,10 +1,10 @@
-import { showError } from '../../../toast';
-import { useMemo, useState, useEffect } from 'react';
-import { Button, Card } from '@heroui/react';
-import { useAuth } from '@/context/AuthContext';
-import AddService from './components/AddService';
-import EditService from './components/EditService';
-import { API_BASE as _apiBase } from '@/lib/api';
+import { showError } from "../../../toast";
+import { useMemo, useState, useEffect } from "react";
+import { Button, Card } from "@heroui/react";
+import { useAuth } from "@/context/AuthContext";
+import AddService from "./components/AddService";
+import EditService from "./components/EditService";
+import { API_BASE as _apiBase } from "@/lib/api";
 
 const API_BASE = `${_apiBase}/infrastructure`;
 const DEFAULT_SOFTWARE_TYPE = 'DOCKER_CONTAINER';

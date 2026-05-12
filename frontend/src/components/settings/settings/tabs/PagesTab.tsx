@@ -27,7 +27,7 @@ import DocumentationServicesPageSettings from "./PageSettings/Documentation/Docu
 import DocumentationStoragePageSettings from "./PageSettings/Documentation/DocumentationStoragePageSettings";
 import DocumentationDocumentsPageSettings from "./PageSettings/Documentation/DocumentationDocumentsPageSettings";
 import PerformancePageSettings from "./PageSettings/Performance/PerformancePageSettings";
-import { API_BASE } from '@/lib/api';
+import { API_BASE } from "@/lib/api";
 
 type PagesTabProps = {
   selectedPageKey: PageSettingKey;

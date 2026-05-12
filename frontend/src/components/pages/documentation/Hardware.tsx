@@ -1,12 +1,12 @@
 import { useMemo, useState, useEffect } from "react";
-import { showError } from '../../../toast';
+import { showError } from "../../../toast";
 import { Button, Card, Input, Select, ListBox } from "@heroui/react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { ChevronDown } from "lucide-react";
 import AddHardware, { type HardwareFormValues } from "./components/AddHardware";
 import EditHardware from "./components/EditHardware";
-import { API_BASE as _apiBase } from '@/lib/api';
+import { API_BASE as _apiBase } from "@/lib/api";
 
 const API_BASE = `${_apiBase}/infrastructure`;
 

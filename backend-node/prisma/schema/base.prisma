@@ -18,7 +18,7 @@ datasource db {
 // Global Instance Settings singleton
 model InstanceSettings {
   id        Int      @id @default(1)
-  haDomain  String   @default("https://homeassistant.local:8123")
+  haDomain  String   @default("http://homeassistant.local:8123")
 }
 
 // --- ENUMS ---

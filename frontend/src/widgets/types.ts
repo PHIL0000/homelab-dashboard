@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import type { TranslationKey } from "../i18n/translations";
 
 export interface WidgetComponentProps {
   widgetId: string;
@@ -10,6 +11,8 @@ export interface WidgetDefinition {
   key: string;
   name: string;
   description: string;
+  nameKey?: TranslationKey;
+  descriptionKey?: TranslationKey;
   icon?: string;
   defaultW: number;
   defaultH: number;
