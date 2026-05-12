@@ -218,20 +218,19 @@ export function deriveResponsiveLayout(
     wrappedFlags.push(spot.y > item.y);
   }
 
-  // ─── Expansion-Pass: Lücke links bei umgebrochenen, alleinigen Items ──
+  // ─── Anchor-Pass: umgebrochene, alleinige Items linksbündig setzen ──
   // Widgets, die in eine neue Zeile umgebrochen sind, würden sonst ihre
   // Original-x-Position behalten — und damit links eine Lücke erzeugen,
-  // obwohl in dieser Zeile gar kein anderes Widget steht.
+  // obwohl in dieser Zeile gar kein anderes Widget steht. Wir setzen
+  // ausschließlich x → 0; die Breite bleibt unangetastet (der User hat
+  // explizit eine Breite gewählt).
   //
   // Regeln:
   //  - greift NUR bei umgebrochenen Items (wrappedFlags[i] === true)
   //  - greift NUR, wenn das Item alleine in seinem y-Span ist
   //    (kein anderes Item hat eine y-Überlappung)
-  //  - x → 0, w → maxCols (respektiert maxW-Constraint, falls vorhanden)
-  //  - h und y bleiben unverändert
+  //  - x → 0; w, h, y bleiben unverändert
   //
-  // Wenn zwei Widgets gemeinsam in eine neue Zeile umbrechen und nebeneinander
-  // passen, bleibt jedes auf seiner gepackten Position — keine Expansion.
   // Das persistierte baseLayout wird nicht angefasst (nur derived).
   for (let i = 0; i < result.length; i++) {
     if (!wrappedFlags[i]) continue;
@@ -246,29 +245,21 @@ export function deriveResponsiveLayout(
     });
     if (hasNeighborInRow) continue;
 
-    const c = constraintsOf(item);
-    const minW = Math.max(1, c.minW ?? 1);
-    const maxW = Math.min(c.maxW ?? targetCols, targetCols);
-    const fullW = Math.min(maxW, Math.max(minW, targetCols));
-
-    result[i] = { ...item, x: 0, w: fullW };
+    result[i] = { ...item, x: 0 };
   }
 
   return result;
 }
 
-// ─── Insertion: neues Widget unten rechts anhängen ─────────────────────────
+// ─── Insertion: neues Widget oben-links einfügen ───────────────────────────
 //
-// Strategie:
-//  1. Bestimme die unterste belegte Zeile (= maximales item.y im Layout).
-//  2. Versuche, das Widget RECHTS in dieser Zeile zu platzieren — von
-//     ganz rechts (x = cols - w) nach links durchgehen, ersten freien
-//     Slot nehmen.
-//  3. Wenn dort gar kein Platz mehr ist: neue Zeile darunter eröffnen
-//     (y = unterste belegte Zeile + max(item.h) der dort liegenden Items),
-//     Widget rechtsbündig einfügen.
+// Strategie: erste freie Stelle, die das Widget aufnimmt, von oben nach
+// unten und innerhalb jeder Zeile von links nach rechts. Bestehende
+// Widgets werden NICHT verschoben — nur Lücken werden gefüllt. Wenn kein
+// Platz im aktuell belegten Bereich frei ist, wird unter allen belegten
+// Zellen eine neue Zeile links angefangen.
 
-export function findBottomRightInsertionPosition(
+export function findTopLeftInsertionPosition(
   layout: Layout[],
   size: { w: number; h: number },
   cols: number
@@ -277,15 +268,12 @@ export function findBottomRightInsertionPosition(
   const h = Math.max(1, size.h);
 
   if (layout.length === 0) {
-    return { x: Math.max(0, cols - w), y: 0 };
+    return { x: 0, y: 0 };
   }
 
-  // Belegungsraster + tiefste Zeile + bottom edge bestimmen.
   const occupied = new Set<string>();
-  let bottomRowY = 0; // tiefstes item.y (Top-Kante der untersten Zeile)
-  let maxBottom = 0; // tiefste belegte Zelle (Bottom-Kante)
+  let maxBottom = 0;
   for (const it of layout) {
-    bottomRowY = Math.max(bottomRowY, it.y);
     maxBottom = Math.max(maxBottom, it.y + it.h);
     for (let dy = 0; dy < it.h; dy++) {
       for (let dx = 0; dx < it.w; dx++) {
@@ -294,33 +282,29 @@ export function findBottomRightInsertionPosition(
     }
   }
 
-  // 1) Versuch: in der untersten existierenden Zeile, so weit rechts
-  //    wie möglich. Wir prüfen den ganzen h-Block ab bottomRowY.
-  for (let x = cols - w; x >= 0; x--) {
-    let fits = true;
-    for (let dy = 0; dy < h && fits; dy++) {
-      for (let dx = 0; dx < w && fits; dx++) {
-        if (occupied.has(`${x + dx}:${bottomRowY + dy}`)) fits = false;
+  for (let y = 0; y <= maxBottom; y++) {
+    for (let x = 0; x + w <= cols; x++) {
+      let fits = true;
+      for (let dy = 0; dy < h && fits; dy++) {
+        for (let dx = 0; dx < w && fits; dx++) {
+          if (occupied.has(`${x + dx}:${y + dy}`)) fits = false;
+        }
       }
+      if (fits) return { x, y };
     }
-    if (fits) return { x, y: bottomRowY };
   }
 
-  // 2) Fallback: neue Zeile DARUNTER, rechtsbündig.
-  //    "Darunter" = unterhalb aller belegten Zellen, nicht nur unterhalb
-  //    der Top-Kante der untersten Zeile.
-  return { x: Math.max(0, cols - w), y: maxBottom };
+  return { x: 0, y: maxBottom };
 }
 
-// Hängt ein neues Item ans Ende des Layouts (unten rechts) an. Falls die
-// Caller-Routine bereits x/y gesetzt hat, werden diese durch die berechnete
-// Position überschrieben — das Backend kann ruhig y: Infinity senden.
-export function appendWidgetToEnd(
+// Fügt ein neues Item an der ersten freien Position oben links ins Layout
+// ein. Bestehende Items werden nie verschoben.
+export function insertWidgetAtTopLeft(
   layout: Layout[],
   newItem: Layout,
   cols: number = BASE_COLS
 ): Layout[] {
-  const pos = findBottomRightInsertionPosition(
+  const pos = findTopLeftInsertionPosition(
     layout,
     { w: newItem.w, h: newItem.h },
     cols

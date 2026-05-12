@@ -465,8 +465,9 @@ function TrainWidget({
         </p>
         <button
           type="button"
+          onMouseDown={(e) => e.stopPropagation()}
           onClick={() => setShowConfig(true)}
-          className="text-xs px-3 py-1.5 rounded-lg border border-default-200 text-default-500 hover:bg-default-100 transition-colors"
+          className="widget-no-drag text-xs px-3 py-1.5 rounded-lg border border-default-200 text-default-500 hover:bg-default-100 transition-colors"
         >
           {t("widget.train.configureButton")}
         </button>
@@ -583,8 +584,8 @@ export const widgetDef: WidgetDefinition = {
   nameKey: "widget.train.name",
   descriptionKey: "widget.train.description",
   icon: "Train",
-  defaultW: 4,
-  defaultH: 4,
+  defaultW: 6,
+  defaultH: 3,
   minW: 3,
   minH: 3,
   defaultConfig: { stationA: null, stationB: null },

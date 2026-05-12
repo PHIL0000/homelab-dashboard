@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import { Card } from "@heroui/react";
 import type { WidgetDefinition, WidgetComponentProps } from "../types";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
+
+const LOCALE_MAP: Record<string, string> = {
+  de: "de-DE",
+  en: "en-US",
+};
 
 const FONT_MAP: Record<string, string> = {
   orbitron: "'Orbitron', monospace",
@@ -29,6 +35,7 @@ function loadFont(fontKey: string) {
 
 function ClockWidget({ config }: WidgetComponentProps) {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const [now, setNow] = useState(new Date());
 
   const fontKey = (config.fontFamily as string) || "orbitron";
@@ -71,7 +78,8 @@ function ClockWidget({ config }: WidgetComponentProps) {
     }
   };
 
-  const weekday = now.toLocaleDateString([], { weekday: "long" });
+  const locale = LOCALE_MAP[language] || language;
+  const weekday = now.toLocaleDateString(locale, { weekday: "long" });
 
   return (
     <Card className="h-full p-4 flex flex-col items-center justify-center gap-2 relative overflow-hidden">
@@ -125,8 +133,8 @@ export const widgetDef: WidgetDefinition = {
   nameKey: "widget.clock.name",
   descriptionKey: "widget.clock.description",
   icon: "Clock",
-  defaultW: 3,
-  defaultH: 3,
+  defaultW: 4,
+  defaultH: 2,
   minW: 2,
   minH: 2,
   defaultConfig: {

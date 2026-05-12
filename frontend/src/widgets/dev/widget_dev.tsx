@@ -53,10 +53,10 @@ export const widgetDef: WidgetDefinition = {
   nameKey: "widget.dev.name",
   descriptionKey: "widget.dev.description",
   icon: "Monitor",
-  defaultW: 3,
-  defaultH: 4,
+  defaultW: 2,
+  defaultH: 2,
   minW: 2,
-  minH: 3,
+  minH: 2,
   defaultConfig: {},
   component: DevInfoWidget,
 };

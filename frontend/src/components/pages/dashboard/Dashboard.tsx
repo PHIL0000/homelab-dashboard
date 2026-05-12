@@ -22,7 +22,7 @@ import {
   BASE_COLS,
 } from "./useResponsiveDashboardLayout";
 import {
-  appendWidgetToEnd,
+  insertWidgetAtTopLeft,
   reprojectChangeToBase,
   validateAndLoadLayout,
 } from "./layoutDerivation";
@@ -218,11 +218,9 @@ export default function Dashboard() {
   );
 
   // ─── Widget hinzufügen / entfernen ─────────────────────────────────────
-  // Neue Widgets werden IMMER unten rechts ans Layout angehängt — nicht
-  // dahin, wo das Backend sie evtl. mit y:Infinity vorschlägt. Die finale
-  // Position berechnet findBottomRightInsertionPosition aus dem aktuellen
-  // base-Layout: erst nach freiem Platz in der untersten Zeile rechts
-  // suchen, sonst neue Zeile darunter.
+  // Neue Widgets werden IMMER an der ersten freien Position oben links ins
+  // Layout eingesetzt — bestehende Widgets werden dabei nicht verschoben.
+  // Vom Backend gelieferte Koordinaten (z. B. y:Infinity) werden ignoriert.
   const addWidget = useCallback(
     async (cardTypeKey: string) => {
       setShowPicker(false);
@@ -244,11 +242,10 @@ export default function Dashboard() {
         },
       ]);
 
-      // Append-Logik: backend-Position ignorieren, deterministisch
-      // unten rechts einfügen.
+      // Backend-Position ignorieren, deterministisch oben links einfügen.
       setBaseLayout((prev) => {
         const incoming = data.layoutItem as Layout;
-        const next = appendWidgetToEnd(prev, incoming, BASE_COLS);
+        const next = insertWidgetAtTopLeft(prev, incoming, BASE_COLS);
         persistBaseLayout(next);
         return next;
       });
