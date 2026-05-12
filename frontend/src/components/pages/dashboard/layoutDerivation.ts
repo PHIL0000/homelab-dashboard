@@ -130,19 +130,21 @@ export function resolveCollisions(layout: Layout[], cols: number): Layout[] {
 }
 
 // ─── Layout-Ableitung ───────────────────────────────────────────────────────
-// Strategie: "place first, shrink only if necessary".
+// Strategie: "row-preserving, shrink only if necessary".
 //
 //  1. Wir starten IMMER vom unveränderten Basislayout (lg).
 //  2. Wir behalten Original-Breite (w) und Original-Höhe (h) bei.
-//  3. Wir versuchen, jedes Widget möglichst nahe an seiner Original-x-Position
-//     im aktuellen Breakpoint zu platzieren.
-//  4. Wenn in einer Zeile kein Platz mehr ist: nächste Zeile — Widget bleibt
-//     in Originalbreite. Wir schrumpfen NICHT.
+//  3. Wir versuchen, jedes Widget möglichst nahe an seiner Original-Position
+//     (x UND y) im aktuellen Breakpoint zu platzieren.
+//  4. Wenn in der Original-Zeile kein Platz mehr ist: nächste Zeile darunter —
+//     Widget bleibt in Originalbreite. Wir schrumpfen NICHT.
 //  5. Schrumpfen passiert NUR, wenn die Original-Breite größer ist als die
 //     im Ziel-Breakpoint verfügbaren Spalten (oder als maxW erlaubt).
 //
-// Kein proportionales Skalieren, kein kumulativer Fehler — beim Zurück-
-// wechseln auf lg sind alle Items 1:1 wie im persistierten Basislayout.
+// Wichtig: Items werden NIEMALS nach oben gezogen. Die vom User festgelegte
+// Zeile bleibt beim Breakpoint-Wechsel erhalten. Kein proportionales Skalieren,
+// kein kumulativer Fehler — beim Zurückwechseln auf lg sind alle Items 1:1
+// wie im persistierten Basislayout.
 
 function constraintsFor(
   item: Layout,
@@ -200,12 +202,12 @@ export function deriveResponsiveLayout(
     // Container, damit das Widget hineinpasst.
     const preferredX = Math.max(0, Math.min(item.x, targetCols - w));
 
-    // Sucht den ersten passenden freien Platz, beginnend bei y=0.
-    // Reihenfolge: zuerst preferredX in y=0, dann andere x in y=0,
-    // dann y=1 usw. → Widget bleibt so weit oben wie möglich, ohne
-    // andere Widgets zu überdecken. Wenn keine x-Position in der
-    // aktuellen Zeile passt, bricht es automatisch in die nächste Zeile.
-    const spot = findFreeSpot(occupied, targetCols, 0, w, h, preferredX);
+    // Sucht den ersten passenden freien Platz, beginnend bei item.y.
+    // Reihenfolge: zuerst preferredX in item.y, dann andere x, dann y+1 usw.
+    // → Widget bleibt auf seiner ursprünglichen Zeile; wenn dort kein Platz
+    // ist, wandert es nach unten (nie nach oben). Das verhindert, dass ein
+    // Widget beim Breakpoint-Wechsel in eine andere Zeile springt.
+    const spot = findFreeSpot(occupied, targetCols, item.y, w, h, preferredX);
 
     markOccupied(occupied, spot.x, spot.y, w, h);
     result.push({
