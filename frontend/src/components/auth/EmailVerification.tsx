@@ -16,11 +16,7 @@ const maskEmail = (email: string) => {
 };
 
 export interface EmailVerificationHandles {
-  // Render this next to the email <Input> in the parent form. Disappears
-  // once the code has been sent.
   sendButton: ReactNode;
-  // Render this below the email field. Shows the OTP slots + resend link,
-  // or a "verified" badge once the code has been entered.
   otpBlock: ReactNode;
 }
 
@@ -42,8 +38,6 @@ export function useEmailVerification(
   const verified = token !== null && verifiedFor.current === normalized;
   const codeWasSent = sentTo === normalized;
 
-  // Reset internal state whenever the email is edited away from a value
-  // we've already sent to / verified.
   useEffect(() => {
     if (verifiedFor.current && verifiedFor.current !== normalized) {
       verifiedFor.current = null;

@@ -120,9 +120,3 @@ export const sendPasswordResetEmail = (email: string, code: string, minutes: num
     minutes
   );
 
-// Diagnostic helper: verify the SMTP connection + credentials without sending.
-// Useful for a /api/auth/mail-test endpoint or one-off scripts.
-export const verifyMailConnection = async (): Promise<void> => {
-  const transporter = getTransporter();
-  await transporter.verify();
-};

@@ -111,14 +111,14 @@ export default function ForgotPasswordModal({
           <Modal.Dialog className="!max-w-md !w-[calc(100vw-2rem)] bg-background rounded-2xl border border-[color-mix(in_srgb,var(--color-primary)_25%,transparent)] shadow-2xl">
             <Modal.CloseTrigger className="absolute top-4 right-4 z-10" />
             <Modal.Body className="p-6">
-              <h2 className="text-2xl font-semibold text-[var(--color-text)] mb-2">
+              <h2 className="text-2xl font-semibold text-[var(--color-text)] mb-4">
                 Reset your password
               </h2>
-              <p className="text-sm text-[var(--color-textSecondary)] mb-5">
-                {step === "request"
-                  ? "Enter your username or email and we'll send a code to the verified email on file."
-                  : "Enter the 6-digit code we sent to your email and choose a new password."}
-              </p>
+              {step === "request" && (
+                <p className="text-sm text-[var(--color-textSecondary)] mb-5 -mt-2">
+                  Enter your username or email and we'll send a code to the verified email on file.
+                </p>
+              )}
 
               {step === "request" ? (
                 <div className="space-y-4">
